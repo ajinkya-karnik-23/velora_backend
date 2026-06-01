@@ -1,0 +1,14 @@
+{
+  "builds": [
+    {
+      "src": ".quartz-engine/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": ".quartz-engine/public/$1"
+    }
+  ]
+}
