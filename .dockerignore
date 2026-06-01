@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+*.egg-info/
+
+# Dev tools
+.git/
+.github/
+.vscode/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Local storage (mounted as volume in prod)
+storage/
+
+# Quartz engine (Node.js static site, not needed in API image)
+.quartz-engine/
+
+# Tests and docs
+tests/
+postman/
+Detail_API_Request_Response/
+data/
+landing_folder/
+*.md
+!README.md
+
+# Secrets
+.env
+.env.*
+
+# Misc
+error_debug.log
+docker-compose.yml
