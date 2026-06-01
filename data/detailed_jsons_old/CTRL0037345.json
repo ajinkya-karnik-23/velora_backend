@@ -1,0 +1,126 @@
+{
+  "_id": {
+    "$oid": "67224256c088dea0dfa75c6b"
+  },
+  "alias": "CTRL0037345_Quarterly",
+  "control_number": "CTRL0037345",
+  "control_name": "Profit/Cost Sharing",
+  "reference_number": "C2A1 - Mauve [Lynparza]",
+  "entity": "R&D Financial Controls",
+  "control_desc": "WHAT & WHY:\nAmounts owing to / from AstraZeneca to settle collaboration profit / cost share agreements are estimated at quarter end before being finally trued up and invoiced one quarter in arrears.  \n \nThis control operates to confirm that:\na) the previous quarter's invoice has been agreed and settled with the relevant third party and\nb) reasons for true ups between the final invoice and accrual have been considered in order to identify any factors which should be taken into account when booking the current quarter accrual. \n \nHOW:\nAn initial analysis is performed to show the total accruals (Commercial and Development) as at the previous quarter end, the value of the corresponding invoice and the scale of the resultant variance.  \n\nCopies of invoices and email screenshots are attached to the file to demonstrate the agreement of the invoices with the third parties directly or via a Joint Committee, together with evidence of the cash payment / receipt (if received within the quarter).\n\nAccruals as at the previous quarter end are tied back to an FBL3N download. Invoice amounts and true ups should also be cross-referenced to the download. SAP screenshots are captured to demonstrate the completeness and accuracy of that download.\n \nA review is performed by the Finance Associate Director Collaborations and Alliances or delegate who documents the following:\n• Where the true up exceeds $10m, the reasons behind the true up  (with support from the relevant post deal finance manage as required) are clearly stated. No explanation is required if the true-up is below $10m.\n• A conclusion as to whether there are any factors identified in the operation of the control which indicate that an adjustment is required to the final accrual for the current quarter. \n \nWHEN:\nQuarterly: To conclude prior to the end of the calendar quarter which follows the quarter to which the invoice is related to (recognizing that cash may not be received until the operation of the following quarter control).Test Script Path\nGeneral >> 2. As Is Overview >> Use Case 1- IPE >> Data >> C2A1 >> File \"R&D Financial Controls_C2A1 - Mauve_P2_Test Sheet\"",
+  "frequency_of": "Quarterly",
+  "risk_level": "High",
+  "pwc_reliance": "No",
+  "control_owner": "Proń, Jerzy",
+  "unit_fccg_contact": "Rachel",
+  "validations": [
+    {
+      "validation_name": "IPE1 GL 23040100_1",
+      "validation_desc": "In 37345_IPE1.jpg, check if the fields in the screenshot are filled correctly. The values in these fields should be as follows:\n1) G/L Account: 23040100 \n2) Company Code: UK10\n3) Posting Date: 01.01.2024 to 31.03.2024\n\n%\nValidate the input parameters for GL 23040100.\n%",
+      "validation": "ipe1_gl_23040100_1",
+      "alias": "CTRL0037345_Quarterly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224256c088dea0dfa75c62"
+      }
+    },
+    {
+      "validation_name": "IPE2 GL 23040100_2",
+      "validation_desc": "In 37345_IPE2.jpg, check if the fields in the screenshot are filled correctly. The values in these fields should be as follows:\n1) Cost Center: 9934\n2) Posting Date : 01.01.2024 to 31.03.2024 \n\n%\nValidate the input parameters for GL 23040100.\n%",
+      "validation": "ipe2_gl_23040100_2",
+      "alias": "CTRL0037345_Quarterly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224256c088dea0dfa75c63"
+      }
+    },
+    {
+      "validation_name": "IPE3 GL 23040100_totals",
+      "validation_desc": "Compare 37345_IPE3.xlsx with  37345_IPE3.jpg. \n\n1. retrieve the Sum of column \"Amount in local currency\" from the 37345_IPE3.xlsx after filtering for '23040100' in column 'Account'\n2. retrieve the total value of column 'Amt in loc. cur' present at the bottom yellow panel in the 37345_IPE3.jpg. \n%\nValidate the completeness and accuracy of GL 23040100 extract from SAP.\n%",
+      "validation": "ipe3_gl_23040100_totals",
+      "alias": "CTRL0037345_Quarterly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224256c088dea0dfa75c64"
+      }
+    },
+    {
+      "validation_name": "IPE4 GL 23020100",
+      "validation_desc": "In 37345_IPE4.jpg, check if the fields in the screenshot are filled correctly. The values in these fields should be as follows:\n1) G/L Account: 23020100\n2) Company Code: UK10\n3) Posting Date: 01.01.2024 to 31.03.2024\n\n%\nValidate the input parameters for GL 23020100\n%",
+      "validation": "ipe4_gl_23020100",
+      "alias": "CTRL0037345_Quarterly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224256c088dea0dfa75c65"
+      }
+    },
+    {
+      "validation_name": "IPE5 GL 23020100_totals",
+      "validation_desc": "Compare 37345_IPE5.xlsx with  37345_IPE5.jpg. \n\n1. retrieve the Sum of column \"Amount in local currency\" from the 37345_IPE5.xlsx\n2. retrieve the total value of column 'Amount in local cur' present at the bottom yellow panel in the 37345_IPE5.jpg. \n\n\n%\nValidate the completeness and accuracy of GL 23020100 extract from SAP.\n%",
+      "validation": "ipe5_gl_23020100_totals",
+      "alias": "CTRL0037345_Quarterly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224256c088dea0dfa75c66"
+      }
+    },
+    {
+      "validation_name": "Attribute A",
+      "validation_desc": "1. In 37345_CPT1.xlsx get the Variance value in the \"Total\" Column.\n2. check if the absolute value of the variance provided is less than 10 million. \n3. in the image 37345_CPT1.jpg, check confirmation of review by Jerzy Pron. \n4. Check if the variance amount mentioned in step3 is same as value extracted from step 1. \n\n\n\n%Inspect true-up analysis review is performed by the Finance Associate Director Collaborations and Alliances or delegate who documents the following:\n• Where the true up exceeds $10m, the reasons behind the true up  (with support from the relevant post deal finance manage as required) are clearly stated. No explanation is required if the true-up is below $10m.\n• A conclusion as to whether there are any factors identified in the operation of the control which indicate that an adjustment is required to the final accrual for the current quarter. %\n\n\n\n",
+      "validation": "attribute_a",
+      "alias": "CTRL0037345_Quarterly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224256c088dea0dfa75c67"
+      }
+    },
+    {
+      "validation_name": "Attribute B",
+      "validation_desc": "1. In 37345_CPT1.xlsx get the 'Total Invoice' value.\n2. from 37345_CPT2a.jpg extract the \"Net balance due to MSD\" value\n3. from 37345_CPT2b.jpg extract the TradeAccruals amount. \n4. check if the values from step 1, step 2 and step 3 are matching with a delta of +/- $10\n\n\n%Inspect whether the Summary True-Up Analysis includes Commercial and R&D accruals and invoices, with appropriate journal entries for the relevant quarter. %",
+      "validation": "attribute_b",
+      "alias": "CTRL0037345_Quarterly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224256c088dea0dfa75c68"
+      }
+    },
+    {
+      "validation_name": "Attribute C",
+      "validation_desc": "1. in 37345_CPT3a.jpg, check if the email is from Train, Huan. \n2. In 37345_CPT3a.jpg, check if the email mentions AZ_Merck Q1-2024 Settlement\n3. In 37345_CPT3b.jpg, check if Kara McNulty has sent their approval to Kudenga, Tonderai\n4. In 37345_CPT3b.jpg, check if Tran, Huan has sent their approval to Kudenga, Tonderai\n\n%Inspect whether the relevant quarters' invoices and accrual agree and are appropriately approved with the third parties directly or via a Joint Committee, .%",
+      "validation": "attribute_c",
+      "alias": "CTRL0037345_Quarterly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224256c088dea0dfa75c69"
+      }
+    },
+    {
+      "validation_name": "Attribute D",
+      "validation_desc": "1. Extract the Debit Amount from 37345_CPT4a.jpg.\n2. Extract the Net Balance Due to MSD from 37345_CPT2a.jpg\n3. check if the values from Step 1 and Step 2 match.\n4. Extract the Beneficiary name from 37345_CPT2a.jpg\n5. Extract the IBAN from 37345_CPT2a.jpg\n6. Check if the values from Step 4 and Step 5 are present in the 37345_CPT2a.jpg\n%Inspect whether the payment bank details reconcile with the bank details on the invoice.%",
+      "validation": "attribute_d",
+      "alias": "CTRL0037345_Quarterly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224256c088dea0dfa75c6a"
+      }
+    }
+  ]
+}

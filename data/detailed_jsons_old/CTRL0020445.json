@@ -1,0 +1,99 @@
+{
+  "alias": "CTRL0020445_Trigger (Event Driven)",
+  "control_number": "CTRL0020445",
+  "control_name": "LTI003 – PRL010 Approval of Shares Purchase (Vesting)",
+  "reference_number": "LTI003",
+  "entity": "LTI",
+  "control_desc": "WHAT & WHY: \nA preventative control to monitor and account for the number of shares purchased to satisfy LTI (Long-term Incentives) vesting.\n\nHOW: \nLTI003a (Share Purchase (if Required)) \nAhead of planned share vesting, the LTI team calculates the required number of shares (allowing a buffer of 28.5K ORDs and 54K ADRs). CEO/CFO approve the estimated cost of the market purchase. Dependent on estimated cost of market purchase, CFO approval only may be required (CFO has $200m purchasing limit). Where appropriate approval may be authorised by HR SVP Reward, Inclusion & TAq/Senior Director Executive Reward up to their DoA approval limit. The LTI team send a request to Board & Corporate Support for their approval to proceed with the purchase. The Company Secretary, or in his absence the Deputy Company Secretary or Senior Assistant Company Secretary, have authority to approve.  See DoA matrix attached which mitigates the requirement for full email signature approval. Where appropriate Board & Corporate Support will approve a 48 - 72 hour period for share purchase trades, with further approval required for trades outside of that window. The LTI team receives a trade confirmation for each share purchase from the Trustee (the AstraZeneca EBT) and reconciles it back to the indicative daily share request. Market volatility may result in a variance between indicative daily target share request and trade confirmation. The Trust Shares Master Tracker will be updated after each share purchase and reconciled to the balance of the share account from the Trustee (the AstraZeneca EBT).  \n\nThe Trust Shares Master Tracker is also reconciled QUARTERLY to the balance of the share account from the Trustee.",
+  "frequency_of": "Trigger (Event Driven)",
+  "risk_level": "High",
+  "pwc_reliance": "Yes",
+  "control_owner": "Crutchley, Elizabeth",
+  "unit_fccg_contact": " ",
+  "validations": [
+    {
+      "validation_name": "IPE1: Validate the TCs (1)",
+      "validation_desc": "Perform 2 tests:\n\nA] In 445b_IPE_TC_1b.pdf and 445b_IPE_TC_1c.pdf, the tables will have information about \"Date\", \"Security/stock\", \"Quantity of Units/Shares\", \"Price per share\", \"Gross Consideration\", \"Net Consideration Due\". Please match these fields with \"Date'\", \"Category\", \"Qty\", \"Price per share\", \"Gross Consideration\", \"Net Consideration Due\" in 445a_IPE.xlsx. Keep note that all of the amounts mentioned are float numbers, round them up to match the values. For field \"Security/stock\", an accronym can be found in the excel. This accronym will also be found in the pdf. You don't have to match case for this. If the accronym is found in the pdf and excel data string, then consider it matched. After matching these fields, be aware that you will then find a two distinct records in the excel for the data in the pdfs. From this, find the corresponding value in \"Amount requested\" for these distinct records. \nIf either of those 2 records are not found, then this test is a fail. If both are found, then this test is a pass.\n\nB] Next validate that the value in \"Amount requested\" found in the records before, matches with the amount mentioned in 445a_IPE_W_1a.pdf. 445a_IPE_W_1a.pdf is a pdf which will talk about the requested amount. You will find that the exact amounts from \"Amount requested\" for those 2 records mentioned somewhere in this document. If it is mentioned, and the amount mentioned is correct, then this test is a Pass. If not, then this test is a Fail.\n\nBoth the above mentioned tasks need to pass in order for this complete test to pass. \n\n%\n445_IPE1* : Validate the ADR and ORD stock Trading Confirmations.\n%",
+      "validation": "ipe1:_validate_the_tcs_(1)",
+      "alias": "CTRL0020445_Trigger (Event Driven)",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "670d1318cd3fddc651e65890"
+      }
+    },
+    {
+      "validation_name": "IPE2: Validate the TCs (2)",
+      "validation_desc": "Perform 2 tests:\n\nA] In 445b_IPE_TC_2b.pdf and 445b_IPE_TC_2c.pdf, the tables will have information about \"Date\", \"Security/stock\", \"Quantity of Units/Shares\", \"Price per share\", \"Gross Consideration\", \"Net Consideration Due\". Please match these feilds with \"Date'\", \"Category\", \"Qty\", \"Price per share\", \"Gross Consideration\", \"Net Consideration Due\" in 445a_IPE.xlsx. Keep note that all of the amounts mentioned are float numbers, round them up to match the values. For field \"Security/stock\", an accronym can be found in the excel. This accronym will also be found in the pdf. You don't have to match case for this. If the accronym is found in the pdf and excel data string, then consider it matched. After matching these fields, be aware that you will then find a two distinct records in the excel for the data in the pdfs. From this, find the corresponding value in \"Amount requested\" for these distinct records. \nIf either of those 2 records are not found, then this test is a fail. If both are found, then this test is a pass.\n\nB] Next validate that the value in \"Amount requested\" found in the records before, matches with the amount mentioned in 445a_IPE_W_2a.pdf. 445a_IPE_W_2a.pdf is a pdf which will talk about the requested amount. You will find that the exact amounts from \"Amount requested\" for those 2 records mentioned somewhere in this document. If it is mentioned, and the amount mentioned is correct, then this test is a Pass. If not, then this test is a Fail.\n\nBoth the above mentioned tasks need to pass in order for this complete test to pass. \n\n%\n445_IPE2* : Validate the ADR and ORD stock Trading Confirmations.\n%",
+      "validation": "ipe2:_validate_the_tcs_(2)",
+      "alias": "CTRL0020445_Trigger (Event Driven)",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "670d1318cd3fddc651e65891"
+      }
+    },
+    {
+      "validation_name": "IPE3: Validate the TCs (3)",
+      "validation_desc": "Perform 2 tests:\n\nA] In 445a_IPE_TC_3b.pdf and 445a_IPE_TC_3c.pdf, the tables will have information about \"Date\", \"Security/stock\", \"Quantity of Units/Shares\", \"Price per share\", \"Gross Consideration\", \"Net Consideration Due\". Please match these feilds with \"Date'\", \"Category\", \"Qty\", \"Price per share\", \"Gross Consideration\", \"Net Consideration Due\" in 445a_IPE.xlsx. Keep note that all of the amounts mentioned are float numbers, round them up to match the values. For field \"Security/stock\", an accronym can be found in the excel. This accronym will also be found in the pdf. You don't have to match case for this. If the accronym is found in the pdf and excel data string, then consider it matched. After matching these fields, be aware that you will then find a two distinct records in the excel for the data in the pdfs. From this, find the corresponding value in \"Amount requested\" for these distinct records. \nIf either of those 2 records are not found, then this test is a fail. If both are found, then this test is a pass.\n\nB] Next validate that the value in \"Amount requested\" found in the records before, matches with the amount mentioned in 445a_IPE_W_3a.pdf. 445a_IPE_W_3a.pdf is a pdf which will talk about the requested amount. You will find that the exact amounts from \"Amount requested\" for those 2 records mentioned somewhere in this document. If it is mentioned, and the amount mentioned is correct, then this test is a Pass. If not, then this test is a Fail.\n\nBoth the above mentioned tasks need to pass in order for this complete test to pass. \n\n%\n445a_IPE3* : Validate the ADR and ORD stock Trading Confirmations.\n%",
+      "validation": "ipe3:_validate_the_tcs_(3)",
+      "alias": "CTRL0020445_Trigger (Event Driven)",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "670d1318cd3fddc651e65892"
+      }
+    },
+    {
+      "validation_name": "IPE4: Validate the TCs (4)",
+      "validation_desc": "Perform 2 tests:\n\nA] In 445a_IPE_TC_4b.pdf and 445a_IPE_TC_4c.pdf, the tables will have information about \"Date\", \"Security/stock\", \"Quantity of Units/Shares\", \"Price per share\", \"Gross Consideration\", \"Net Consideration Due\". Please match these feilds with \"Date'\", \"Category\", \"Qty\", \"Price per share\", \"Gross Consideration\", \"Net Consideration Due\" in 445a_IPE.xlsx. Keep note that all of the amounts mentioned are float numbers, round them up to match the values. For field \"Security/stock\", an accronym can be found in the excel. This accronym will also be found in the pdf. You don't have to match case for this. If the accronym is found in the pdf and excel data string, then consider it matched. After matching these fields, be aware that you will then find a two distinct records in the excel for the data in the pdfs. From this, find the corresponding value in \"Amount requested\" for these distinct records. \nIf either of those 2 records are not found, then this test is a fail. If both are found, then this test is a pass.\n\nB] Next validate that the value in \"Amount requested\" found in the records before, matches with the amount mentioned in 445a_IPE_W_4a.pdf. 445a_IPE_W_4a.pdf is a pdf which will talk about the requested amount. You will find that the exact amounts from \"Amount requested\" for those 2 records mentioned somewhere in this document. If it is mentioned, and the amount mentioned is correct, then this test is a Pass. If not, then this test is a Fail.\n\nBoth the above mentioned tasks need to pass in order for this complete test to pass. \n\n%\n445a_IPE4* : Validate the ADR and ORD stock Trading Confirmations.\n%",
+      "validation": "ipe4:_validate_the_tcs_(4)",
+      "alias": "CTRL0020445_Trigger (Event Driven)",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "670d1318cd3fddc651e65893"
+      }
+    },
+    {
+      "validation_name": "IPE5: Validate the TCs (5)",
+      "validation_desc": "Perform 2 tests:\n\nA] In 445a_IPE_TC_5b.pdf and 445a_IPE_TC_5c.pdf, the tables will have information about \"Date\", \"Security/stock\", \"Quantity of Units/Shares\", \"Price per share\", \"Gross Consideration\", \"Net Consideration Due\". Please match these feilds with \"Date'\", \"Category\", \"Qty\", \"Price per share\", \"Gross Consideration\", \"Net Consideration Due\" in 445a_IPE.xlsx. Keep note that all of the amounts mentioned are float numbers, round them up to match the values. For field \"Security/stock\", an accronym can be found in the excel. This accronym will also be found in the pdf. You don't have to match case for this. If the accronym is found in the pdf and excel data string, then consider it matched. After matching these fields, be aware that you will then find a two distinct records in the excel for the data in the pdfs. From this, find the corresponding value in \"Amount requested\" for these distinct records. \nIf either of those 2 records are not found, then this test is a fail. If both are found, then this test is a pass.\n\nB] Next validate that the value in \"Amount requested\" found in the records before, matches with the amount mentioned in 445a_IPE_W_5a.pdf. 445a_IPE_W_5a.pdf is a pdf which will talk about the requested amount. You will find that the exact amounts from \"Amount requested\" for those 2 records mentioned somewhere in this document. If it is mentioned, and the amount mentioned is correct, then this test is a Pass. If not, then this test is a Fail.\n\nBoth the above mentioned tasks need to pass in order for this complete test to pass. \n\n%\n445a_IPE4* : Validate the ADR and ORD stock Trading Confirmations.\n%",
+      "validation": "ipe5:_validate_the_tcs_(5)",
+      "alias": "CTRL0020445_Trigger (Event Driven)",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "670d1318cd3fddc651e65894"
+      }
+    },
+    {
+      "validation_name": "IPE6: Validate TAV shares details",
+      "validation_desc": "In 445b_IPE1b.jpg, match the data for the entities \"AZN ORD\" and \"AZN ADR\" with the data in 445b_IPE1a.xlsx. To do this, match the ISIN number of those entities in the .jpg with the \"Row labels\" in the 1st table in the excel. After that, match the number of shares that are mentioned in the \"Sum of TOTAL SHARES TRANSFERED\" column against those row labels with the number of shares mentioned in the .jpg. Round the numbers up and a delta of +/- 5 is okay while matching. \n\nIf the number of shares match for both entities, then this test is a pass, if not, it is a fail.\n\n%\n445b_IPE1: Validate the number of shares as per ADR and ORD stock with AZ TAV funding report.\n%",
+      "validation": "ipe6:_validate_tav_shares_details",
+      "alias": "CTRL0020445_Trigger (Event Driven)",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "670d1318cd3fddc651e65895"
+      }
+    },
+    {
+      "validation_name": "IPE7: Validate Participant IDs ",
+      "validation_desc": "In 445b_IPE2a.xlsx, a initial list of records for the Participants ID is present in column \"PARTICIPANT_ID\". In 445b_IPE2b.xlsx, you will find a final list of records for the participants under column \"Final PIDs\". Make sure that the final list of Participant ID records are a complete subset of the initial Participant ID records. If it is, then this test is a Pass. If not, then this test is a fail and mention the IDs that are present in the final list which aren't present in the initial list.\n\n%\n445b_IPE2: Validate if the pre-adjusted and final-adjusted Participant IDs are all accounted for.\n%",
+      "validation": "ipe7:_validate_participant_ids_",
+      "alias": "CTRL0020445_Trigger (Event Driven)",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "670d1319cd3fddc651e65896"
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "_id": {
+    "$oid": "6722425bc088dea0dfa75c72"
+  },
+  "alias": "CTRL0037784_Monthly",
+  "control_number": "CTRL0037784",
+  "control_name": "Manual IDOC Edits - Yusen (SE18 & UBED)",
+  "reference_number": "DES001",
+  "entity": "EMEA Logistics",
+  "control_desc": "WHAT & WHY:\nA control to monitor manual status changes to goods despatch IDOCs received from LSPs.  This is to monitor cases where the picking / dispatch confirmation was made in SAP manually by the user rather than automatically by the IDOC.\n\nHOW:\n1. On monthly basis, after WD1 an IDOC report (covering full previous month) is created using WE02 to show IDOCs from LSPs relating to despatches.  A screenshot should be taken of the screen used to select the parameters of the report including the bottom corner of the screen to show the date and time.\n2. Those IDOCs with a status 68 indicating manual picking / dispatch confirmation are identified.  If there are no such IDOCs the report is saved, again showing the date and time, and no further actions are necessary.\n3. Where IDOCs with status 68 are present, evidence is saved together with the report to demonstrate that each manual entry was based on a physical despatch (e.g. based on delivery note or packing list, etc).  In the case of any errors identified, an action plan is proposed to make relevant corrections.  This review should be not be performed by any person who has processed manual confirmations on the report.\n4. When complete, the report and evidence is reviewed and approved.\n5. Overall analysis, evidence for manual confirmations,  and any actions necessary are saved and approved by WD8\n\nHOW OFTEN & WHEN:\nMonthly\n",
+  "frequency_of": "Monthly",
+  "risk_level": "Medium",
+  "pwc_reliance": "Yes",
+  "control_owner": "Lawton, Jon",
+  "unit_fccg_contact": "Ana",
+  "validations": [
+    {
+      "test_id":115,
+      "validation_name": "IPE1: IDOC listing Parameters (1)",
+      "validation_desc": "In screenshot1.jpg,the values in these fields should be as follows: 1) Created on: 2024-04-01 to 2024-04-30, 2) Partner Number = YUSEN_UB. If both these fields match, then this test is a pass",
+      "validation": "ipe1:_idoc_listing_parameters_(1)",
+      "alias": "CTRL0037784_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722425bc088dea0dfa75c70"
+      }
+    },
+    {
+      "test_id":116,
+      "validation_name": "IPE2: IDOC listing Parameters (2)",
+      "validation_desc": "In screenshot3.jpg,the values in these fields should be as follows: 1) Created on: 2024-04-01 to 2024-04-30, 2) Partner Number = YUSEN. If both these fields match, then this test is a pass",
+      "validation": "ipe2:_idoc_listing_parameters_(2)",
+      "alias": "CTRL0037784_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722425bc088dea0dfa75c71"
+      }
+    }
+  ]
+}

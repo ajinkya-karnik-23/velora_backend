@@ -1,0 +1,1536 @@
+﻿================================================================================
+CIQ BACKEND API - SUCCESS INPUT & OUTPUT REFERENCE
+================================================================================
+
+Base URL: http://localhost:8000
+
+All authenticated endpoints require: Authorization: Bearer <access_token>
+
+All timestamps are Unix epoch integers (seconds).
+
+
+================================================================================
+1. HEALTH
+================================================================================
+
+1.1 Health Check
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /health
+Auth:         None
+
+Success Response (200):
+{
+  "status": "healthy"
+}
+
+
+================================================================================
+2. AUTH
+================================================================================
+
+2.1 Login
+--------------------------------------------------------------------------------
+Method:       POST
+URL:          /api/v1/auth/login-user
+Auth:         None
+Content-Type: application/x-www-form-urlencoded
+
+Request Body:
+  Field       Type     Required   Example
+  email       string   Yes        admin@example.com
+  password    string   Yes        Admin@12345
+
+Success Response (200):
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+
+Note: Also sets refresh_token as an HttpOnly cookie.
+
+
+2.2 Refresh Token
+--------------------------------------------------------------------------------
+Method:       POST
+URL:          /api/v1/auth/refresh-token
+Auth:         None (uses refresh_token cookie)
+
+Request: No body. Requires refresh_token cookie from login.
+
+Success Response (200):
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+
+
+2.3 Logout
+--------------------------------------------------------------------------------
+Method:       POST
+URL:          /api/v1/auth/logout-user
+Auth:         None
+
+Request: No body.
+
+Success Response (200):
+{
+  "detail": "Logged out"
+}
+
+
+2.4 Get Current User (Me)
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/auth/get-current-user
+Auth:         Bearer Token
+
+Success Response (200):
+{
+  "user_id": 1,
+  "user_name": "Admin User",
+  "email": "admin@example.com",
+  "phone": null,
+  "department": "IT",
+  "job_title": "System Administrator",
+  "location": "HQ",
+  "profile_picture": null,
+  "status": "Active",
+  "two_factor_enabled": false,
+  "api_access_enabled": true,
+  "last_login": 1714400000,
+  "created_time": 1700000000,
+  "updated_time": 1714400000,
+  "roles": ["Admin"],
+  "permissions": ["can_manage_users", "can_manage_clients", "can_manage_cycles", "can_manage_controls", "can_upload", "can_approve", "can_reject", "can_assign_team"]
+}
+
+
+================================================================================
+3. USERS
+================================================================================
+
+3.1 List Users
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/users/?page=1&page_size=20
+Auth:         Bearer Token
+
+Query Parameters:
+  Param        Type     Required   Description
+  page         int      No         Page number (default: 1)
+  page_size    int      No         Items per page (default: 20, max: 100)
+  status       string   No         Filter by status (e.g. "Active")
+  department   string   No         Filter by department
+  search       string   No         Search by name/email
+
+Success Response (200):
+{
+  "data": [
+    {
+      "user_id": 1,
+      "user_name": "Admin User",
+      "email": "admin@example.com",
+      "phone": null,
+      "department": "IT",
+      "job_title": "System Administrator",
+      "location": "HQ",
+      "profile_picture": null,
+      "status": "Active",
+      "two_factor_enabled": false,
+      "api_access_enabled": true,
+      "last_login": 1714400000,
+      "created_time": 1700000000,
+      "updated_time": 1714400000,
+      "roles": ["Admin"],
+      "permissions": ["can_manage_users", "can_manage_clients"]
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "page_size": 20
+}
+
+
+3.2 Create User
+--------------------------------------------------------------------------------
+Method:       POST
+URL:          /api/v1/users/
+Auth:         Bearer Token (requires can_manage_users permission)
+Content-Type: application/json
+
+Request Body:
+{
+  "user_name": "John Doe",
+  "email": "john.doe@example.com",
+  "password": "SecurePass@123",
+  "phone": "+1234567890",
+  "department": "Audit",
+  "job_title": "Auditor",
+  "location": "New York",
+  "role_ids": [2]
+}
+
+Field Constraints:
+  Field             Type      Required   Constraints
+  user_name         string    Yes        1-255 chars
+  email             string    Yes        max 255 chars
+  password          string    Yes        10-128 chars, 1 upper, 1 lower, 1 digit, 1 special
+  phone             string    No         max 50 chars
+  department        string    No         max 100 chars
+  job_title         string    No         max 100 chars
+  location          string    No         max 255 chars
+  profile_picture   string    No         max 500 chars
+  role_ids          int[]     No         Array of role IDs
+
+Success Response (201):
+{
+  "user_id": 2,
+  "user_name": "John Doe",
+  "email": "john.doe@example.com",
+  "phone": "+1234567890",
+  "department": "Audit",
+  "job_title": "Auditor",
+  "location": "New York",
+  "profile_picture": null,
+  "status": "Active",
+  "two_factor_enabled": false,
+  "api_access_enabled": false,
+  "last_login": null,
+  "created_time": 1714400000,
+  "updated_time": 1714400000,
+  "roles": ["Auditor"],
+  "permissions": ["can_upload"]
+}
+
+
+3.3 Get User Stats
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/users/get-user-stats
+Auth:         Bearer Token (requires can_manage_users permission)
+
+Success Response (200):
+{
+  "by_status": {
+    "Active": 10,
+    "Inactive": 2,
+    "Suspended": 1
+  },
+  "two_factor_enabled_count": 3
+}
+
+
+3.4 Get User by ID
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/users/get-user?user_id={user_id}
+Auth:         Bearer Token
+
+Success Response (200):
+{
+  "user_id": 2,
+  "user_name": "John Doe",
+  "email": "john.doe@example.com",
+  "phone": "+1234567890",
+  "department": "Audit",
+  "job_title": "Auditor",
+  "location": "New York",
+  "profile_picture": null,
+  "status": "Active",
+  "two_factor_enabled": false,
+  "api_access_enabled": false,
+  "last_login": null,
+  "created_time": 1714400000,
+  "updated_time": 1714400000,
+  "roles": ["Auditor"],
+  "permissions": ["can_upload"]
+}
+
+
+3.5 Update User
+--------------------------------------------------------------------------------
+Method:       PUT
+URL:          /api/v1/users/get-user?user_id={user_id}
+Auth:         Bearer Token
+Content-Type: application/json
+
+Request Body (non-admin):
+{
+  "user_name": "John Doe Updated",
+  "phone": "+0987654321",
+  "department": "Internal Audit",
+  "job_title": "Senior Auditor",
+  "location": "Boston"
+}
+
+Request Body (admin - additional fields):
+{
+  "user_name": "John Doe Updated",
+  "phone": "+0987654321",
+  "department": "Internal Audit",
+  "job_title": "Senior Auditor",
+  "location": "Boston",
+  "email": "john.updated@example.com",
+  "status": "Inactive"
+}
+
+Field Constraints:
+  Field             Type     Required   Admin Only
+  user_name         string   No         No
+  phone             string   No         No
+  department        string   No         No
+  job_title         string   No         No
+  location          string   No         No
+  profile_picture   string   No         No
+  email             string   No         Yes
+  status            string   No         Yes
+
+Success Response (200):
+{
+  "user_id": 2,
+  "user_name": "John Doe Updated",
+  "email": "john.doe@example.com",
+  "phone": "+0987654321",
+  "department": "Internal Audit",
+  "job_title": "Senior Auditor",
+  "location": "Boston",
+  "profile_picture": null,
+  "status": "Active",
+  "two_factor_enabled": false,
+  "api_access_enabled": false,
+  "last_login": null,
+  "created_time": 1714400000,
+  "updated_time": 1714401000,
+  "roles": ["Auditor"],
+  "permissions": ["can_upload"]
+}
+
+
+3.6 Update User Roles
+--------------------------------------------------------------------------------
+Method:       PUT
+URL:          /api/v1/users/get-user?user_id={user_id}/update-user-roles
+Auth:         Bearer Token (requires can_manage_users permission)
+Content-Type: application/json
+
+Request Body:
+{
+  "role_ids": [1, 2]
+}
+
+Success Response (200):
+{
+  "user_id": 2,
+  "user_name": "John Doe",
+  "email": "john.doe@example.com",
+  "phone": "+1234567890",
+  "department": "Audit",
+  "job_title": "Auditor",
+  "location": "New York",
+  "profile_picture": null,
+  "status": "Active",
+  "two_factor_enabled": false,
+  "api_access_enabled": false,
+  "last_login": null,
+  "created_time": 1714400000,
+  "updated_time": 1714401000,
+  "roles": ["Admin", "Auditor"],
+  "permissions": ["can_manage_users", "can_manage_clients", "can_upload"]
+}
+
+
+3.7 Delete User (Soft Delete)
+--------------------------------------------------------------------------------
+Method:       DELETE
+URL:          /api/v1/users/get-user?user_id={user_id}
+Auth:         Bearer Token (requires can_manage_users permission)
+
+Success Response (200):
+{
+  "user_id": 2,
+  "user_name": "John Doe",
+  "email": "john.doe@example.com",
+  "phone": "+1234567890",
+  "department": "Audit",
+  "job_title": "Auditor",
+  "location": "New York",
+  "profile_picture": null,
+  "status": "Inactive",
+  "two_factor_enabled": false,
+  "api_access_enabled": false,
+  "last_login": null,
+  "created_time": 1714400000,
+  "updated_time": 1714401000,
+  "roles": ["Auditor"],
+  "permissions": ["can_upload"]
+}
+
+
+================================================================================
+4. CLIENTS
+================================================================================
+
+4.1 List Clients
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/clients/?page=1&page_size=20
+Auth:         Bearer Token
+
+Query Parameters:
+  Param        Type   Required   Description
+  page         int    No         Page number (default: 1)
+  page_size    int    No         Items per page (default: 20, max: 100)
+
+Success Response (200):
+{
+  "data": [
+    {
+      "client_id": 1,
+      "client_code": "ACME-001",
+      "client_name": "Acme Corporation",
+      "definition_scope": "Full audit scope covering all financial controls",
+      "reference_documents": "SOX 2024, Internal Audit Charter",
+      "compliance_framework": "SOX",
+      "created_time": 1700000000,
+      "updated_time": 1700000000
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "page_size": 20
+}
+
+
+4.2 Create Client
+--------------------------------------------------------------------------------
+Method:       POST
+URL:          /api/v1/clients/
+Auth:         Bearer Token (requires can_manage_clients permission)
+Content-Type: application/json
+
+Request Body:
+{
+  "client_code": "ACME-001",
+  "client_name": "Acme Corporation",
+  "definition_scope": "Full audit scope covering all financial controls",
+  "reference_documents": "SOX 2024, Internal Audit Charter",
+  "compliance_framework": "SOX"
+}
+
+Field Constraints:
+  Field                  Type     Required   Constraints
+  client_code            string   Yes        max 255 chars
+  client_name            string   Yes        max 255 chars
+  definition_scope       string   Yes        -
+  reference_documents    string   Yes        -
+  compliance_framework   string   No         max 255 chars
+
+Success Response (201):
+{
+  "client_id": 1,
+  "client_code": "ACME-001",
+  "client_name": "Acme Corporation",
+  "definition_scope": "Full audit scope covering all financial controls",
+  "reference_documents": "SOX 2024, Internal Audit Charter",
+  "compliance_framework": "SOX",
+  "created_time": 1700000000,
+  "updated_time": 1700000000
+}
+
+
+4.3 Get Client by ID
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/clients/get-client?client_id={client_id}
+Auth:         Bearer Token
+
+Success Response (200):
+{
+  "client_id": 1,
+  "client_code": "ACME-001",
+  "client_name": "Acme Corporation",
+  "definition_scope": "Full audit scope covering all financial controls",
+  "reference_documents": "SOX 2024, Internal Audit Charter",
+  "compliance_framework": "SOX",
+  "created_time": 1700000000,
+  "updated_time": 1700000000
+}
+
+
+4.4 Update Client
+--------------------------------------------------------------------------------
+Method:       PUT
+URL:          /api/v1/clients/get-client?client_id={client_id}
+Auth:         Bearer Token (requires can_manage_clients permission)
+Content-Type: application/json
+
+Request Body (all fields optional, only provided fields are updated):
+{
+  "client_name": "Acme Corp Updated",
+  "compliance_framework": "SOX + COSO"
+}
+
+Success Response (200):
+{
+  "client_id": 1,
+  "client_code": "ACME-001",
+  "client_name": "Acme Corp Updated",
+  "definition_scope": "Full audit scope covering all financial controls",
+  "reference_documents": "SOX 2024, Internal Audit Charter",
+  "compliance_framework": "SOX + COSO",
+  "created_time": 1700000000,
+  "updated_time": 1714401000
+}
+
+
+4.5 Delete Client
+--------------------------------------------------------------------------------
+Method:       DELETE
+URL:          /api/v1/clients/get-client?client_id={client_id}
+Auth:         Bearer Token (requires can_manage_clients permission)
+
+Success Response (204): No content.
+
+
+================================================================================
+5. VERSIONS
+================================================================================
+
+5.1 List Versions
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/versions/?page=1&page_size=20
+Auth:         Bearer Token
+
+Query Parameters:
+  Param        Type   Required   Description
+  page         int    No         Page number (default: 1)
+  page_size    int    No         Items per page (default: 20, max: 100)
+
+Success Response (200):
+{
+  "data": [
+    {
+      "version_id": 1,
+      "version_name": "v1.0",
+      "released_at": 1700000000,
+      "is_current": true,
+      "description": "Initial control framework",
+      "created_time": 1700000000,
+      "updated_time": 1700000000
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "page_size": 20
+}
+
+
+5.2 Get Current Version
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/versions/get-current-version
+Auth:         Bearer Token
+
+Success Response (200):
+{
+  "version_id": 1,
+  "version_name": "v1.0",
+  "released_at": 1700000000,
+  "is_current": true,
+  "description": "Initial control framework",
+  "created_time": 1700000000,
+  "updated_time": 1700000000
+}
+
+
+5.3 Create Version
+--------------------------------------------------------------------------------
+Method:       POST
+URL:          /api/v1/versions/
+Auth:         Bearer Token (requires Admin role)
+Content-Type: application/json
+
+Request Body:
+{
+  "version_name": "v2.0",
+  "released_at": 1700000000,
+  "is_current": false,
+  "description": "Version 2.0 control framework update"
+}
+
+Field Constraints:
+  Field          Type     Required   Constraints
+  version_name   string   No         max 255 chars
+  released_at    int      No         Unix timestamp
+  is_current     bool     No         default: false
+  description    string   No         -
+
+Success Response (201):
+{
+  "version_id": 2,
+  "version_name": "v2.0",
+  "released_at": 1700000000,
+  "is_current": false,
+  "description": "Version 2.0 control framework update",
+  "created_time": 1714400000,
+  "updated_time": 1714400000
+}
+
+
+5.4 Get Version by ID
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/versions/get-version?version_id={version_id}
+Auth:         Bearer Token
+
+Success Response (200):
+{
+  "version_id": 1,
+  "version_name": "v1.0",
+  "released_at": 1700000000,
+  "is_current": true,
+  "description": "Initial control framework",
+  "created_time": 1700000000,
+  "updated_time": 1700000000
+}
+
+
+5.5 Update Version
+--------------------------------------------------------------------------------
+Method:       PUT
+URL:          /api/v1/versions/get-version?version_id={version_id}
+Auth:         Bearer Token (requires Admin role)
+Content-Type: application/json
+
+Request Body:
+{
+  "version_name": "v2.0.1",
+  "is_current": true,
+  "description": "Updated to current version"
+}
+
+Success Response (200):
+{
+  "version_id": 2,
+  "version_name": "v2.0.1",
+  "released_at": 1700000000,
+  "is_current": true,
+  "description": "Updated to current version",
+  "created_time": 1714400000,
+  "updated_time": 1714401000
+}
+
+
+================================================================================
+6. CONTROLS (READ-ONLY CATALOG)
+================================================================================
+
+6.1 List Controls
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/controls/?page=1&page_size=20
+Auth:         Bearer Token
+
+Query Parameters:
+  Param        Type     Required   Description
+  page         int      No         Page number (default: 1)
+  page_size    int      No         Items per page (default: 20, max: 100)
+  domain       string   No         Filter by domain
+  risk_level   string   No         Filter by risk level
+  frequency    string   No         Filter by frequency
+  framework    string   No         Filter by framework
+  status       string   No         Filter by status
+  search       string   No         Search by name/number/description
+
+Success Response (200):
+{
+  "data": [
+    {
+      "control_id": 1,
+      "control_number": "CTL-001",
+      "version_id": 1,
+      "control_name": "Access Control Review",
+      "reference_number": "SOX-AC-001",
+      "entity": "Finance",
+      "control_desc": "Quarterly review of user access rights to financial systems",
+      "domain": "Access Management",
+      "status": "Active",
+      "frequency": "Quarterly",
+      "risk_level": "High",
+      "pwc_reliance": "Yes",
+      "control_owner": 1,
+      "owner_name": "Admin User",
+      "units_fccg_contact": 2,
+      "fccg_contact_name": "John Doe",
+      "frameworks": ["SOX", "COSO"],
+      "created_time": 1700000000,
+      "updated_time": 1700000000
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "page_size": 20
+}
+
+
+6.2 Get Control by ID
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/controls/get-control?control_id={control_id}
+Auth:         Bearer Token
+
+Success Response (200):
+{
+  "control_id": 1,
+  "control_number": "CTL-001",
+  "version_id": 1,
+  "control_name": "Access Control Review",
+  "reference_number": "SOX-AC-001",
+  "entity": "Finance",
+  "control_desc": "Quarterly review of user access rights to financial systems",
+  "domain": "Access Management",
+  "status": "Active",
+  "frequency": "Quarterly",
+  "risk_level": "High",
+  "pwc_reliance": "Yes",
+  "control_owner": 1,
+  "owner_name": "Admin User",
+  "units_fccg_contact": 2,
+  "fccg_contact_name": "John Doe",
+  "frameworks": ["SOX", "COSO"],
+  "created_time": 1700000000,
+  "updated_time": 1700000000
+}
+
+
+6.3 Get Control Changelog
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/controls/get-control-changelog?control_id={control_id}
+Auth:         Bearer Token
+
+Success Response (200):
+[
+  {
+    "change_id": 1,
+    "control_id": 1,
+    "changed_by": 1,
+    "changer_name": "Admin User",
+    "from_version": null,
+    "from_version_name": null,
+    "to_version": 1,
+    "to_version_name": "v1.0",
+    "change_type": "Created",
+    "change_timestamp": 1700000000,
+    "new_control_name": "Access Control Review",
+    "new_control_desc": "Quarterly review of user access rights",
+    "change_percentage": null,
+    "is_archived": false,
+    "note": "Initial creation",
+    "created_time": 1700000000,
+    "updated_time": 1700000000
+  }
+]
+
+
+================================================================================
+7. CONTROL TESTS
+================================================================================
+
+7.1 Update Control Test
+--------------------------------------------------------------------------------
+Method:       PUT
+URL:          /api/v1/control-tests/update-test?test_id={test_id}
+Auth:         Bearer Token
+Content-Type: application/json
+
+Request Body:
+{
+  "tests": "Verified control execution for Q4 2024",
+  "note": "All samples passed",
+  "comments": "No exceptions noted"
+}
+
+Field Constraints:
+  Field      Type     Required
+  tests      string   No
+  note       string   No
+  comments   string   No
+
+Success Response (200):
+{
+  "test_id": 1,
+  "config_control_id": 1,
+  "tests": "Verified control execution for Q4 2024",
+  "note": "All samples passed",
+  "comments": "No exceptions noted",
+  "created_time": 1700000000,
+  "updated_time": 1714401000
+}
+
+
+================================================================================
+8. REVIEW CYCLES
+================================================================================
+
+8.1 List Review Cycles
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/review-cycles/?page=1&page_size=20
+Auth:         Bearer Token
+
+Query Parameters:
+  Param        Type     Required   Description
+  page         int      No         Page number (default: 1)
+  page_size    int      No         Items per page (default: 20, max: 100)
+  client_id    int      No         Filter by client
+  status       string   No         Filter by status
+
+Success Response (200):
+{
+  "data": [
+    {
+      "cycle_id": 1,
+      "client_id": 1,
+      "project_lead": 1,
+      "lead_name": "Admin User",
+      "review_period": "Q1 2025",
+      "name": "Q1 2025 SOX Review",
+      "audit_type": "SOX",
+      "priority": "High",
+      "framework": "COSO",
+      "start_date": 1704067200,
+      "due_date": 1711929600,
+      "end_date": null,
+      "status": "Planning",
+      "score": null,
+      "overview": "Quarterly SOX compliance review",
+      "description": "Full review of financial controls for Q1 2025",
+      "created_time": 1700000000,
+      "updated_time": 1700000000
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "page_size": 20
+}
+
+
+8.2 Create Review Cycle
+--------------------------------------------------------------------------------
+Method:       POST
+URL:          /api/v1/review-cycles/
+Auth:         Bearer Token (requires can_manage_cycles permission)
+Content-Type: application/json
+
+Request Body:
+{
+  "client_id": 1,
+  "project_lead": 1,
+  "review_period": "Q1 2025",
+  "name": "Q1 2025 SOX Review",
+  "audit_type": "SOX",
+  "priority": "High",
+  "framework": "COSO",
+  "start_date": 1704067200,
+  "due_date": 1711929600,
+  "overview": "Quarterly SOX compliance review",
+  "description": "Full review of financial controls for Q1 2025"
+}
+
+Field Constraints:
+  Field           Type     Required   Constraints
+  client_id       int      Yes        -
+  project_lead    int      No         User ID
+  review_period   string   Yes        max 50 chars
+  name            string   Yes        max 255 chars
+  audit_type      string   No         max 100 chars
+  priority        string   No         max 20 chars
+  framework       string   No         max 100 chars
+  start_date      int      Yes        Unix timestamp
+  due_date        int      Yes        Unix timestamp
+  overview        string   No         -
+  description     string   No         -
+
+Success Response (201):
+{
+  "cycle_id": 1,
+  "client_id": 1,
+  "project_lead": 1,
+  "lead_name": "Admin User",
+  "review_period": "Q1 2025",
+  "name": "Q1 2025 SOX Review",
+  "audit_type": "SOX",
+  "priority": "High",
+  "framework": "COSO",
+  "start_date": 1704067200,
+  "due_date": 1711929600,
+  "end_date": null,
+  "status": "Planning",
+  "score": null,
+  "overview": "Quarterly SOX compliance review",
+  "description": "Full review of financial controls for Q1 2025",
+  "created_time": 1714400000,
+  "updated_time": 1714400000
+}
+
+
+8.3 Get Review Cycle by ID
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}
+Auth:         Bearer Token
+
+Success Response (200): Same shape as the object in Create response above.
+
+
+8.4 Update Review Cycle
+--------------------------------------------------------------------------------
+Method:       PUT
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}
+Auth:         Bearer Token (requires can_manage_cycles permission)
+Content-Type: application/json
+
+Request Body:
+{
+  "name": "Q1 2025 SOX Review - Updated",
+  "status": "In Progress",
+  "priority": "Critical"
+}
+
+Field Constraints (all optional):
+  Field           Type      Required
+  project_lead    int       No
+  review_period   string    No
+  name            string    No
+  audit_type      string    No
+  priority        string    No
+  framework       string    No
+  start_date      int       No
+  due_date        int       No
+  end_date        int       No
+  status          string    No
+  score           decimal   No
+  overview        string    No
+  description     string    No
+
+Success Response (200): Full ReviewCycleOut object with updated fields.
+
+
+8.5 Delete Review Cycle
+--------------------------------------------------------------------------------
+Method:       DELETE
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}
+Auth:         Bearer Token (requires can_manage_cycles permission)
+
+Success Response (204): No content.
+
+
+8.6 Get Cycle Stats
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/review-cycles/get-cycle-stats?cycle_id={cycle_id}
+Auth:         Bearer Token
+
+Success Response (200):
+{
+  "controls_tested_pct": 75.0,
+  "evidence_count": 12,
+  "days_remaining": 45
+}
+
+
+8.7 Get Cycle Team
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}/list-team-members
+Auth:         Bearer Token
+
+Success Response (200):
+[
+  {
+    "user_id": 2,
+    "user_name": "John Doe",
+    "email": "john.doe@example.com",
+    "profile_picture": null,
+    "job_title": "Auditor",
+    "team_role": "Auditor",
+    "role_name": "Auditor"
+  }
+]
+
+
+8.8 Add Team Member
+--------------------------------------------------------------------------------
+Method:       POST
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}/list-team-members
+Auth:         Bearer Token (requires can_assign_team permission)
+Content-Type: application/json
+
+Request Body:
+{
+  "user_id": 2,
+  "team_role": "Auditor"
+}
+
+Success Response (201):
+{
+  "user_id": 2,
+  "user_name": "John Doe",
+  "email": "john.doe@example.com",
+  "profile_picture": null,
+  "job_title": "Auditor",
+  "team_role": "Auditor",
+  "role_name": "Auditor"
+}
+
+
+8.9 Bulk Add Team Members
+--------------------------------------------------------------------------------
+Method:       POST
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}/add-team-members-bulk
+Auth:         Bearer Token (requires can_assign_team permission)
+Content-Type: application/json
+
+Request Body:
+{
+  "members": [
+    {"user_id": 2, "team_role": "Auditor"},
+    {"user_id": 3, "team_role": "Reviewer"}
+  ]
+}
+
+Success Response (201):
+[
+  {
+    "user_id": 2,
+    "user_name": "John Doe",
+    "email": "john.doe@example.com",
+    "profile_picture": null,
+    "job_title": "Auditor",
+    "team_role": "Auditor",
+    "role_name": "Auditor"
+  },
+  {
+    "user_id": 3,
+    "user_name": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "profile_picture": null,
+    "job_title": "Reviewer",
+    "team_role": "Reviewer",
+    "role_name": "Moderator"
+  }
+]
+
+
+8.10 Update Team Member Role
+--------------------------------------------------------------------------------
+Method:       PUT
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}/update-team-member?user_id={user_id}
+Auth:         Bearer Token (requires can_assign_team permission)
+Content-Type: application/json
+
+Request Body:
+{
+  "team_role": "Lead Auditor"
+}
+
+Success Response (200):
+{
+  "user_id": 2,
+  "user_name": "John Doe",
+  "email": "john.doe@example.com",
+  "profile_picture": null,
+  "job_title": "Auditor",
+  "team_role": "Lead Auditor",
+  "role_name": "Auditor"
+}
+
+
+8.11 Remove Team Member
+--------------------------------------------------------------------------------
+Method:       DELETE
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}/update-team-member?user_id={user_id}
+Auth:         Bearer Token (requires can_assign_team permission)
+
+Success Response (204): No content.
+
+
+8.12 Get Cycle Controls
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}/list-controls
+Auth:         Bearer Token (requires engagement membership)
+
+Success Response (200):
+[
+  {
+    "config_control_id": 1,
+    "cycle_id": 1,
+    "control_id": 1,
+    "control_number": "CTL-001",
+    "control_name": "Access Control Review",
+    "domain": "Access Management",
+    "risk_level": "High",
+    "frequency": "Quarterly",
+    "status": "Active",
+    "test_id": 1,
+    "tests": null,
+    "note": null,
+    "comments": null,
+    "created_time": 1700000000,
+    "updated_time": 1700000000
+  }
+]
+
+
+8.13 Attach Control to Cycle
+--------------------------------------------------------------------------------
+Method:       POST
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}/list-controls
+Auth:         Bearer Token (requires can_manage_controls permission)
+Content-Type: application/json
+
+Request Body:
+{
+  "control_id": 1
+}
+
+Success Response (201):
+{
+  "config_control_id": 1,
+  "cycle_id": 1,
+  "control_id": 1,
+  "control_number": "CTL-001",
+  "control_name": "Access Control Review",
+  "domain": "Access Management",
+  "risk_level": "High",
+  "frequency": "Quarterly",
+  "status": "Active",
+  "test_id": 1,
+  "tests": null,
+  "note": null,
+  "comments": null,
+  "created_time": 1714400000,
+  "updated_time": 1714400000
+}
+
+
+8.14 Bulk Attach Controls
+--------------------------------------------------------------------------------
+Method:       POST
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}/add-controls-bulk
+Auth:         Bearer Token (requires can_manage_controls permission)
+Content-Type: application/json
+
+Request Body:
+{
+  "control_ids": [1, 2, 3]
+}
+
+Success Response (201):
+[
+  {
+    "config_control_id": 1,
+    "cycle_id": 1,
+    "control_id": 1,
+    "control_number": "CTL-001",
+    "control_name": "Access Control Review",
+    "domain": "Access Management",
+    "risk_level": "High",
+    "frequency": "Quarterly",
+    "status": "Active",
+    "test_id": 1,
+    "tests": null,
+    "note": null,
+    "comments": null,
+    "created_time": 1714400000,
+    "updated_time": 1714400000
+  }
+]
+
+
+8.15 Detach Control from Cycle
+--------------------------------------------------------------------------------
+Method:       DELETE
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}/remove-control?control_id={control_id}
+Auth:         Bearer Token (requires can_manage_controls permission)
+
+Success Response (204): No content.
+
+
+8.16 Get Cycle Test Logs
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}/list-test-logs
+Auth:         Bearer Token (requires engagement membership)
+
+Success Response (200):
+[
+  {
+    "log_id": 1,
+    "test_id": 1,
+    "control_id": 1,
+    "control_number": "CTL-001",
+    "control_name": "Access Control Review",
+    "cycle_id": 1,
+    "log_date": 1714400000,
+    "changed_by": 1,
+    "tested_by": "Admin User",
+    "status": "Passed",
+    "execution_time_seconds": 3600,
+    "report_link": "https://reports.example.com/test-001",
+    "notes": "All test cases passed successfully",
+    "created_time": 1714400000,
+    "updated_time": 1714400000
+  }
+]
+
+
+8.17 Get Cycle Evidence
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/review-cycles/get-cycle?cycle_id={cycle_id}/list-evidence
+Auth:         Bearer Token (requires engagement membership)
+
+Success Response (200):
+[
+  {
+    "evidence_id": 1,
+    "file_name": "access_review_q1.pdf",
+    "file_type": "application/pdf",
+    "file_size": 204800,
+    "file_path": "evidence/2025/access_review_q1.pdf",
+    "upload_date": 1714400000,
+    "uploaded_by": 1,
+    "uploader_name": "Admin User",
+    "cycle_id": 1,
+    "engagement_name": "Q1 2025 SOX Review",
+    "control_id": 1,
+    "control_name": "Access Control Review",
+    "test_id": null,
+    "status": "Pending",
+    "comments": "Uploaded via Postman",
+    "file_version": 1,
+    "created_time": 1714400000,
+    "updated_time": 1714400000
+  }
+]
+
+
+================================================================================
+9. EVIDENCE
+================================================================================
+
+9.1 List Evidence
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/evidence/?page=1&page_size=20
+Auth:         Bearer Token
+
+Query Parameters:
+  Param         Type     Required   Description
+  page          int      No         Page number (default: 1)
+  page_size     int      No         Items per page (default: 20, max: 100)
+  cycle_id      int      No         Filter by cycle
+  control_id    int      No         Filter by control
+  uploaded_by   int      No         Filter by uploader user ID
+  file_type     string   No         Filter by MIME type
+  status        string   No         Filter by status
+  search        string   No         Search by file name
+
+Success Response (200):
+{
+  "data": [
+    {
+      "evidence_id": 1,
+      "file_name": "access_review_q1.pdf",
+      "file_type": "application/pdf",
+      "file_size": 204800,
+      "file_path": "evidence/2025/access_review_q1.pdf",
+      "upload_date": 1714400000,
+      "uploaded_by": 1,
+      "uploader_name": "Admin User",
+      "cycle_id": 1,
+      "engagement_name": "Q1 2025 SOX Review",
+      "control_id": 1,
+      "control_name": "Access Control Review",
+      "test_id": null,
+      "status": "Pending",
+      "comments": "Uploaded via Postman",
+      "file_version": 1,
+      "created_time": 1714400000,
+      "updated_time": 1714400000
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "page_size": 20
+}
+
+
+9.2 Get Evidence Stats
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/evidence/get-evidence-stats
+Auth:         Bearer Token
+
+Success Response (200):
+{
+  "total_count": 25,
+  "total_size": 52428800,
+  "by_file_type": {
+    "application/pdf": {"count": 15, "size": 31457280},
+    "image/png": {"count": 10, "size": 20971520}
+  },
+  "by_status": {
+    "Pending": 10,
+    "Approved": 12,
+    "Rejected": 3
+  }
+}
+
+
+9.3 Get Evidence Vault
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/evidence/get-evidence-vault
+Auth:         Bearer Token
+
+Success Response (200):
+[
+  {
+    "cycle_id": 1,
+    "engagement_name": "Q1 2025 SOX Review",
+    "evidence_count": 12
+  },
+  {
+    "cycle_id": 2,
+    "engagement_name": "Q2 2025 SOX Review",
+    "evidence_count": 5
+  }
+]
+
+
+9.4 Upload Evidence
+--------------------------------------------------------------------------------
+Method:       POST
+URL:          /api/v1/evidence/upload-evidence
+Auth:         Bearer Token (requires can_upload permission)
+Content-Type: multipart/form-data
+
+Request Body (form-data):
+  Field        Type     Required   Description
+  file         file     Yes        The file to upload
+  cycle_id     int      No*        Review cycle to link to
+  control_id   int      No*        Control to link to
+  test_id      int      No*        Test to link to
+  comments     string   No         Comments about the evidence
+
+  * At least one of cycle_id, control_id, or test_id must be provided.
+
+Success Response (201):
+{
+  "evidence_id": 1,
+  "file_name": "access_review_q1.pdf",
+  "file_type": "application/pdf",
+  "file_size": 204800,
+  "file_path": "evidence/2025/access_review_q1.pdf",
+  "upload_date": 1714400000,
+  "uploaded_by": 1,
+  "uploader_name": "Admin User",
+  "cycle_id": 1,
+  "engagement_name": "Q1 2025 SOX Review",
+  "control_id": null,
+  "control_name": null,
+  "test_id": null,
+  "status": "Pending",
+  "comments": "Uploaded via Postman",
+  "file_version": 1,
+  "created_time": 1714400000,
+  "updated_time": 1714400000
+}
+
+
+9.5 Get Evidence by ID
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/evidence/get-evidence?evidence_id={evidence_id}
+Auth:         Bearer Token
+
+Success Response (200): Same shape as EvidenceOut above.
+
+
+9.6 Update Evidence
+--------------------------------------------------------------------------------
+Method:       PUT
+URL:          /api/v1/evidence/get-evidence?evidence_id={evidence_id}
+Auth:         Bearer Token
+Content-Type: application/json
+
+Request Body:
+{
+  "comments": "Updated evidence metadata",
+  "cycle_id": 1,
+  "control_id": 1
+}
+
+Field Constraints:
+  Field        Type     Required
+  comments     string   No
+  cycle_id     int      No
+  control_id   int      No
+  test_id      int      No
+
+Success Response (200): Full EvidenceOut object with updated fields.
+
+
+9.7 Re-upload Evidence
+--------------------------------------------------------------------------------
+Method:       PUT
+URL:          /api/v1/evidence/reupload-evidence?evidence_id={evidence_id}
+Auth:         Bearer Token (requires can_upload permission)
+Content-Type: multipart/form-data
+
+Request Body (form-data):
+  Field   Type   Required   Description
+  file    file   Yes        Replacement file
+
+Success Response (200):
+{
+  "evidence_id": 1,
+  "file_name": "access_review_q1_v2.pdf",
+  "file_type": "application/pdf",
+  "file_size": 215040,
+  "file_path": "evidence/2025/access_review_q1_v2.pdf",
+  "upload_date": 1714400000,
+  "uploaded_by": 1,
+  "uploader_name": "Admin User",
+  "cycle_id": 1,
+  "engagement_name": "Q1 2025 SOX Review",
+  "control_id": null,
+  "control_name": null,
+  "test_id": null,
+  "status": "Pending",
+  "comments": "Uploaded via Postman",
+  "file_version": 2,
+  "created_time": 1714400000,
+  "updated_time": 1714401000
+}
+
+
+9.8 Approve Evidence
+--------------------------------------------------------------------------------
+Method:       PUT
+URL:          /api/v1/evidence/update-evidence-status?evidence_id={evidence_id}
+Auth:         Bearer Token (requires can_approve permission)
+Content-Type: application/json
+
+Request Body:
+{
+  "status": "Approved",
+  "comments": "Evidence verified and approved"
+}
+
+Field Constraints:
+  Field      Type     Required   Constraints
+  status     string   Yes        Must be "Approved" or "Rejected"
+  comments   string   No         -
+
+Success Response (200): Full EvidenceOut with "status": "Approved".
+
+
+9.9 Reject Evidence
+--------------------------------------------------------------------------------
+Method:       PUT
+URL:          /api/v1/evidence/update-evidence-status?evidence_id={evidence_id}
+Auth:         Bearer Token (requires can_reject permission)
+Content-Type: application/json
+
+Request Body:
+{
+  "status": "Rejected",
+  "comments": "Insufficient documentation"
+}
+
+Success Response (200): Full EvidenceOut with "status": "Rejected".
+
+
+9.10 Delete Evidence
+--------------------------------------------------------------------------------
+Method:       DELETE
+URL:          /api/v1/evidence/get-evidence?evidence_id={evidence_id}
+Auth:         Bearer Token
+
+Success Response (204): No content.
+
+
+9.11 Download Evidence
+--------------------------------------------------------------------------------
+Method:       GET
+URL:          /api/v1/evidence/download-evidence?evidence_id={evidence_id}
+Auth:         Bearer Token
+
+Success Response (200):
+{
+  "url": "https://storageaccount.blob.core.windows.net/evidence/file.pdf?sv=2023-01-03&se=..."
+}
+
+Note: Returns a time-limited SAS URL for downloading the file from Azure Blob Storage.
+
+
+================================================================================
+10. TEST LOGS
+================================================================================
+
+10.1 Create Test Log
+--------------------------------------------------------------------------------
+Method:       POST
+URL:          /api/v1/test-logs/
+Auth:         Bearer Token
+Content-Type: application/json
+
+Request Body:
+{
+  "test_id": 1,
+  "control_id": 1,
+  "cycle_id": 1,
+  "status": "Passed",
+  "execution_time_seconds": 3600,
+  "report_link": "https://reports.example.com/test-001",
+  "notes": "All test cases passed successfully"
+}
+
+Field Constraints:
+  Field                    Type     Required   Constraints
+  test_id                  int      No*        -
+  control_id               int      No*        -
+  cycle_id                 int      No*        -
+  log_date                 int      No         Unix timestamp (auto-set if omitted)
+  status                   string   Yes        max 50 chars (e.g. "Passed", "Failed")
+  execution_time_seconds   int      No         Duration in seconds
+  report_link              string   No         max 255 chars
+  notes                    string   No         -
+
+  * At least one of test_id, control_id, or cycle_id must be provided.
+
+Success Response (201):
+{
+  "log_id": 1,
+  "test_id": 1,
+  "control_id": 1,
+  "control_number": "CTL-001",
+  "control_name": "Access Control Review",
+  "cycle_id": 1,
+  "log_date": 1714400000,
+  "changed_by": 1,
+  "tested_by": "Admin User",
+  "status": "Passed",
+  "execution_time_seconds": 3600,
+  "report_link": "https://reports.example.com/test-001",
+  "notes": "All test cases passed successfully",
+  "created_time": 1714400000,
+  "updated_time": 1714400000
+}

@@ -1,0 +1,122 @@
+{
+  "_id": {
+    "$oid": "67224254c088dea0dfa75c61"
+  },
+  "alias": "CTRL0020293_Monthly",
+  "control_number": "CTRL0020293",
+  "control_name": "Review of Fixed Assets Gains/Losses",
+  "reference_number": "CPX009-001",
+  "entity": "GFS KL Back Office R2R (UK Hub)",
+  "control_desc": "\"WHAT & WHY : \nA reconciliation between the gain/loss on retirement per the Asset Retirement Report and the gain/loss on disposal per GL Account 76210500 and 76210510 is performed by the GFS Fixed Assets team to ensure that they are completely and accurately recorded. Differences identified will need to be investigated and resolved. The reconciliation is reviewed and approved by the  GFS Fixed Assets Team Lead or delegate.\n\nHOW: \nExtract S_ALR_87012052 Asset Retirement Report from the Fixed Assets sub ledger for the month. Next, extract the Gain/Loss on Disposal from GL Account 76210500 and 76210510 using FBL3N. Perform a reconciliation and ensure that they are the same. Differences identified will need to be investigated and explained. The GFS Fixed Assets Team Lead or delegate is required to approve this reconciliation by WD+4.\n\nWHEN: \nMonthly\"\n",
+  "frequency_of": "Monthly",
+  "risk_level": "High",
+  "pwc_reliance": "Yes",
+  "control_owner": "Dinyati, Nor Hana",
+  "unit_fccg_contact": "Agnes",
+  "validations": [
+    {
+      "test_id":160,
+      "validation_name": "IPE validation 1",
+      "validation_desc": "In 293&292_IPE1.jpg check if the values in these fields should be as follows:\n1) Charts of Accounts: SCOA\n2) GL Account No.: 76210500 & 76210510\n3) Company Code: UK10\n4) Financial Statement Version: ZFSG\n5) Reporting Year: 2024\n5) Reporting Period: 1 to 6\n6) Comparison Year: 2024\n7) Comparison Period: Period 1 to 5\n\n%\n526m_IPE7 \"ZFSG\" Validation: Validate the overall pricing report input parameters.\n%",
+      "validation": "ipe_validation_1",
+      "alias": "CTRL0020293_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224254c088dea0dfa75c59"
+      }
+    },
+    {
+      "test_id":161,
+      "validation_name": "IPE validation 2",
+      "validation_desc": "For screenshot3.jpg check:                               If it captures the total values reflecting at the end of the report.",
+      "validation": "ipe_validation_2",
+      "alias": "CTRL0020293_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224254c088dea0dfa75c5a"
+      }
+    },
+    {
+      "test_id":162,
+      "validation_name": "IPE validation 3",
+      "validation_desc": "For screenshot4.jpg and screenshot5.jpg check:                            Ensure that the screenshot captures the date and time stamp from the screen.                                                          Also check if these fields are filled:                               \nGL Account No.: 76210500 & 76210510(GL account impacting Asset Retirement from Trial Balance)\nCompany Code: UK10\nDocument Type (multiple selection for document type >> Exclude Single Values): AA (refer screenshot 5)\nOpen at Key Date: The date when the report is extracted\nPosting Date: The date range which is suppose to be tested\nLayout: /JV 2021",
+      "validation": "ipe_validation_3",
+      "alias": "CTRL0020293_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224254c088dea0dfa75c5b"
+      }
+    },
+    {
+      "test_id":163,
+      "validation_name": "IPE validation 4",
+      "validation_desc": "For screenshot6.jpg check:                               If it captures the total values reflecting at the end of the report.",
+      "validation": "ipe_validation_4",
+      "alias": "CTRL0020293_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224254c088dea0dfa75c5c"
+      }
+    },
+    {
+      "test_id":164,
+      "validation_name": "IPE validation 5",
+      "validation_desc": "For screenshot7.jpg check:                              1) Charts of Accounts: SCOA\n2) GL Account No.: 76210500 & 76210510 (GL account impacting Asset Retirement from Trial Balance)\n3) Company Code: UK10\n4) Financial Statement Version: ZFSG\n5) Language: EN\n6) Reporting Year: Year to be tested\n7) Reporting Period: Period \"from and to\" be tested\n8) Comparison Year: Year to be compared with\n9) Comparison Period: Period \"from and to\" be compared\n10) Layout: /GCS UK",
+      "validation": "ipe_validation_5",
+      "alias": "CTRL0020293_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224254c088dea0dfa75c5d"
+      }
+    },
+    {
+      "test_id":165,
+      "validation_name": "IPE validation 6",
+      "validation_desc": "For screenshot8.jpg check:                                      If it captures the total values reflecting at the end of the report.",
+      "validation": "ipe_validation_6",
+      "alias": "CTRL0020293_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224254c088dea0dfa75c5e"
+      }
+    },
+    {
+      "test_id":166,
+      "validation_name": "IPE validation 7",
+      "validation_desc": "For screenshot9.jpg check:                               Ensure that the screenshot captures the date and time stamp from the screen.                                                          Also check if these fields are filled:                               \nCompany Code: UK10\nReport Date: \"report to\" date\nDepreciation area: 01 (Ord. Deprec)\nSort Variant: 0021 (Co)mpany code / Eval.gr.2 / acct dete\nPosting Date: The date range which is suppose to be tested",
+      "validation": "ipe_validation_7",
+      "alias": "CTRL0020293_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224254c088dea0dfa75c5f"
+      }
+    },
+    {
+      "test_id":167,
+      "validation_name": "IPE validation 8",
+      "validation_desc": "For screenshot10.jpg check:                                      If it captures the total values reflecting at the end of the report.",
+      "validation": "ipe_validation_8",
+      "alias": "CTRL0020293_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224254c088dea0dfa75c60"
+      }
+    }
+  ]
+}

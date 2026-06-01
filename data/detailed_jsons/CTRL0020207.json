@@ -1,0 +1,56 @@
+{
+  "_id": {
+    "$oid": "6722425dc088dea0dfa75c75"
+  },
+  "alias": "CTRL0020207_Monthly",
+  "control_number": "CTRL0020207",
+  "control_name": "Resolution of failed iDOCs",
+  "reference_number": "CAB002-007",
+  "entity": "GFS Delhi Back Office P2P",
+  "control_desc": "WHAT & WHY: This is monthly detective control, to ensure that all failed Idocs have been resolved by WD+1, otherwise the impact assessment of unresolved Idocs, in scope, is completed with follow up actions addressed and communicated to AZ AP Sr. Manager for review if any further action recommended.\n\nHOW:\nOn WD+1, the P2P Senior Analyst reviews SAP transaction \"SBWP>>Inbox>>workflow>>Group according to Task>>Invoice Input error FI\" to verify if all IDoc files have been resolved, released from queue and based on that confirms on results to Finance Master Data team. In case of any unresolved failed Idocs (in scope) by WD+1, Genpact will complete impact assessment template, address & document follow-ups with business user and will share with AZ AP Sr. Manager for review if there are further actions recommended, if any.\n\nWHEN:\nMonthly",
+  "frequency_of": "Monthly",
+  "risk_level": "High",
+  "pwc_reliance": "Yes",
+  "control_owner": "Singh, Umesh (GenPact)",
+  "unit_fccg_contact": "Joanna",
+  "validations": [
+    {
+      "test_id":120,
+      "validation_name": "IPE1: IDOC Validation (1)",
+      "validation_desc": "Verify System Date is 01/11/2023 (bottom right taskbar) on SAP screenshot3.jpg and screenshot4.jpg, and validate input parameters for report title \"INVOIC input error FI\".",
+      "alias": "CTRL0020207_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722425dc088dea0dfa75c73"
+      }
+    },
+    {
+      "test_id":121,
+      "validation_name": "IPE2: IDOC Validation (2)",
+      "validation_desc": "For the screenshot5.jpg. Give the total count of rows present in it and extract the contents of the first row and the last row of it and give the value of them and validate the same.",
+      "validation": "ipe2:_idoc_validation_(2)",
+      "alias": "CTRL0020207_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722425dc088dea0dfa75c74"
+      }
+    },
+    {
+      "test_id":122,
+      "validation_name": "IPE3 Validation",
+      "validation_desc": "For screenshot6.jpg  \nSystem Date: 01/11/2023. \nreport title : INVOIC input error FI\n%\nValidate the input parameters\n%",
+      "validation": "ipe1:_idoc_validation_(1)",
+      "alias": "CTRL0020207_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722425dc088dea0dfa75c73"
+      }
+    }
+  ]
+}

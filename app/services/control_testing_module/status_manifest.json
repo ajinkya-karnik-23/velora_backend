@@ -1,0 +1,135 @@
+{
+  "version": "1.0",
+  "module": "control_testing_module",
+  "description": "Registry of all SSE event types emitted by the control testing pipeline. Used by the frontend to resolve display labels, descriptions, phases, and visual styling for each event.",
+  "phases": [
+    { "id": "init",          "label": "Initialisation",     "color": "#3B82F6" },
+    { "id": "preprocessing", "label": "Context Enrichment", "color": "#8B5CF6" },
+    { "id": "analysis",      "label": "Parallel Analysis",  "color": "#F59E0B" },
+    { "id": "workorder",     "label": "Work Order",         "color": "#14B8A6" },
+    { "id": "agent",         "label": "Agent Execution",    "color": "#10B981" },
+    { "id": "complete",      "label": "Complete",           "color": "#059669" },
+    { "id": "error",         "label": "Error",              "color": "#EF4444" }
+  ],
+  "events": {
+    "pipeline_start": {
+      "label": "Pipeline Initiated",
+      "description": "Control testing pipeline accepted. Incoming trigger validated and execution context initialised.",
+      "phase": "init",
+      "color": "#3B82F6"
+    },
+    "preprocessing_start": {
+      "label": "Enriching Context",
+      "description": "Resolving the detailed test specification from the control registry. Binding the full validation description to the execution payload.",
+      "phase": "preprocessing",
+      "color": "#8B5CF6"
+    },
+    "preprocessing_complete": {
+      "label": "Context Ready",
+      "description": "Validation description successfully loaded and injected into the pipeline state. The enriched payload is ready for the analysis graph.",
+      "phase": "preprocessing",
+      "color": "#8B5CF6"
+    },
+    "graph_start": {
+      "label": "Analysis Graph Launched",
+      "description": "G01 LangGraph activated. The Interpreter and Evidence Gatherer nodes are running in parallel to classify the test type and locate supporting evidence.",
+      "phase": "analysis",
+      "color": "#F59E0B"
+    },
+    "node_start": {
+      "label": "Node Running",
+      "description": "A LangGraph analysis node has started execution. Each node runs concurrently as part of the parallel fan-out from the START boundary.",
+      "phase": "analysis",
+      "color": "#F59E0B",
+      "node_labels": {
+        "interpreter": "Classifying the test requirement against the methodology corpus via LLM inference.",
+        "evidence_gatherer": "Scanning the test description for referenced evidence filenames and validating their presence on disk."
+      }
+    },
+    "node_complete": {
+      "label": "Node Complete",
+      "description": "A LangGraph node has finished execution and its output has been committed to the graph state.",
+      "phase": "analysis",
+      "color": "#F59E0B",
+      "node_labels": {
+        "interpreter": "Test category resolved. Target compliance parameters extracted from the description.",
+        "evidence_gatherer": "Evidence file scan complete. Available files queued for agent analysis."
+      }
+    },
+    "methodology_resolved": {
+      "label": "Methodology Activated",
+      "description": "The compliance testing methodology playbook for the detected test category has been located and loaded. Tool assignments and procedural instructions are now active.",
+      "phase": "analysis",
+      "color": "#F59E0B"
+    },
+    "graph_complete": {
+      "label": "Analysis Graph Done",
+      "description": "Both parallel LangGraph nodes have completed. The test category, target parameters, and evidence file inventory are finalised and ready for work order compilation.",
+      "phase": "analysis",
+      "color": "#F59E0B"
+    },
+    "work_order_compiled": {
+      "label": "Work Order Compiled",
+      "description": "A structured work order has been assembled from the graph outputs. It contains the test category, enriched description, and verified evidence paths ready for agent dispatch.",
+      "phase": "workorder",
+      "color": "#14B8A6"
+    },
+    "agent_selected": {
+      "label": "Agent Selected",
+      "description": "The appropriate specialised compliance agent has been selected based on the test category routed from the analysis graph.",
+      "phase": "agent",
+      "color": "#10B981"
+    },
+    "agent_session_created": {
+      "label": "Session Initialised",
+      "description": "A secure, isolated agent execution session has been created. The work order is being ingested into the agentic layer for processing.",
+      "phase": "agent",
+      "color": "#10B981"
+    },
+    "agent_start": {
+      "label": "Agent Running",
+      "description": "The compliance agent has received the work order and has begun its execution loop. Tool invocations will be streamed as they occur.",
+      "phase": "agent",
+      "color": "#10B981"
+    },
+    "tool_call": {
+      "label": "Tool Invoked",
+      "description": "The agent has dispatched a compliance tool to extract or analyse evidence data.",
+      "phase": "agent",
+      "color": "#10B981",
+      "tool_labels": {
+        "extract_price_change_entries": "Scanning Excel workbook for price change condition blocks and commentary annotations.",
+        "extract_text_from_image": "Extracting structured field text and OCR content from image evidence.",
+        "analyse_email_evidence": "Analysing email screenshot for stakeholder sign-offs, approval markers, and timeline indicators.",
+        "analyse_image_evidence": "Inspecting SAP compliance screenshot for interface field values and structural configurations.",
+        "get_excel_table_shape": "Reading Excel spreadsheet row count, column structure, and boundary row data.",
+        "extract_table_structure_from_image": "Parsing image table layout to count data rows and capture boundary record content.",
+        "parse_excel_raw": "Performing high-fidelity raw structural extraction of spreadsheet contents for reconciliation."
+      }
+    },
+    "tool_result": {
+      "label": "Tool Output Received",
+      "description": "A compliance tool has returned its extraction results. The agent is now analysing the output against the test criteria.",
+      "phase": "agent",
+      "color": "#10B981"
+    },
+    "agent_complete": {
+      "label": "Agent Verdict Issued",
+      "description": "The compliance agent has completed its analysis and issued a final Pass or Fail determination with a supporting audit justification.",
+      "phase": "complete",
+      "color": "#059669"
+    },
+    "pipeline_complete": {
+      "label": "Pipeline Complete",
+      "description": "The full control testing pipeline has finished execution. The compliance verdict and audit justification are available for review.",
+      "phase": "complete",
+      "color": "#059669"
+    },
+    "error": {
+      "label": "Pipeline Error",
+      "description": "An error occurred during pipeline execution. Check the phase and message fields for details.",
+      "phase": "error",
+      "color": "#EF4444"
+    }
+  }
+}

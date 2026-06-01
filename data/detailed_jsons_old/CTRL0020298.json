@@ -1,0 +1,96 @@
+{
+  "_id": {
+    "$oid": "67224262c088dea0dfa75c82"
+  },
+  "alias": "CTRL0020298_Monthly",
+  "control_number": "CTRL0020298",
+  "control_name": "Depreciation Variance Analysis",
+  "reference_number": "CPX011-001",
+  "entity": "GFS KL Back Office R2R (Sweden)",
+  "control_desc": "\"WHAT & WHY:\nThis control is to ensure that overall depreciation charge is complete and accurate. The Asset Accounting module in SAP calculates depreciation automatically on active assets. A monthly analysis is carried out by the GFS Fixed Assets Team on the depreciation test run amounts to ensure that depreciation charge is complete and accurate.\n\nHOW:\nThe SAP system automatically process and generates depreciation charges. GFS R2R Fixed Assets team is responsible to monitor the depreciation test run and final run result. \nScreenshots are taken from SAP at the time of the depreciation run to confirm that \na) depreciation postings are complete and \nb) the job log is error free.\nThe subledger depreciation run must initially be run in test mode and the month-on-month variance checked.  Any variance above the lower of (+/-) USD1,000,000 or (+/-) 5% must be investigated before executing the final depreciation run in the live environment. The analysis is reviewed by the GFS Fixed Assets Team Lead or delegate.\n\nWHEN:\nMonthly",
+  "frequency_of": "Monthly",
+  "risk_level": "High",
+  "pwc_reliance": "Yes",
+  "control_owner": "Dinyati, Nor Hana ",
+  "unit_fccg_contact": "Agnes",
+  "validations": [
+    {
+      "test_id":131,
+      "validation_name": "IPE1: Depr Posting Run Report Parameters ",
+      "validation_desc": "In 298_299sw_IPE1.jpg, check if the fields are filled correctly as follows:\n1) Company Code = SE10\n2) Fiscal Year = 2023\n3) Post Period = 10\n4) Parameters for Test Run = Test Run\n5) Date and time stamp of the system in the taskbar = 11:52AM, 31-Oct-2023.\n\n%\n298&299sw_IPE1: Validate the input parameters for the test depreciation posting run report.\n%",
+      "validation": "ipe1:_depr_posting_run_report_parameters_",
+      "alias": "CTRL0020298_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224262c088dea0dfa75c7c"
+      }
+    },
+    {
+      "test_id":132,
+      "validation_name": "IPE2: Asset Report Validate ",
+      "validation_desc": "Perform the following:\nStep 1: Note the total sum against column \"Planned Amt for Dep./Interest\" in 298_299sw_IPE2a.xlsx.\nStep 2: Note the total amounts highlighted in yellow, mentioned at the bottom of \"planned amount\" 298_299sw_IPE2b.jpg.\n\n\n%\n298&299sw_IPE2* : Validate the completeness and accuracy of the Asset report.\n%",
+      "validation": "ipe2:_asset_report_validate_",
+      "alias": "CTRL0020298_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224262c088dea0dfa75c7d"
+      }
+    },
+    {
+      "test_id":133,
+      "validation_name": "IPE3:  AFBP Validation",
+      "validation_desc": "In 298_299sw_IPE3.jpg, \n1) report title: Schedule Manager: Monitor\n1) Start date = 31.10.2023\n2) End Date = 31.10.2023\n4) The T-Code :\"AFBP\n5) Date and time stamp of the system in the taskbar : 11:56AM, 31-Oct-2023.\n\n%\n288&299sw_IPE3* : Validate the input parameters for the AFBP report generation.\n%",
+      "validation": "ipe3:__afbp_validation",
+      "alias": "CTRL0020298_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224262c088dea0dfa75c7e"
+      }
+    },
+    {
+      "test_id":134,
+      "validation_name": "IPE4: AFBP Actual - Input parameter validation",
+      "validation_desc": "In 298_299sw_IPE4.png, check if the fields are correct filled as follows:\n1) Company code = SE10\n2) Fiscal Year = 2023\n3) Posting Period = 10 \n4) The T-Code : AFBP\n5) Date and time stamp of the system in the taskbar should be 10:38AM, 1-Nov-2023.\n\n%\n298&299sw_IPE4: Validate the input parameters for the actual Log of Posting Run report.\n%",
+      "validation": "ipe4:_afbp_actual_-_input_parameter_validation",
+      "alias": "CTRL0020298_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224262c088dea0dfa75c7f"
+      }
+    },
+    {
+      "test_id":135,
+      "validation_name": "IPE5: AFBP Actual - Report validation",
+      "validation_desc": "Perform the following:\nStep 1: Note the total sum against column \"Planned Amt for Dep./Interest\" in 298_299sw_IPE5a.xlsx.\nStep 2: Note the total amounts of column \"planned amount\" highlighted in yellow, mentioned at the bottom of 298_299sw_IPE5b.jpg.\n%\n298&299sw_IPE5* : Validate the completeness and accuracy of the AFBP Actual report.\n%",
+      "validation": "ipe5:_afbp_actual_-_report_validation",
+      "alias": "CTRL0020298_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224262c088dea0dfa75c80"
+      }
+    },
+    {
+      "test_id":136,
+      "validation_name": "IPE6:  AFBP Validation",
+      "validation_desc": "In 298_299sw_IPE6.jpg, \n\n\n1) report title: Schedule Manager:Monitor\n2) Start date = 31.10.2023\n3) End Date = 31.10.2023\n5) The T-Code : AFBP\n5) Date and time stamp of the system in the taskbar : 10:39AM, 01-Nov-2023.\n\n%\n288&299sw_IPE3* : Validate the input parameters for the AFBP report generation.\n%",
+      "validation": "ipe6:__afbp_validation",
+      "alias": "CTRL0020298_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224262c088dea0dfa75c81"
+      }
+    }
+  ]
+}

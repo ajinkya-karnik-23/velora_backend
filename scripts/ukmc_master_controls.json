@@ -1,0 +1,277 @@
+[
+  {
+    "sheet": "UKMC_monthly",
+    "control_number": "CTRL0020526",
+    "control_name": "FSC008-002 Review of SAP configured discounts and rebates control",
+    "reference_number": "FSC008-002",
+    "entity": null,
+    "control_desc": "WHAT & WHY: Gross to net sales calculation. Price conditions in SAP representing selling price or deductions are reviewed to ensure that the gross sales, discounts and net sales reported are accurate; and discounts applied are valid and approved.HOW: a full review of all SAP price conditions related to sales is performed once a year. During the months when the full review is not performed, the changes on those sales related price conditions are reviewed by the Supply Chain Manager, CFO or delegates.Full review: a report (UKMC only: 30 & Z5-ZL & ZF) is extracted from SAP (transaction V/LD) with all the price conditions related to sales/customers. Accuracy and completeness of the report in SAP is proved by taking screenshots of the parameters to ensure that all the conditions are included. Comments on validity of the price conditions are added by the Supply Chain team or delegates, and the report in excel with the comments is sent to the Supply Chain Manager, CFO or delegates for review and sign-off.Changes during the month: a report with all the changes during the month is extracted from SAP (transaction  ZV231213 and V/LD 30). Accuracy and completeness of the report in SAP is proved by taking screenshots of the parameters to ensure that all the conditions are included. Comments on validity of the change are added by the Supply Chain team or delegates, and the report in excel with the comments is sent to the Supply Chain Manager, CFO or delegates for review and sign-off If errors are detected during the review, clear action plan or evidence of the correction is added.WHEN: Monthly before WD15 (December by WD8)",
+    "frequency": "Monthly",
+    "risk_level": "High",
+    "pwc_reliance": "Yes",
+    "control_owner": "Vibhakar, Nisha",
+    "units_fccg_contact": "Priyanka",
+    "control_tests_and_evidences": [
+      {
+        "tests": "IPE1: ZL01 validation",
+        "note": "For attached screenshot IPE_1.jpg Sales Organization: GB10 Condition Type : ZL01 Validity Range: 1.10.2023 to 31.10.2023 Type of report: Classical Report",
+        "comments": "Input Parameters Check"
+      },
+      {
+        "tests": "IPE2: ZL01 validation",
+        "note": "For attached screenshot IPE_2.jpg Sales Organization: GB10 Condition Type : ZL02 Validity Range: 1.10.2023 to 31.10.2023 Type of report: Classical Report",
+        "comments": "Input Parameters Check"
+      },
+      {
+        "tests": "IPE3: ZF01 validation",
+        "note": "For IPE_3.jpg check: Sales Organization: GB10 Condition Type : ZF01 Validity Range: 1.10.2023 to 31.10.2023 Type of report: Classical Report",
+        "comments": "Input Parameters Check"
+      },
+      {
+        "tests": "IPE4: ZF01 Validation",
+        "note": "Tally IPE_4.jpg  and the IPE_4.xlsx. Find the total line items that are found in the screeshot and the report and check if they are the same. Also check the first and last line item",
+        "comments": "Tally Line Items"
+      },
+      {
+        "tests": "IPE5: ZF01 Hierarchy Validation",
+        "note": "For IPE_5a.jpg and IPE_5b.jpg  check:3. Sales Organization: GB104: Condition Type : ZF015. Validity Range : 1.10.2023 till 31.10.2023 start of validity period is checked- at end of validity period is checked- Display Scales is checked- Display validity Period is checked",
+        "comments": "Input Parameters Check"
+      },
+      {
+        "tests": "IPE6: ZF01 Hierarchy Validation",
+        "note": "Tally screenshot and the excel. Find the total number of line items that are found in all the screenshots and the row count in the report. The addition of row counts of all screenshots should be equal to the rowcounts in the reports.",
+        "comments": "Tally Row Counts"
+      },
+      {
+        "tests": "IPE7: ZA01 Validation",
+        "note": "For IPE_7.jpg check:Sales Organization: GB10Condition Type : ZA01Validity Range : 1.10.2023 till 31.10.2023Type of report: Classical Report",
+        "comments": "Input Parameters Check"
+      },
+      {
+        "tests": "IPE8: ZA01 Validation",
+        "note": "Tally IPE_8.jpg and IPE_8.xlsx. Find the total line items that are found in the screeshot and the report and check if they are the same. Also check the first and last line item",
+        "comments": "Tally Line Items"
+      },
+      {
+        "tests": "CPT",
+        "note": "Monthly Review: Verify that  comments on validity of the price conditions are added by the Supply Chain team or delegates, and the report in excel with the comments is sent to the Supply Chain Manager, CFO or delegates for monthly review and sign-off.- Verify that the monthly review is performed before 15th working day.",
+        "comments": null
+      }
+    ]
+  },
+  {
+    "sheet": "CTRL0027940",
+    "control_number": "CTRL0027940",
+    "control_name": "IDOC Monitoring_Movianto",
+    "reference_number": "DES001",
+    "entity": "EMEA Logistics",
+    "control_desc": "WHAT & WHYA control to monitor the status of goods despatch IDOCs received from LSPs to ensure blocked IDOCs are resolved in a timely fashionHOW:1. On a daily basis an IDOC report is ran using SAP transaction WE02 to review IDOCs received from LSPs for goods despatches.  A screenshot should be taken of the screen used to select the parameters of the report including the bottom corner of the screen to show the date and time.2. IDOCs relating to LSP despatches are reviewed to identify any that are blocked (showing status 51) and therefore may not have been accurately reflected in revenue.3. If there are no despatch IDOCs with a status of 51, or if the only blocked IDOCs are 3 days old or less, a further screenshot is saved to evidence this, again showing the date and time. No further actions are necessary.4. Where blocked despatch IDOCs greater than 3 days old are identified, appropriate actions are taken to ensure these are cleared promptly.  The actions must be noted together with the report to identify both how the IDOCs will be unblocked.  By the end of the month, the actions should have been completed to ensure that no blocked IDOCs remain when the period closes in SAP.WHEN:Daily  (working days only)",
+    "frequency": "Daily",
+    "risk_level": "High",
+    "pwc_reliance": "Yes",
+    "control_owner": "Lawton, Jon",
+    "units_fccg_contact": "Ana",
+    "control_tests_and_evidences": [
+      {
+        "tests": "IPE 1 IDOC Listing Validation ",
+        "note": "For screenshot1.jpg check:1. Created at (time range): Autofill (00:00:00 to 23:59:59)2. Created On (Date range): Input filled3. Last changed at (time range): Autofill  (00:00:00 to 23:59:59)4. Message Function: nl5. Partner Number: Input filled (MOVIANTO)6. Date and time stamp of the input parameter screenshot",
+        "comments": "Message Parameters Check"
+      },
+      {
+        "tests": "CPT",
+        "note": "For screenshot2a.jpg, screenshot2b.jpg, screenshot2c.jpg check:1. List of IDOC Reports for conditions- \"WHSCON\" & \"SHPCON\"2. Each condition could have a list of IDOCS in Status 51 (blocked), Status 53(despatches) and Status 68 (manual despatches)3. Screenshots of Status 51 or any despatches blocked for more than 3 days is being verified.4. Date and time stamp of the output result screenshot is validated.",
+        "comments": null
+      }
+    ]
+  },
+  {
+    "sheet": "CTRL0037784",
+    "control_number": "CTRL0037784",
+    "control_name": "Manual IDOC Edits - Yusen (SE18 & UBED)",
+    "reference_number": "DES001",
+    "entity": "EMEA Logistics",
+    "control_desc": "WHAT & WHY:A control to monitor manual status changes to goods despatch IDOCs received from LSPs.  This is to monitor cases where the picking / dispatch confirmation was made in SAP manually by the user rather than automatically by the IDOC.HOW:1. On monthly basis, after WD1 an IDOC report (covering full previous month) is created using WE02 to show IDOCs from LSPs relating to despatches.  A screenshot should be taken of the screen used to select the parameters of the report including the bottom corner of the screen to show the date and time.2. Those IDOCs with a status 68 indicating manual picking / dispatch confirmation are identified.  If there are no such IDOCs the report is saved, again showing the date and time, and no further actions are necessary.3. Where IDOCs with status 68 are present, evidence is saved together with the report to demonstrate that each manual entry was based on a physical despatch (e.g. based on delivery note or packing list, etc).  In the case of any errors identified, an action plan is proposed to make relevant corrections.  This review should be not be performed by any person who has processed manual confirmations on the report.4. When complete, the report and evidence is reviewed and approved.5. Overall analysis, evidence for manual confirmations,  and any actions necessary are saved and approved by WD8HOW OFTEN & WHEN:Monthly",
+    "frequency": "Monthly",
+    "risk_level": "Medium",
+    "pwc_reliance": "Yes",
+    "control_owner": "Lawton, Jon",
+    "units_fccg_contact": "Ana",
+    "control_tests_and_evidences": [
+      {
+        "tests": "IPE1: IDOC listing Parameters (1)",
+        "note": "For screenshot1.jpg check:1. Created at (time range): Autofill (00:00:00 to 00:00:00)2. Created On (Date range): Input filled3. Last changed at (time range): Autofill  (00:00:00 to 00:00:00)4. Partner Number: Input filled (YUSEN_UB) for plant UBED5. Date and time stamp of the input parameter screenshot",
+        "comments": "Partner Parameters Check"
+      },
+      {
+        "tests": "IPE2: IDOC listing Parameters (2)",
+        "note": "For screenshot3.jpg check:1. Created at (time range): Autofill (00:00:00 to 00:00:00)2. Created On (Date range): Input filled3. Last changed at (time range): Autofill  (00:00:00 to 00:00:00)4. Partner Number: Input filled (YUSEN) for plant SE185. Date and time stamp of the input parameter screenshot",
+        "comments": "Partner Parameters Check"
+      },
+      {
+        "tests": "CPT 1",
+        "note": "For screenshot2.jpg check:1. List of IDOC Reports for conditions- \"WHSCON\"2. Each condition could have a list of IDOCS in Status 51 (blocked), Status 53(despatches) and Status 68 (manual despatches)3. Screenshots of Status 68 line items is being verified.4. Date and time stamp of the output result screenshot is validated.",
+        "comments": null
+      },
+      {
+        "tests": "CPT 2",
+        "note": "For screenshot4.jpg check:1. List of IDOC Reports for conditions- \"WHSCON\"2. Each condition could have a list of IDOCS in Status 51 (blocked), Status 53(despatches) and Status 68 (manual despatches)3. Screenshots of Status 68 line items is being verified.4. Date and time stamp of the output result screenshot is validated.",
+        "comments": null
+      },
+      {
+        "tests": "CPT Comments",
+        "note": "- Tester obtains the sample month's IDOC Report screenshots and validates the for completeness of the report by checking the input parameters of the report, the output results being captured along with date and time stamp.- For this control tester verifies for IDOCS listed under Partner Name \"Yusen\" and for plants UBED (code: YUSEN_UB) and SE18 (code: YUSEN)- Tester verifies for IDOCs with status 68. If yes, tester validates that the evidence is saved together with the report to demonstrate that each manual entry was based on a physical despatch (based on delivery note or packing list)- Tester verifies that the monthly report is reviewed and approved by the Logistics Manager (via DocuSign) within the stipulated timeframe of WD+8.",
+        "comments": null
+      }
+    ]
+  },
+  {
+    "sheet": "CTRL0020207",
+    "control_number": "CTRL0020207",
+    "control_name": "Resolution of failed iDOCs",
+    "reference_number": "CAB002-007",
+    "entity": "GFS Delhi Back Office P2P",
+    "control_desc": "WHAT & WHY: This is monthly detective control, to ensure that all failed Idocs have been resolved by WD+1, otherwise the impact assessment of unresolved Idocs, in scope, is completed with follow up actions addressed and communicated to AZ AP Sr. Manager for review if any further action recommended.HOW:On WD+1, the P2P Senior Analyst reviews SAP transaction \"SBWP>>Inbox>>workflow>>Group according to Task>>Invoice Input error FI\" to verify if all IDoc files have been resolved, released from queue and based on that confirms on results to Finance Master Data team. In case of any unresolved failed Idocs (in scope) by WD+1, Genpact will complete impact assessment template, address & document follow-ups with business user and will share with AZ AP Sr. Manager for review if there are further actions recommended, if any.WHEN:Monthly",
+    "frequency": "Monthly",
+    "risk_level": "High",
+    "pwc_reliance": null,
+    "control_owner": "Singh, Umesh (GenPact)",
+    "units_fccg_contact": "Joanna",
+    "control_tests_and_evidences": [
+      {
+        "tests": "IPE1: IDOC Validation (1)",
+        "note": "For screenshot3.jpg and screenshot4.jpg check: Ensure that the date and time of the report generation is captured in the screenshots.",
+        "comments": "Report Timestamp Check"
+      },
+      {
+        "tests": "IPE2: IDOC Validation (2)",
+        "note": "For screenshot5.jpg check: The number of unresolved failed iDocs.",
+        "comments": "Failed iDocs Count"
+      },
+      {
+        "tests": "IPE3 Validation",
+        "note": "For screenshot6.jpg check: Email evidence on the exception approval on the unresolved failed iDocs from the iDoc SPOC",
+        "comments": "Exception Approval Email"
+      },
+      {
+        "tests": "CPT 1",
+        "note": "For screenshot1.jpg check: Email from Finance Master Data requesting for voting options from the Senior P2P Analyst.Voting options:1) All iDocs have been processed2) iDoc errors have occurred",
+        "comments": null
+      },
+      {
+        "tests": "CPT 2",
+        "note": "For screenshot2.jpg check: Email from Senior P2P Analyst to Finance Master Data providing with the vote for No unresolved failed iDocs.",
+        "comments": null
+      },
+      {
+        "tests": "CPT Comments",
+        "note": "- Tester verifies that the Finance Master Data team has sent the voting options email for unresolved failed iDocs to the P2P Senior Analyst within the timelines of WD+1.- Tester verifies that evidence of review performed by the P2P Senior Analyst on the unresolved failed iDocs in SAP is retained.- Tester validates that for all  unresolved failed iDocs, resolution/corrective action plan has been provided by the AZ AP Senior Manager. The evidence for the same should be retained for tester",
+        "comments": null
+      }
+    ]
+  },
+  {
+    "sheet": "CTRL0020148",
+    "control_number": "CTRL0020148",
+    "control_name": "Sales trend review control",
+    "reference_number": "FSC008-001",
+    "entity": "Germany MC",
+    "control_desc": "WHAT & WHY: Sales. External sales for MC are reviewed to analyse variances between year to date (YTD) actuals on the current (CY) and prior year (PY) to ensure that sales are appropriate.HOW:- FP&A (Financial Planning and Analysis) team produces a report based on CMR data by using Smart View- To ensure that the report is accurate and complete, the Finance Planning and Reporting Lead or delegate reconciles the total product sales in the CMR Report with Financial Statement report in SAP (transaction S_ALR_87012284). If there are differences, they are explained.  - Finance Planning and Reporting Lead or delegate analyses and comments variances between actuals CY and PY over the threshold for either individual or grouped brands, being the thresholds:      a) Return to Growth platforms: ±$1m*      b) Rest of brands: ±$2m*- The report and commentary are reviewed by the CFO or delegate, who provides sign-off.*Conversion from local currency to $ will be at current year budget exchange rateWHEN: Monthly before WD15 (December by WD8)",
+    "frequency": "Monthly",
+    "risk_level": "High",
+    "pwc_reliance": "No",
+    "control_owner": "Höwer, Susanne",
+    "units_fccg_contact": "Priyanka",
+    "control_tests_and_evidences": [
+      {
+        "tests": "IPE1: DE10 Validation (1)",
+        "note": "for IPE_1.jpg, check the following Input Parameters:Company Code: DE10Financial Statement Version: ZFSGLanguage: ENReporting Year: 2024Reporting Period: 1 to 4 (Jan to April)Comparison Year: 2023Comparison Period: 1 to 4 (Jan to April)List Output: Classical ListDate and time stamp of the input parameter screenshot",
+        "comments": "Screenshot Input Parameters"
+      },
+      {
+        "tests": "IPE2: DE10 Validation (2)",
+        "note": "For IPE_2.jpg, check the following input parameters inREPORT HEADER detailsCompany code: DE10Date and Time of Generation of the ReportCurrency: EURin Table Rows: Divestment Total for current year and previous year,Total Revenue for current year and prevous yearCompare the Table row values with values in the excel S_ALR_87012284.xlsx",
+        "comments": "Report Header Validation"
+      },
+      {
+        "tests": "IPE3b: CMR Validation",
+        "note": "in CMR.xlsx, check the column headers to have following value \"Parameters:ActivityGeography Total ProjectTotal FunctionTotal AZ WorkforceTotal ChannelTotal_DepartmentSubmission BaseGermany (Top 12)Budget RatesActualMar_YTD FY24PeriodicProduct Sales\"",
+        "comments": "Column Headers Check"
+      },
+      {
+        "tests": "IPE4: Input Parameter \"Andexxa\"",
+        "note": "For IPE_4.jpg shared for this test, check the following input parametersTable description: \"Display total records: selection Ledger ZH\",Fiscal year: 2024.",
+        "comments": "Selection Ledger Check"
+      },
+      {
+        "tests": "CPT 1",
+        "note": "IN CYvPY.xlsx file, for each brand, compare the current year and previous year values with the respective sheet in input.xlsx file. The sheetnames are in the format <Brand Name>_ YYYY format. For any variations above 1 million, commentaries need to be provided in the commentaries.xlsx file",
+        "comments": null
+      }
+    ]
+  },
+  {
+    "sheet": "CTRL0020298-CTRL0020299",
+    "control_number": "CTRL0020298",
+    "control_name": "Depreciation Variance Analysis",
+    "reference_number": "CPX011-001",
+    "entity": "GFS KL Back Office R2R (Sweden)",
+    "control_desc": "WHAT & WHY:This control is to ensure that overall depreciation charge is complete and accurate. The Asset Accounting module in SAP calculates depreciation automatically on active assets. A monthly analysis is carried out by the GFS Fixed Assets Team on the depreciation test run amounts to ensure that depreciation charge is complete and accurate.HOW:The SAP system automatically process and generates depreciation charges. GFS R2R Fixed Assets team is responsible to monitor the depreciation test run and final run result. Screenshots are taken from SAP at the time of the depreciation run to confirm that a) depreciation postings are complete and b) the job log is error free.The subledger depreciation run must initially be run in test mode and the month-on-month variance checked.  Any variance above the lower of (+/-) USD1,000,000 or (+/-) 5% must be investigated before executing the final depreciation run in the live environment. The analysis is reviewed by the GFS Fixed Assets Team Lead or delegate.WHEN:Monthly",
+    "frequency": "Monthly",
+    "risk_level": "High",
+    "pwc_reliance": null,
+    "control_owner": "Dinyati, Nor Hana",
+    "units_fccg_contact": "Agnes",
+    "control_tests_and_evidences": [
+      {
+        "tests": "IPE1: Depr Posting Run Report Parameters",
+        "note": "For screenshot4.jpg check: Ensure that the screenshot captures the date and time stamp from the screen. Also check if these fields are filled:Company Code: SE10Fiscal Year: The Year we want to assessPosting Period: The month we want to assessReason for Posting Run: Planned Posting RunFurther options: Select \"List Assets\"Layout: /FA DEPNParameters for Test Run: Select \"Test Run\"",
+        "comments": "Timestamp Fields Check"
+      },
+      {
+        "tests": "IPE2: Asset Report Validate ",
+        "note": "For screenshot5.jpg and screenshot6.jpg check: If the totals in the excel extract and the SAP output screenshot match. If yes, then great if not, what is the delta between the two.",
+        "comments": "Totals Match Check"
+      },
+      {
+        "tests": "IPE3:  AFBP Validation",
+        "note": "For screenshot8.jpg check: Ensure that the screenshot captures the date and time stamp from the screen. Also check if these fields are filled:Company Code: SE10Fiscal Year: The Year we want to assessPosting Period: The month we want to assessReason for Posting Run: Planned Posting RunFurther options: Select \"List Assets\"Layout: /FA DEPNParameters for Test Run: Select \"Test Run\"",
+        "comments": "Timestamp Fields Check"
+      },
+      {
+        "tests": "CPT 1",
+        "note": "For screenshot1.jpg check: If the screenshot of the excel pertains to the Standardized Depreciation Analysis Template which is used for testing this control.",
+        "comments": null
+      },
+      {
+        "tests": "CPT 2",
+        "note": "For screenshot2.jpg and screenshot3.jpg check: If the screenshot pertains to the email which evidences the preparer and reviewer of the Standardized Depreciation Analysis Template which is used for testing this control.",
+        "comments": null
+      },
+      {
+        "tests": "CPT 3",
+        "note": "For screenshot7.jpg ?? What exactly is needed to be done here ?",
+        "comments": null
+      },
+      {
+        "tests": "CPT 4",
+        "note": "For screenshot9.jpg and screenshot10.jpg check: If the totals match in both the screenshot and the system report excel.",
+        "comments": null
+      },
+      {
+        "tests": "CPT 5",
+        "note": "For screenshot11.jpg ?? What exactly is needed to be done here ?",
+        "comments": null
+      },
+      {
+        "tests": "CPT 6",
+        "note": "For screenshot12.jpg ?? How to map this record ? What are the keys that can be used to mapping?",
+        "comments": null
+      },
+      {
+        "tests": "CPT Comments",
+        "note": "- Tester validates that the Monthly Depreciation Analysis for the sample month has been prepared.- Tester verifies that the Analysis is prepared by GFS KL Fixed Assets Team and approved by GFS KL Fixed Assets Team Lead.- Tester verifies that that the Test Run extract from SAP is complete and error free.- Tester verifies that that the Actual Run extract from SAP is complete and error free.- Tester verifies that the variances above the threshold (+/- 1,000,000 or +/- 5%) has been identified, investigated, resolved and commented upon in the Analysis file.",
+        "comments": null
+      }
+    ]
+  }
+]

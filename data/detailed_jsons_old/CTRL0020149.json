@@ -1,0 +1,44 @@
+{
+  "_id": {
+    "$oid": "6722424cc088dea0dfa75c44"
+  },
+  "alias": "CTRL0020149_Monthly",
+  "control_number": "CTRL0020149",
+  "control_name": "Review of SAP configured discounts and rebates control",
+  "reference_number": "FSC008-002",
+  "entity": "Germany MC",
+  "control_desc": "WHAT & WHY: Gross to net sales calculation. Price conditions in SAP representing selling price or deductions are reviewed to ensure that the gross sales, discounts and net sales reported are accurate; and discounts applied are valid and approved.\n\nHOW: a full review of all SAP price conditions related to sales is performed once a year. During the months when the full review is not performed, the changes on those sales related price conditions are reviewed by the Supply Chain Manager, CFO or delegates.\n\nFull review: a report (Z1, UKMC only: Z5 & 30) is extracted from SAP (transaction V/LD) with all the price conditions related to sales/customers. Accuracy and completeness of the report in SAP is proved by taking screenshots of the parameters to ensure that all the conditions are included. Comments on validity of the price conditions are added by the Supply Chain team or delegates, and the report in excel with the comments is sent to the Supply Chain Manager, CFO or delegates for review and sign-off.\n\nChanges during the month: a report with all the changes during the month is extracted from SAP (transaction  ZV231213). Accuracy and completeness of the report in SAP is proved by taking screenshots of the parameters to ensure that all the conditions are included. Comments on validity of the change are added by the Supply Chain team or delegates, and the report in excel with the comments is sent to the Supply Chain Manager, CFO or delegates for review and sign-off\n \nIf errors are detected during the review, clear action plan or evidence of the correction is added.\n\nWHEN: Monthly before wd15 (December by wd8\n\nTest Script Path:\nGeneral >> 2. As Is Overview >> Use Case 1- IPE >> Data >> Germany MC - FY24 >> FSC008-002 - Germany >> File \"Germany MC_FSC008-02_P1 Test Sheet\"",
+  "frequency_of": "Monthly",
+  "risk_level": "High",
+  "pwc_reliance": "Yes",
+  "control_owner": "Petersen, Nina",
+  "unit_fccg_contact": "Priyanka",
+  "validations": [
+    {
+      "test_id":105,
+      "validation_name": "IPE1_Pricing_Report_Parameter_Validation",
+      "validation_desc": "In 149m_IPE1.jpg, check if the fields in the screenshot are filled correctly. The values in these fields should be as follows:\n1. Sales Organization: DE10\n2: Condition Type : ZNAT, ZD39, ZPR0, ZR4W, ZNAG\n3. Validity Range : 01.03.2024 to 31.03.2024\n\n%\nValidate the input parameters for pricing report generation. \n%",
+      "validation": "ipe1_pricing_report_parameter_validation",
+      "alias": "CTRL0020149_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424cc088dea0dfa75c42"
+      }
+    },
+    {
+      "test_id":106,
+      "validation_name": "IPE2_Pricing_Report_C_and_A",
+      "validation_desc": "Match the records found in 149m_IPE2a.xlsx with the records in 149m_IPE2b.jpg.\n \nStep1: retrieve the number of rows in 149m_IPE2a.xlsx\nStep 2: retrieve the row count in 149m_IPE2b.html\n\n\n\n                                                 % Validate the completeness and accuracy of the pricing report. %",
+      "validation": "ipe2_pricing_report_c_and_a",
+      "alias": "CTRL0020149_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424cc088dea0dfa75c43"
+      }
+    }
+  ]
+}

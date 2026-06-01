@@ -1,0 +1,17 @@
+.venv/
+venv/
+.env
+*.pyc
+__pycache__/
+storage/
+
+.vscode/*
+!.vscode/launch.json
+
+# Ignore local Node dependencies and generated builds inside the engine
+.quartz-engine/node_modules/
+.quartz-engine/public/
+.quartz-engine/.next/
+
+# Ignore the local shortcut link we made
+.quartz-engine/content

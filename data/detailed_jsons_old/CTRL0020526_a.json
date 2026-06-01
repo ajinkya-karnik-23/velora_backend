@@ -1,0 +1,162 @@
+{
+  "_id": {
+    "$oid": "6722424ac088dea0dfa75c41"
+  },
+  "alias": "CTRL0020526_Annual",
+  "control_number": "CTRL0020526",
+  "control_name": "FSC008-002 Review of SAP configured discounts and rebates control",
+  "reference_number": "FSC008-002",
+  "entity": "UK MC",
+  "control_desc": "WHAT & WHY: Gross to net sales calculation. Price conditions in SAP representing selling price or deductions are reviewed to ensure that the gross sales, discounts and net sales reported are accurate; and discounts applied are valid and approved.\n\nHOW: a full review of all SAP price conditions related to sales is performed once a year. During the months when the full review is not performed, the changes on those sales related price conditions are reviewed by the Supply Chain Manager, CFO or delegates.\n\nFull review: a report (UKMC only: 30 & Z5-ZL & ZF) is extracted from SAP (transaction V/LD) with all the price conditions related to sales/customers. Accuracy and completeness of the report in SAP is proved by taking screenshots of the parameters to ensure that all the conditions are included. Comments on validity of the price conditions are added by the Supply Chain team or delegates, and the report in excel with the comments is sent to the Supply Chain Manager, CFO or delegates for review and sign-off.\n\nChanges during the month: a report with all the changes during the month is extracted from SAP (transaction  ZV231213 and V/LD 30). Accuracy and completeness of the report in SAP is proved by taking screenshots of the parameters to ensure that all the conditions are included. Comments on validity of the change are added by the Supply Chain team or delegates, and the report in excel with the comments is sent to the Supply Chain Manager, CFO or delegates for review and sign-off\n \nIf errors are detected during the review, clear action plan or evidence of the correction is added.\n\nWHEN: Monthly before WD15 (December by WD8)",
+  "frequency_of": "Annual",
+  "risk_level": "High",
+  "pwc_reliance": "No",
+  "control_owner": "Nisha Vibhakar, Financial Controller",
+  "unit_fccg_contact": "Priyanka Jain",
+  "validations": [
+    {
+      "validation_name": "IPE 1: ZL01_(1) Validation ",
+      "validation_desc": "In 1. Z5 Execution Screenshot_ZL01.jpg \n1. T-Codes:  V/LD\n2. Pricing Report: Z5\n\nIf all the fields match, then this test is a pass. If any field does not match, then this test is a fail. State the reason of pass and fail regardless.\n%\nValidate the overall pricing report input parameters\n%",
+      "validation": "ipe_1:_zl01_(1)_validation_",
+      "alias": "CTRL0020526_Annual",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424ac088dea0dfa75c35"
+      }
+    },
+    {
+      "validation_name": "IPE 2: ZL01_(2) Validation ",
+      "validation_desc": "In 2. GB Pricing Report_ZL01.jpg  Ensure if the input parameters were filled correctly by the user for genarating the output reports. The values in these fields should be as follows:\n1. Condition Type: ZL01\n2. Validity Range : 31.07.2023 till 31.12.9999\nIf all the fields match, then this test is a pass. If any field does not match, then this test is a fail. State the reason of pass and fail regardless.\n\n%\nValidate the GB pricing report condition ZL01 input parameters\n%\n",
+      "validation": "ipe_2:_zl01_(2)_validation_",
+      "alias": "CTRL0020526_Annual",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424ac088dea0dfa75c36"
+      }
+    },
+    {
+      "validation_name": "IPE 3: ZL01_(3) Validation",
+      "validation_desc": "Validate the reports 526a_IPE3.xlsx and 526a_IPE3.pdf. s\nStep 1: Get the count of rows from 526a_IPE3.xlsx \nStep 2: Get the number of rows from  526a_IPE3.pdf.\n\n%\nEnsure the completeness and accuracy of ZL01 report used in the control performance\n%",
+      "validation": "ipe_3:_zl01_(3)_validation",
+      "alias": "CTRL0020526_Annual",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424ac088dea0dfa75c37"
+      }
+    },
+    {
+      "validation_name": "IPE 4: ZF01_(1) Validation ",
+      "validation_desc": "In 4. Z5 Execution Screenshot_ZF01.jpg  Next, ensure if the input parameters were filled correctly by the user for generating the output reports. The values in these fields should be as follows:\n1. T-Codes: Transaction Report: V/LD\n2. Pricing Report: Z5\nIf all the fields match, then this test is a pass. If any field does not match, then this test is a fail. State the reason of pass and fail regardless.\n%\nValidate the overall pricing report input parameters\n%",
+      "validation": "ipe_4:_zf01_(1)_validation_",
+      "alias": "CTRL0020526_Annual",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424ac088dea0dfa75c38"
+      }
+    },
+    {
+      "validation_name": "IPE 5: ZF01_(2) Validation ",
+      "validation_desc": "In 5. GB Pricing Report_ZF01.jpg Validate Ensure if the input parameters were filled correctly by the user for genarating the output reports. The values in these fields should be as follows:\n1. GB Pricing report\n2. Condition Type: ZF01\n3. Validity Range : 31.07.2023 till 31.12.9999\nIf all the fields match, then this test is a pass. If any field does not match, then this test is a fail. State the reason of pass and fail regardless.\n\n%\nValidate the GB pricing report condition ZF01 input parameters\n%\n",
+      "validation": "ipe_5:_zf01_(2)_validation_",
+      "alias": "CTRL0020526_Annual",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424ac088dea0dfa75c39"
+      }
+    },
+    {
+      "validation_name": "IPE 6: ZF01_(3) Validation",
+      "validation_desc": "Validate the reports 6A. ZF01 Output Excel report.xlsx and 6B. ZF01 Output screenshot.pdf. Validate the 6A. ZF01 Output Excel report.xlsx used in performance of control is complete and accurate by ensuring the count match and content accuracy by comparing with records in the \"6B. ZF01 Output screenshot.pdf\". \nIf the count and the data within the records match in both, then this test is a pass and please state the reason if the test is a pass, or if it's a fail with details such as \"Counts matched\" or \"Counts Mis-match\". \n\n%\nEnsure the completeness and accuracy of ZF01 report used in the control performance\n%",
+      "validation": "ipe_6:_zf01_(3)_validation",
+      "alias": "CTRL0020526_Annual",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424ac088dea0dfa75c3a"
+      }
+    },
+    {
+      "validation_name": "IPE 7: ZF01 Hierarchy_(1) Validation",
+      "validation_desc": "In Execution_Screen_ZF01_Hierarchy.jpg Ensure if the input parameters were filled correctly by the user for generating the output reports. The values in these fields should be as follows:\n1. T-Codes: V/LD\n2. Pricing Report: 30\n\nIf all the fields match, then this test is a pass. If any field does not match, then this test is a fail. State the reason of pass and fail regardless.\n%\nValidate the overall pricing report input parameters\n%",
+      "validation": "ipe_7:_zf01_hierarchy_(1)_validation",
+      "alias": "CTRL0020526_Annual",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424ac088dea0dfa75c3b"
+      }
+    },
+    {
+      "validation_name": "IPE 8: ZF01 Hierarchy_(2) Validation ",
+      "validation_desc": "In 8. ZF01 Hierarchy.jpg Ensure if the input parameters were filled correctly by the user for genarating the output reports. The values in these fields should be as follows:\n1. Report Name: Conditions by Customer Hierarchy\n2. Condition Type: ZF01\n3. Validity Range : 31.07.2023 till 31.12.9999\nIf all the fields match, then this test is a pass. If any field does not match, then this test is a fail. State the reason of pass and fail regardless.\n\n%\nValidate the GB pricing report input parameters\n%\n",
+      "validation": "ipe_8:_zf01_hierarchy_(2)_validation_",
+      "alias": "CTRL0020526_Annual",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424ac088dea0dfa75c3c"
+      }
+    },
+    {
+      "validation_name": "IPE 9: ZF01 Hierarchy_(3) Validation",
+      "validation_desc": "Validate the reports 9A. ZF01 Hierarchy Output Excel report.xlsx and 9B. ZF01 Hierarchy Output screenshot.pdf \nValidate the 9A. ZF01 Output Excel report.xlsx used in performance of control is complete and accurate by ensuring the count match and content accuracy by comparing with records in the \"9B. ZF01 Output screenshot.pdf\". \nIf the count and the data within the records match in both, then this test is a pass and please state the reason if the test is a pass, or if it's a fail with details such as \"Counts matched\" or \"Counts Mis-match\". \n\n%\nEnsure the completeness and accuracy of ZF01 report used in the control performance\n%",
+      "validation": "ipe_9:_zf01_hierarchy_(3)_validation",
+      "alias": "CTRL0020526_Annual",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424ac088dea0dfa75c3d"
+      }
+    },
+    {
+      "validation_name": "Attribute - A",
+      "validation_desc": "Validate as a SOX auditor whether the control owner has performed Attribute A. Ensure that the annual report is extracted from SAP with all the price conditions related to sales/customers for full review. \nValidate whether IPE validation procedure pass in below steps: \n\n3. ZL01 Output screenshot and excel Validation\n6. ZF01 Output screenshot and excel Validation\n9. ZF01 Hierarchy Output screenshot and excel Validation\n\nThe result of this attribute A will be pass / fail depending upon result of for these IPE test procedure. \n%\nVerify that annually report (UKMC only: 30 & Z5-ZL & ZF) is extracted from SAP (transaction V/LD) with all the price conditions related to sales/customers for full review.\n%",
+      "validation": "attribute_-_a",
+      "alias": "CTRL0020526_Annual",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424ac088dea0dfa75c3e"
+      }
+    },
+    {
+      "validation_name": "Attribute - B",
+      "validation_desc": "Validate as a SOX auditor whether the control owner has performed Attribute B. \nStep 1: Validate the count of line items as below:\n11B. ZL01 Output screenshot and excel Validation - Verify the column \"M\" for 0 and NA values.\n11C. ZF01 Output screenshot and excel Validation - Verify the column \"S\" for variances greater than 0 / 0%\n11D. ZF01 Hierarchy Output screenshot and excel Validation- - Verify the column \"AB\" for variances greater than 0 / 0%\nStep2: Validate whether all line items counts as per step1 above is annotated within \"11F Evidence.xlsx\"\nStep3: Validate whether there is Financial Controller approval email as per DOA in file\"11A. DOA.xlsx\". Search for approval context in email body within file \"11E.Email Approval.png\"\n\n%Verify that  comments on validity of the price conditions are added by the Supply Chain team or delegates, and the report in excel with the comments is sent to the Supply Chain Manager, CFO or delegates for annual review and sign-off.%",
+      "validation": "attribute_-_b",
+      "alias": "CTRL0020526_Annual",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424ac088dea0dfa75c3f"
+      }
+    },
+    {
+      "validation_name": "Attribute - F",
+      "validation_desc": "If IPE is satisfied, then this test is pass else Fail\n%Verify that the screenshots of the parameters are retained to ensure accuracy and completeness of the report.%",
+      "validation": "attribute_-_f",
+      "alias": "CTRL0020526_Annual",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "6722424ac088dea0dfa75c40"
+      }
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "_id": {
+    "$oid": "67224267c088dea0dfa75c8c"
+  },
+  "alias": "CTRL0021876_Q4",
+  "control_number": "CTRL0021876",
+  "control_name": "Review of the useful economic life of all significant intangible assets",
+  "reference_number": "C44",
+  "entity": "GFR",
+  "control_desc": "WHAT and WHY: \nGFR co-ordinate a review of the useful economic life of all significant intangible assets, that are being amortised, in Q4 each year. The review is intended to ensure that the lives applied to assets remain appropriate.\n\nHOW:  \nA monthly schedule of all intangible assets reported in the group numbers is maintained by GFR (the 'Intangible Asset Supp note'). This details which intangible assets are being amortised and is reconciled to the ERH reported balance sheet intangible asset value as part of the monthly preparation process (this reconciliation is not part of this UEL control process). The supp note is used as a basis for this UEL control.\n\nIn Q4, the September month end Intangible Asset Supp Note is obtained by the Finance Director, Deals & Impairments (or delegate), and assets being amortised are segregated between R&D, OBU, BBU, RDU, IS and GFR (as applicable). After confirming completeness and accuracy of the schedule, the Finance Director, Deals & Impairments (or delegate) will provide the Intangible Asset Supp note to the GFS Global Capital team, who will perform a reconciliation against the SAP fixed asset registers. By the end of November, the reconciled Intangible Asset Supp note will be provided to the Finance Director, Deals & Impairments (or delegate). Assets must be reconciled between to Intangible asset Supp note to within $10m with aggregation of reconciling items being less than $20m in total. Where possible, the SAP level detail is evidenced by a time stamped screen shot. \n\nFor all assets with remaining NBV above $100m, the following process is then carried out:\n● For launched assets, each individual finance PDM who has an intangible asset listed on the schedule reviews the remaining asset life against latest expectations for the assets. In addition to a consideration of the factors listed in IAS 38.90, considerations also include critical market patent expiries, expectation around the competitive environment specific to the product and LRP sales curve information. The conclusion on latest estimated UEL is documented on a control schedule (which is based on the intangible asset listing supplied by GFR) and the PDMs record their review completion date on the control schedule. Once the review with PDMs is completed and the assessment documented, the relevant finance VP reviews the documentation and signs off confirming they, within the constraints of this clearly judgemental area, are comfortable with the conclusion of the current year assessment and are not aware of any other significant factors that should be considered further.\n\n● This control is focused on product intangibles. The software assets are included in the reconciliation schedule to ensure agreement with the Supp Note total overall. The software assets are either CIP or amortising according to various determined UELs.\n\n● For GFR assigned assets, the Finance Director, Deals & Impairments (or delegate) completes the review of the Merck Intangible assets by preparing the Merck Impairment review paper. In addition to a consideration of the factors listed in IAS 38.90, considerations also include critical market patent expiries, expectation around the competitive environment specific to the product and LTP sales curve information. The conclusion on latest estimated UEL is documented on a control schedule (which is controlled by GFR) and the reviewer records their review completion date on the control schedule. Once the review is completed and the assessment documented, the VP GFR (or delegate) reviews the documentation and signs off confirming they, within the constraints of this clearly judgemental area, are comfortable with the conclusion of the current year assessment and are not aware of any other significant factors that should be considered further.\n\n● For Alexion Assets, the Finance Director, Deals & Impairments (or delegate) is provided with a list of Alexion intangible assets (product and IS intangibles), who will perform a reconciliation against the SAP fixed asset registers for values not impacted by the PPA adjustments. Finance Director, Deals & Impairments with then incorporate the impact of the PPA adjustments posted as group journals to complete the reconciliation to the Intangible asset Supp note. Once reconciled, the Finance Director, Deals & Impairments (or delegate) uses the Intangible asset review documentation for the Alexion assets to review the remaining asset life against latest expectations for the assets. In addition to a consideration of the factors listed in IAS 38.90, considerations also include critical market patent expiries, expectation around the competitive environment specific to the product and LTP sales curve information. The conclusion on latest estimated UEL is documented on a control schedule (which is based on the intangible asset listing supplied by GFR) and the Finance Director, Deals & Impairments (or delegate) controls records the review completion date on the control schedule. Once the review is completed and the assessment documented, the relevant finance VP reviews the documentation and signs off confirming they, within the constraints of this clearly judgemental area, are comfortable with the conclusion of the current year assessment and are not aware of any other significant factors that should be considered further.\n\n● For any asset greater than $100m that is not included in the above three categories, the Finance Director, Deals & Impairments (or delegate) contacts the asset finance manager and obtains evidence of their review of the asset life in Q4. The number of assets in this category will be minimal/none.\n\nAs a general principle, AZ considered asset lives should only be extended when there is clear evidence of a significant event that drives a change in the expected asset life, the change can be documented and evidenced and the possibility of reversal of that change is considered remote. Indications of the asset life being reduced are not subject to the same hurdle test and will normally result in the UEL being updated prospectively. If any asset lives are identified as requiring update following the control operation, after making sure that the appropriate DOA has been obtained (which for launched assets is the finance VP sign off), the SET areas finance controllers should communicate this prospective change to the relevant fixed asset team and supply evidence of the change to Finance Director, Deals & Impairments (or delegate).\n\nGFR obtain sign off schedules from R&D/OBU/BBU/RDU, and maintain the overall list of annual UEL assessment process. The VP GFR (or delegate) conducts a final review of the schedule to confirm appropriate evidence of each asset UEL assessment, and evidence that any identified changes have been actioned, has been obtained. \n\nWHEN: \nThe process is run in Q4.\n\nTest Script Path:\nGeneral >> 2. As Is Overview >> Use Case 1- IPE >> Data >> C44 >> File \"GFR_C44, tabs Control Description &  Test Results\"",
+  "frequency_of": "Q4",
+  "risk_level": "High",
+  "pwc_reliance": "No",
+  "control_owner": "Fenton, Max",
+  "unit_fccg_contact": "Ana",
+  "validations": [
+    {
+      "validation_name": "IPE1 Asset History Sheet Validation",
+      "validation_desc": "In 1876_IPE1.jpg check :\n1) T-Code: AR02\n2) Company code = UK10\n3) Asset class = 8200\n4) Report date = 30.09.2023\n5) Depreciation area = 01\n6) Sort variant = 0001\n\n\n%\n1876_IPE1 Validation: Input parameter validation for Asset history sheet. \n%",
+      "validation": "ipe1_asset_history_sheet_validation",
+      "alias": "CTRL0021876_Q4",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224267c088dea0dfa75c87"
+      }
+    },
+    {
+      "validation_name": "IPE2 Asset History Sheet Validation",
+      "validation_desc": "In 1876_IPE2a.xlsx, check if the totals are matching with the totals mentioned in 1876_IPE2b.jpg. The totals in the excel can be found at the end of the excel. The totals in the .jpg can be found in the highlighted text at the bottom. If the totals match, then this test is a pass, if not, then this test is a fail.\n\n%\n1876_IPE2* Validation: Validating the Asset History Sheet completeness and accuracy.\n%",
+      "validation": "ipe2_asset_history_sheet_validation",
+      "alias": "CTRL0021876_Q4",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224267c088dea0dfa75c88"
+      }
+    },
+    {
+      "validation_name": "IPE3 10Q Report validation",
+      "validation_desc": "In 1876_IPE3a.xlsx, match the \"NBV\" value for field \"GROUPS(per ERH)\" with the following:\n1) \"Intangible assets\" in 1876_IPE3b.jpg\nIf the amounts match in the excel matches with above, then this test is a pass. If not, then this test is a fail. A delta of +/- $10 is okay while matching.\n\n%\n1876_IPE3* : Tally of IFA Supp Note with the 10Q Report.\n%",
+      "validation": "ipe3_10q_report_validation",
+      "alias": "CTRL0021876_Q4",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224267c088dea0dfa75c89"
+      }
+    },
+    {
+      "validation_name": "IPE4 $ Value validation",
+      "validation_desc": "In 1876_IPE4a.xlsx and 1876_IPE4b.xlsx. \nStep 1: retrieve \"Asset Number\" In 1876_IPE4a.xlsx that are also included in Column\"Asset number\" in 1876_IPE4b.xlsx \nStep2: Retrieve the values in column \"NBV C/F\" against the common assets in 1876_IPE4b.xlsx.\nStep 3: Divide the above values with \"1000000\" and \"0.816693\"\nStep 4: Validate the net book values in 1876_IPE4b.xlsx as per column \"NBV ($m)\" matches with values obtained from Step 3\n\n%\n1876_IPE4* : Validation of $ values of NBV \n%",
+      "validation": "ipe4_$_value_validation",
+      "alias": "CTRL0021876_Q4",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224267c088dea0dfa75c8a"
+      }
+    },
+    {
+      "validation_name": "IPE5 UEL validation2",
+      "validation_desc": "In 1876_IPE5a.jpg and 1876_IPE5b.xlsx. \nStep 1: retrieve value in field \"Asset\" In 1876_IPE5a.jpg and match it to the asset that are included in Column \"Asset\" in 1876_IPE5b.xlsx \nStep2: Retrieve the life of assets in \"years\" in column \"UseLife\" In 1876_IPE5a.jpg \nStep 3:Retrieve the life of assets in \"months\" in column \"Prd\" In 1876_IPE5a.jpg\nStep 4: Add the life value in step 3 and Step4 to date mentioned in column \"ODep Start\"\nStep 5: Retrieve the value in 1876_IPE5b.xlsx for same asset in column \"UEL\"\nStep6: The value in step 5 should tie to Step4, the result is pass. Otherwise, its fail\n%\n1876_IPE4* : Validation of  UEL\n%",
+      "validation": "ipe5_uel_validation2",
+      "alias": "CTRL0021876_Q4",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224267c088dea0dfa75c8b"
+      }
+    }
+  ]
+}

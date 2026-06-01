@@ -1,0 +1,83 @@
+{
+  "_id": {
+    "$oid": "67224260c088dea0dfa75c7b"
+  },
+  "alias": "CTRL0020148_Monthly",
+  "control_number": "CTRL0020148",
+  "control_name": "Sales trend review control",
+  "reference_number": "FSC008-001",
+  "entity": "Germany MC",
+  "control_desc": "WHAT & WHY: Sales. External sales for MC are reviewed to analyse variances between year to date (YTD) actuals on the current (CY) and prior year (PY) to ensure that sales are appropriate.\n\nHOW:\n- FP&A (Financial Planning and Analysis) team produces a report based on CMR data by using Smart View\n- To ensure that the report is accurate and complete, the Finance Planning and Reporting Lead or delegate reconciles the total product sales in the CMR Report with Financial Statement report in SAP (transaction S_ALR_87012284). If there are differences, they are explained. \n - Finance Planning and Reporting Lead or delegate analyses and comments variances between actuals CY and PY over the threshold for either individual or grouped brands, being the thresholds:\n      a) Return to Growth platforms: ±$1m*\n      b) Rest of brands: ±$2m*\n- The report and commentary are reviewed by the CFO or delegate, who provides sign-off.\n\n*Conversion from local currency to $ will be at current year budget exchange rate\n\nWHEN: Monthly before WD15 (December by WD8)",
+  "frequency_of": "Monthly",
+  "risk_level": "High",
+  "pwc_reliance": "No",
+  "control_owner": "Höwer, Susanne",
+  "unit_fccg_contact": "Priyanka",
+  "validations": [
+    {
+      "test_id":126,
+      "validation_name": "IPE1: DE10 Validation (1)",
+      "validation_desc": "In 148_IPE1.jpg, validate that the fields in the screenshot are correctly filled with the following values:\n1) Company code = DE10\n2) Financial Statement Version = ZFSG\n3) Language = EN\n4) Reporting year = 2024\n5) Reporting Period = 1 to 3\n6) Comparison year = 2023\n7) Comparison periods = 1 to 3\n8) List ouptut = Classical list                                                 9) Validate if the date and time stamp of the system in the taskbar: mentioned\n%\n148_IPE1 ZFSG Validation: Validating the input parameters for the report generation.\n%",
+      "validation": "ipe1:_de10_validation_(1)",
+      "alias": "CTRL0020148_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224260c088dea0dfa75c76"
+      }
+    },
+    {
+      "test_id":127,
+      "validation_name": "IPE2: DE10 Validation (2)",
+      "validation_desc": "Step1: extract value for row 'DIVESTMENT TOTAL' against column 'Reporting period (01.2024-03.2024)' In 148_IPE2.jpg\nStep2: filter column 'Text for B/S P&L item' for value 'DIVESTMENT TOTAL' and extract value of column 'Total of reporting period' In 148_IPE2b.xlsx\nStep3: In 148_IPE2.jpg extract value for row 'Total Revenue' against column 'Reporting period (01.2024-03.2024)' In 148_IPE2.jpg\nStep4: filter column 'Text for B/S P&L item' for value 'Total Revenue' and extract value of column 'Total of reporting period' In 148_IPE2b.xlsx\nStep 5: In 148_IPE2.jpg extract value for row 'DIVESTMENT TOTAL' against column 'Comparison period (01.2023-03.2023)' In 148_IPE2.jpg\nStep6: filter column 'Text for B/S P&L item' for value 'DIVESTMENT TOTAL' and extract value of column 'Total of the comparison period' In 148_IPE2b.xlsx\nStep 7: In 148_IPE2.jpg extract value for row 'Total Revenue' against column 'Comparison period (01.2023-03.2023)' In 148_IPE2.jpg\nStep8: filter column 'Text for B/S P&L item' for value 'Total Revenue' and  extract value of column 'Total of the comparison period' In 148_IPE2b.xlsx\n\n%\n148_IPE2 DE10 Validation: Validate DE10-ZFSH reports.\n%",
+      "validation": "ipe2:_de10_validation_(2)",
+      "alias": "CTRL0020148_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224260c088dea0dfa75c77"
+      }
+    },
+    {
+     "test_id":128, 
+      "validation_name": "IPE3a: CMR Validation",
+      "validation_desc": "In 148_IPE3.jpg, check if the following filters are mentioned:\n1) Germany (Top 12) : mentioned\n2) Budget Rates: : mentioned\n3) Actual: : mentioned\n4) Mar_YTD: : mentioned\n5) FY24\t: : mentioned\n6) FY23: : mentioned\n\n%\n148_IPE3a: Validate the filters and the totals of the CMR report.\n%",
+      "validation": "ipe3a:_cmr_validation",
+      "alias": "CTRL0020148_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224260c088dea0dfa75c78"
+      }
+    },
+    {
+      "test_id":129,
+      "validation_name": "IPE3b: CMR Validation",
+      "validation_desc": "Step1: Filter column 'in USD for 'Total', extract value of column 'Actual' from 148_IPE3a.xlsx\nStep2:Extract the value in the last row in column B. convert the number to extract just the million value from 148_IPE3a.jpg\nStep3: Filter column 'in USD' for 'Total', extract value of column 'PY Actual' from 148_IPE3a.xlsx\nStep2:Extract the value in the last row in column C. convert the number to extract just the million value from 148_IPE3a.jpg\n%\n148_IPE3a: Validate the filters and the totals of the CMR report.\n%",
+      "validation": "ipe3b:_cmr_validation",
+      "alias": "CTRL0020148_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224260c088dea0dfa75c79"
+      }
+    },
+    {
+      "test_id":130,
+      "validation_name": "IPE4: Input Parameter \"Andexxa\"",
+      "validation_desc": "In 148_IPE4a.jpg and 148_IPE4b.jpg, validate if all fields are correctly filled with these values:\n1) Product = 8001\n2) Fiscal year = 2024\n3) Company Code = DE10\n4) Account Number = 30000000 to 31999999\n5) Posting period = 1 to 3\n\n%\n148_IPE4* Validation: Validating the input parameters for the \"Andexxa\" report generation.\n%",
+      "validation": "ipe4:_input_parameter_\"andexxa\"",
+      "alias": "CTRL0020148_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224260c088dea0dfa75c7a"
+      }
+    }
+  ]
+}

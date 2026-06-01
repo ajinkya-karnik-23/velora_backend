@@ -1,0 +1,137 @@
+{
+  "_id": {
+    "$oid": "67224247c088dea0dfa75c34"
+  },
+  "alias": "CTRL0020526_Monthly",
+  "control_number": "CTRL0020526",
+  "control_name": "FSC008-002 Review of SAP configured discounts and rebates control",
+  "reference_number": "FSC008-002",
+  "entity": {
+    "$numberDouble": "NaN"
+  },
+  "control_desc": "WHAT & WHY: Gross to net sales calculation. Price conditions in SAP representing selling price or deductions are reviewed to ensure that the gross sales, discounts and net sales reported are accurate; and discounts applied are valid and approved.\n\nHOW: a full review of all SAP price conditions related to sales is performed once a year. During the months when the full review is not performed, the changes on those sales related price conditions are reviewed by the Supply Chain Manager, CFO or delegates.\n\nFull review: a report (UKMC only: 30 & Z5-ZL & ZF) is extracted from SAP (transaction V/LD) with all the price conditions related to sales/customers. Accuracy and completeness of the report in SAP is proved by taking screenshots of the parameters to ensure that all the conditions are included. Comments on validity of the price conditions are added by the Supply Chain team or delegates, and the report in excel with the comments is sent to the Supply Chain Manager, CFO or delegates for review and sign-off.\n\nChanges during the month: a report with all the changes during the month is extracted from SAP (transaction  ZV231213 and V/LD 30). Accuracy and completeness of the report in SAP is proved by taking screenshots of the parameters to ensure that all the conditions are included. Comments on validity of the change are added by the Supply Chain team or delegates, and the report in excel with the comments is sent to the Supply Chain Manager, CFO or delegates for review and sign-off\n \nIf errors are detected during the review, clear action plan or evidence of the correction is added.\n\nWHEN: Monthly before WD15 (December by WD8)",
+  "frequency_of": "Monthly",
+  "risk_level": "High",
+  "pwc_reliance": "No",
+  "control_owner": "Vibhakar, Nisha",
+  "unit_fccg_contact": "Priyanka",
+  "validations": [
+    {
+      "test_id":86,
+      "validation_name": "IPE1:  ZL01 Validation",
+      "validation_desc": "In IPE_1.jpg \n1) T-Code = ZV231213 \n2) Sales Organisation = GB10\n3) Condition Type = ZL01\n4) Validity Range = 01.10.2023 to 31.10.2023\n5) Type of report = Classical Report \n\n%\nIPE_1 \"ZL01\" Validation: Validate the ZL01 input parameters.\n%",
+      "validation": "ipe1:__zl01_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c2b"
+      }
+    },
+    {
+      "test_id":87,
+      "validation_name": "IPE2: ZL01 Validation",
+      "validation_desc": "In IPE_2.jpg and IPE_2.xlsx. \nStep1: retrieve the number of rows in IPE_2.xlsx.\nStep2: retrieve row count from IPE_2.jpg\nStep3: retrieve first and last row elements from IPE_2.xlsx.\nStep 4: extract the first and last line items from the image:IPE_2.jpg\n%\nIPE_2* \"ZL01\" Validation: Ensure the completeness and accuracy of ZL01 report used in the control performance\n%",
+      "validation": "ipe2:_zl01_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c2c"
+      }
+    },
+    {
+      "test_id":88,
+      "validation_name": "IPE3: ZF01 Validation",
+      "validation_desc": "In IPE_3.jpg \n1) T-Code = ZV231213 \n2) Sales Organisation = GB10\n3) Condition Type = ZL01\n4) Validity Range = 01.10.2023 to 31.10.2023\n5) Type of report = Classical Report \n%\nIPE_3 \"ZF01\" Validation: Validate the overall pricing report condition ZF01 input parameters.\n%",
+      "validation": "ipe3:_zf01_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c2d"
+      }
+    },
+    {
+      "test_id":89,
+      "validation_name": "IPE4: ZF01 Validation",
+      "validation_desc": "Match the records of IPE_4.jpg with the records in IPE_4.xlsx. \nStep1: retrieve  the  first row and last row from IPE_4.xlsx.\nStep2: retrieve the first row from IPE_4.jpg\nStep3:  retrieve the last row from IPE_4.jpg\nStep4: Retrieve the number of rows in IPE_4.xlsx\nStep5: retreive the row count from IPE_4.jpg\nStep6: retreive the row count from IPE_4.jpg\n%\nIPE_2* \"ZF01\" Validation: Ensure the completeness and accuracy of ZF01 report used in the control performance\n%",
+      "validation": "ipe4:_zf01_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c2e"
+      }
+    },
+    {
+      "test_id":90,
+      "validation_name": "IPE5: ZF01 Hierarchy Validation",
+      "validation_desc": "In IPE_5a.jpg and IPE_5b.jpg \n1) T-Code = VL/D \n2) Sales Organisation = GB10\n3) Validity Range = 01.10.2023 to 31.10.2023 \n\n%\nIPE_5* \"ZF01 Hierarchy\" Validation: Validate the overall pricing report input parameters.\n%",
+      "validation": "ipe5:_zf01_hierarchy_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c2f"
+      }
+    },
+    {
+      "test_id":91,
+      "validation_name": "IPE6: ZF01 Hierarchy Validation",
+      "validation_desc": "Refer data in IPE_6a.jpg, IPE_6b.jpg, IPE_6c.jpg, IPE_6d.jpg, IPE_6e.jpg, \nStep 1: retrieve row counts from all the IPE_6* screenshots for the row highlighed in blue. \nStep2: Validate if the total number of row count come up to 21. %\nIPE_6 \"ZF01 Hierarchy\" Validation: Ensure the completeness and accuracy of ZL01 report used in the control performance\n%",
+      "validation": "ipe6:_zf01_hierarchy_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c30"
+      }
+    },
+    {
+      "test_id":92,
+      "validation_name": "IPE7: ZA01 Validation",
+      "validation_desc": "In IPE_7.jpg \n1) T-Code = ZV231213 \n2) Sales Organisation = GB10\n3) Condition Type = ZA01\n4) Validity Range = 01.10.2023 to 31.10.2023\n5) Type of report = Classical Report \n\n%\nIPE_7 \"ZA01\" Validation: Validate the overall pricing report condition \"ZA01\" input parameters.\n%",
+      "validation": "ipe7:_za01_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c31"
+      }
+    },
+    {
+      "test_id":93,
+      "validation_name": "IPE8: ZA01 Validation",
+      "validation_desc": "Match the no. of records found in IPE_8.jpg and IPE_8.xlsx. \nStep 1: retrieve row counts from  IPE_8.xlsx. \nStep2: retrieve row counts from IPE_8.jpg Step3: Check if both are same. \n\n%\nIPE_8 \"ZA01\" Validation: Ensure the completeness and accuracy of ZL01 report used in the control performance\n%",
+      "validation": "ipe8:_za01_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c32"
+      }
+    },
+    {
+      "test_id":94,
+      "validation_name": "CPT",
+      "validation_desc": "Monthly Review: In cpt.xlsx 1) Verify that comments on validity of the price conditions for period 'ZL01', 'ZF01', 'ZF01 Hierarchy' & 'ZA01' are added. \n- In cpt.jpg, 1) Verify that the email mentiond that the monthly review is performed before WD15.\n",
+      "validation": "cpt",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c33"
+      }
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+    <channel>
+      <title>Quartz 4</title>
+      <link>https://quartz.jzhao.xyz</link>
+      <description>Last 10 notes on Quartz 4</description>
+      <generator>Quartz -- quartz.jzhao.xyz</generator>
+      <item>
+    <title>index</title>
+    <link>https://quartz.jzhao.xyz/</link>
+    <guid>https://quartz.jzhao.xyz/</guid>
+    <description><![CDATA[  ]]></description>
+    <pubDate>Sat, 30 May 2026 11:37:39 GMT</pubDate>
+  </item><item>
+    <title>Structured Extraction</title>
+    <link>https://quartz.jzhao.xyz/Structured-Extraction</link>
+    <guid>https://quartz.jzhao.xyz/Structured-Extraction</guid>
+    <description><![CDATA[ Structured Extraction Used when evidence contains rows and columns. ]]></description>
+    <pubDate>Fri, 29 May 2026 11:40:54 GMT</pubDate>
+  </item><item>
+    <title>Tabular Evidence</title>
+    <link>https://quartz.jzhao.xyz/Tabular-Evidence</link>
+    <guid>https://quartz.jzhao.xyz/Tabular-Evidence</guid>
+    <description><![CDATA[ Tabular Evidence Nature Evidence organized into rows and columns. ]]></description>
+    <pubDate>Fri, 29 May 2026 11:40:54 GMT</pubDate>
+  </item><item>
+    <title>Test Classification</title>
+    <link>https://quartz.jzhao.xyz/Test-Classification</link>
+    <guid>https://quartz.jzhao.xyz/Test-Classification</guid>
+    <description><![CDATA[ Test Classification Controls are classified according to evidence type and testing methodology. ]]></description>
+    <pubDate>Fri, 29 May 2026 11:40:54 GMT</pubDate>
+  </item><item>
+    <title>Tool Registry</title>
+    <link>https://quartz.jzhao.xyz/Tool-Registry</link>
+    <guid>https://quartz.jzhao.xyz/Tool-Registry</guid>
+    <description><![CDATA[ Tool Registry Supports IPE SAP Image Validation ROW_LEVEL_ANALYSIS Parent IPE tools #cyan. ]]></description>
+    <pubDate>Fri, 29 May 2026 11:40:54 GMT</pubDate>
+  </item><item>
+    <title>Tool Selection Strategy</title>
+    <link>https://quartz.jzhao.xyz/Tool-Selection-Strategy</link>
+    <guid>https://quartz.jzhao.xyz/Tool-Selection-Strategy</guid>
+    <description><![CDATA[ Tool Selection Strategy Tools are selected based on evidence type. ]]></description>
+    <pubDate>Fri, 29 May 2026 11:40:54 GMT</pubDate>
+  </item><item>
+    <title>How To Scope</title>
+    <link>https://quartz.jzhao.xyz/How-To-Scope</link>
+    <guid>https://quartz.jzhao.xyz/How-To-Scope</guid>
+    <description><![CDATA[ How To Scope Objective Defines how controls should be scoped for testing. ]]></description>
+    <pubDate>Fri, 29 May 2026 11:40:54 GMT</pubDate>
+  </item><item>
+    <title>IPE SAP Image Validation</title>
+    <link>https://quartz.jzhao.xyz/IPE-SAP-Image-Validation</link>
+    <guid>https://quartz.jzhao.xyz/IPE-SAP-Image-Validation</guid>
+    <description><![CDATA[ IPE SAP Image Validation Purpose Validate SAP GUI screenshots. Parent IPE Related ROW_LEVEL_ANALYSIS Evidence Processing Tool Registry sap #ipe #blue. ]]></description>
+    <pubDate>Fri, 29 May 2026 11:40:54 GMT</pubDate>
+  </item><item>
+    <title>IPE</title>
+    <link>https://quartz.jzhao.xyz/IPE</link>
+    <guid>https://quartz.jzhao.xyz/IPE</guid>
+    <description><![CDATA[ IPE Information Produced by Entity (IPE). ]]></description>
+    <pubDate>Fri, 29 May 2026 11:40:54 GMT</pubDate>
+  </item><item>
+    <title>OCR Extraction</title>
+    <link>https://quartz.jzhao.xyz/OCR-Extraction</link>
+    <guid>https://quartz.jzhao.xyz/OCR-Extraction</guid>
+    <description><![CDATA[ OCR Extraction Used when evidence is image based. ]]></description>
+    <pubDate>Fri, 29 May 2026 11:40:54 GMT</pubDate>
+  </item>
+    </channel>
+  </rss>

@@ -1,0 +1,939 @@
+﻿{
+	"info": {
+		"name": "CIQ Backend API v2",
+		"description": "Controls Internal Quality (CIQ) Backend — Audit Management API\n\nSetup:\n1. Run the \"Login\" request first to get tokens\n2. The access_token is automatically saved to the collection variable\n3. All authenticated requests use {{access_token}} via Bearer auth",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{"key": "base_url", "value": "http://localhost:8000"},
+		{"key": "access_token", "value": ""},
+		{"key": "user_id", "value": "1"},
+		{"key": "client_id", "value": "1"},
+		{"key": "version_id", "value": "1"},
+		{"key": "cycle_id", "value": "1"},
+		{"key": "control_id", "value": "1"},
+		{"key": "config_control_id", "value": "1"},
+		{"key": "test_id", "value": "1"},
+		{"key": "evidence_id", "value": "1"},
+		{"key": "log_id", "value": "1"}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]
+	},
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"]},
+						"auth": {"type": "noauth"}
+					}
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', json.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"url": {"raw": "{{base_url}}/api/v1/auth/login-user", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "login-user"]},
+						"auth": {"type": "noauth"},
+						"header": [{"key": "Content-Type", "value": "application/x-www-form-urlencoded"}],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{"key": "email", "value": "admin@example.com", "type": "text"},
+								{"key": "password", "value": "Admin@12345", "type": "text"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', json.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"url": {"raw": "{{base_url}}/api/v1/auth/refresh-token", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "refresh-token"]},
+						"auth": {"type": "noauth"}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"url": {"raw": "{{base_url}}/api/v1/auth/logout-user", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "logout-user"]},
+						"auth": {"type": "noauth"}
+					}
+				},
+				{
+					"name": "Get Current User (Me)",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{base_url}}/api/v1/auth/get-current-user", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "get-current-user"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "List Users",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/list-users?page=1&page_size=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "list-users"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "page_size", "value": "20"},
+								{"key": "status", "value": "Active", "disabled": true},
+								{"key": "department", "value": "", "disabled": true},
+								{"key": "search", "value": "", "disabled": true}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var json = pm.response.json();",
+									"    pm.collectionVariables.set('user_id', json.user_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"url": {"raw": "{{base_url}}/api/v1/users/create-user", "host": ["{{base_url}}"], "path": ["api", "v1", "users", "create-user"]},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass@123\",\n  \"phone\": \"+1234567890\",\n  \"department\": \"Audit\",\n  \"job_title\": \"Auditor\",\n  \"location\": \"New York\",\n  \"role_ids\": [2]\n}"
+						}
+					}
+				},
+				{
+					"name": "Get User Stats",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{base_url}}/api/v1/users/get-user-stats", "host": ["{{base_url}}"], "path": ["api", "v1", "users", "get-user-stats"]}
+					}
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/get-user?user_id={{user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "get-user"],
+							"query": [{"key": "user_id", "value": "{{user_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/update-user?user_id={{user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "update-user"],
+							"query": [{"key": "user_id", "value": "{{user_id}}"}]
+						},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_name\": \"John Doe Updated\",\n  \"phone\": \"+0987654321\",\n  \"department\": \"Internal Audit\",\n  \"job_title\": \"Senior Auditor\",\n  \"location\": \"Boston\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Update User Roles",
+					"request": {
+						"method": "PUT",
+						"url": {"raw": "{{base_url}}/api/v1/users/{{user_id}}/update-user-roles", "host": ["{{base_url}}"], "path": ["api", "v1", "users", "{{user_id}}", "update-user-roles"]},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"role_ids\": [1, 2]\n}"
+						}
+					}
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/delete-user?user_id={{user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "delete-user"],
+							"query": [{"key": "user_id", "value": "{{user_id}}"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Clients",
+			"item": [
+				{
+					"name": "List Clients",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/list-clients?page=1&page_size=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "clients", "list-clients"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "page_size", "value": "20"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Client",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var json = pm.response.json();",
+									"    pm.collectionVariables.set('client_id', json.client_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"url": {"raw": "{{base_url}}/api/v1/clients/create-client", "host": ["{{base_url}}"], "path": ["api", "v1", "clients", "create-client"]},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"client_code\": \"ACME-001\",\n  \"client_name\": \"Acme Corporation\",\n  \"definition_scope\": \"Full audit scope covering all financial controls\",\n  \"reference_documents\": \"SOX 2024, Internal Audit Charter\",\n  \"compliance_framework\": \"SOX\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Get Client by ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/get-client?client_id={{client_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "clients", "get-client"],
+							"query": [{"key": "client_id", "value": "{{client_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Update Client",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/update-client?client_id={{client_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "clients", "update-client"],
+							"query": [{"key": "client_id", "value": "{{client_id}}"}]
+						},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"client_name\": \"Acme Corp Updated\",\n  \"compliance_framework\": \"SOX + COSO\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Delete Client",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/delete-client?client_id={{client_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "clients", "delete-client"],
+							"query": [{"key": "client_id", "value": "{{client_id}}"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Versions",
+			"item": [
+				{
+					"name": "List Versions",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/versions/list-versions?page=1&page_size=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "versions", "list-versions"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "page_size", "value": "20"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Current Version",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{base_url}}/api/v1/versions/get-current-version", "host": ["{{base_url}}"], "path": ["api", "v1", "versions", "get-current-version"]}
+					}
+				},
+				{
+					"name": "Create Version",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var json = pm.response.json();",
+									"    pm.collectionVariables.set('version_id', json.version_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"url": {"raw": "{{base_url}}/api/v1/versions/create-version", "host": ["{{base_url}}"], "path": ["api", "v1", "versions", "create-version"]},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"version_name\": \"v2.0\",\n  \"released_at\": 1700000000,\n  \"is_current\": false,\n  \"description\": \"Version 2.0 control framework update\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Get Version by ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/versions/get-version?version_id={{version_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "versions", "get-version"],
+							"query": [{"key": "version_id", "value": "{{version_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Update Version",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{base_url}}/api/v1/versions/update-version?version_id={{version_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "versions", "update-version"],
+							"query": [{"key": "version_id", "value": "{{version_id}}"}]
+						},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"version_name\": \"v2.0.1\",\n  \"is_current\": true,\n  \"description\": \"Updated to current version\"\n}"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Controls",
+			"item": [
+				{
+					"name": "List Controls",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/controls/list-controls?page=1&page_size=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "controls", "list-controls"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "page_size", "value": "20"},
+								{"key": "domain", "value": "", "disabled": true},
+								{"key": "risk_level", "value": "", "disabled": true},
+								{"key": "frequency", "value": "", "disabled": true},
+								{"key": "framework", "value": "", "disabled": true},
+								{"key": "status", "value": "", "disabled": true},
+								{"key": "search", "value": "", "disabled": true}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Control by ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/controls/get-control?control_id={{control_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "controls", "get-control"],
+							"query": [{"key": "control_id", "value": "{{control_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Get Control Changelog",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/controls/get-control-changelog?control_id={{control_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "controls", "get-control-changelog"],
+							"query": [{"key": "control_id", "value": "{{control_id}}"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Control Tests",
+			"item": [
+				{
+					"name": "Get Test by ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/control-tests/get-test?test_id={{test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "control-tests", "get-test"],
+							"query": [{"key": "test_id", "value": "{{test_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "List Tests by Config Control",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/control-tests/list-tests?config_control_id={{config_control_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "control-tests", "list-tests"],
+							"query": [{"key": "config_control_id", "value": "{{config_control_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Update Control Test",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{base_url}}/api/v1/control-tests/update-test?test_id={{test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "control-tests", "update-test"],
+							"query": [{"key": "test_id", "value": "{{test_id}}"}]
+						},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tests\": \"Verified control execution for Q4 2024\",\n  \"note\": \"All samples passed\",\n  \"comments\": \"No exceptions noted\"\n}"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Review Cycles",
+			"item": [
+				{
+					"name": "List Review Cycles",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/review-cycles/list-cycles?page=1&page_size=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "review-cycles", "list-cycles"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "page_size", "value": "20"},
+								{"key": "client_id", "value": "", "disabled": true},
+								{"key": "status", "value": "", "disabled": true}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Review Cycle",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var json = pm.response.json();",
+									"    pm.collectionVariables.set('cycle_id', json.cycle_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"url": {"raw": "{{base_url}}/api/v1/review-cycles/create-cycle", "host": ["{{base_url}}"], "path": ["api", "v1", "review-cycles", "create-cycle"]},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"client_id\": 1,\n  \"project_lead\": 1,\n  \"review_period\": \"Q1 2025\",\n  \"name\": \"Q1 2025 SOX Review\",\n  \"audit_type\": \"SOX\",\n  \"priority\": \"High\",\n  \"framework\": \"COSO\",\n  \"start_date\": 1704067200,\n  \"due_date\": 1711929600,\n  \"overview\": \"Quarterly SOX compliance review\",\n  \"description\": \"Full review of financial controls for Q1 2025\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Get Review Cycle by ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/review-cycles/get-cycle?cycle_id={{cycle_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "review-cycles", "get-cycle"],
+							"query": [{"key": "cycle_id", "value": "{{cycle_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Update Review Cycle",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{base_url}}/api/v1/review-cycles/update-cycle?cycle_id={{cycle_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "review-cycles", "update-cycle"],
+							"query": [{"key": "cycle_id", "value": "{{cycle_id}}"}]
+						},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Q1 2025 SOX Review - Updated\",\n  \"status\": \"In Progress\",\n  \"priority\": \"Critical\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Delete Review Cycle",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{base_url}}/api/v1/review-cycles/delete-cycle?cycle_id={{cycle_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "review-cycles", "delete-cycle"],
+							"query": [{"key": "cycle_id", "value": "{{cycle_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Get Cycle Stats",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/review-cycles/get-cycle-stats?cycle_id={{cycle_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "review-cycles", "get-cycle-stats"],
+							"query": [{"key": "cycle_id", "value": "{{cycle_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Team",
+					"item": [
+						{
+							"name": "List Team Members",
+							"request": {
+								"method": "GET",
+								"url": {"raw": "{{base_url}}/api/v1/review-cycles/{{cycle_id}}/list-team-members", "host": ["{{base_url}}"], "path": ["api", "v1", "review-cycles", "{{cycle_id}}", "list-team-members"]}
+							}
+						},
+						{
+							"name": "Add Team Member",
+							"request": {
+								"method": "POST",
+								"url": {"raw": "{{base_url}}/api/v1/review-cycles/{{cycle_id}}/add-team-member", "host": ["{{base_url}}"], "path": ["api", "v1", "review-cycles", "{{cycle_id}}", "add-team-member"]},
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"user_id\": 2,\n  \"team_role\": \"Auditor\"\n}"
+								}
+							}
+						},
+						{
+							"name": "Bulk Add Team Members",
+							"request": {
+								"method": "POST",
+								"url": {"raw": "{{base_url}}/api/v1/review-cycles/{{cycle_id}}/add-team-members-bulk", "host": ["{{base_url}}"], "path": ["api", "v1", "review-cycles", "{{cycle_id}}", "add-team-members-bulk"]},
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"members\": [\n    {\"user_id\": 2, \"team_role\": \"Auditor\"},\n    {\"user_id\": 3, \"team_role\": \"Reviewer\"}\n  ]\n}"
+								}
+							}
+						},
+						{
+							"name": "Update Team Member Role",
+							"request": {
+								"method": "PUT",
+								"url": {
+									"raw": "{{base_url}}/api/v1/review-cycles/{{cycle_id}}/update-team-member?user_id={{user_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "review-cycles", "{{cycle_id}}", "update-team-member"],
+									"query": [{"key": "user_id", "value": "{{user_id}}"}]
+								},
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"team_role\": \"Lead Auditor\"\n}"
+								}
+							}
+						},
+						{
+							"name": "Remove Team Member",
+							"request": {
+								"method": "DELETE",
+								"url": {
+									"raw": "{{base_url}}/api/v1/review-cycles/{{cycle_id}}/remove-team-member?user_id={{user_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "review-cycles", "{{cycle_id}}", "remove-team-member"],
+									"query": [{"key": "user_id", "value": "{{user_id}}"}]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Controls (Cycle)",
+					"item": [
+						{
+							"name": "List Cycle Controls",
+							"request": {
+								"method": "GET",
+								"url": {"raw": "{{base_url}}/api/v1/review-cycles/{{cycle_id}}/list-controls", "host": ["{{base_url}}"], "path": ["api", "v1", "review-cycles", "{{cycle_id}}", "list-controls"]}
+							}
+						},
+						{
+							"name": "Add Control to Cycle",
+							"request": {
+								"method": "POST",
+								"url": {"raw": "{{base_url}}/api/v1/review-cycles/{{cycle_id}}/add-control", "host": ["{{base_url}}"], "path": ["api", "v1", "review-cycles", "{{cycle_id}}", "add-control"]},
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"control_id\": 1\n}"
+								}
+							}
+						},
+						{
+							"name": "Bulk Add Controls",
+							"request": {
+								"method": "POST",
+								"url": {"raw": "{{base_url}}/api/v1/review-cycles/{{cycle_id}}/add-controls-bulk", "host": ["{{base_url}}"], "path": ["api", "v1", "review-cycles", "{{cycle_id}}", "add-controls-bulk"]},
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"control_ids\": [1, 2, 3]\n}"
+								}
+							}
+						},
+						{
+							"name": "Remove Control from Cycle",
+							"request": {
+								"method": "DELETE",
+								"url": {
+									"raw": "{{base_url}}/api/v1/review-cycles/{{cycle_id}}/remove-control?control_id={{control_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "review-cycles", "{{cycle_id}}", "remove-control"],
+									"query": [{"key": "control_id", "value": "{{control_id}}"}]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "List Cycle Test Logs",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{base_url}}/api/v1/review-cycles/{{cycle_id}}/list-test-logs", "host": ["{{base_url}}"], "path": ["api", "v1", "review-cycles", "{{cycle_id}}", "list-test-logs"]}
+					}
+				},
+				{
+					"name": "List Cycle Evidence",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{base_url}}/api/v1/review-cycles/{{cycle_id}}/list-evidence", "host": ["{{base_url}}"], "path": ["api", "v1", "review-cycles", "{{cycle_id}}", "list-evidence"]}
+					}
+				},
+				{
+					"name": "List Cycle Test Objectives",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{base_url}}/api/v1/review-cycles/{{cycle_id}}/list-test-objectives", "host": ["{{base_url}}"], "path": ["api", "v1", "review-cycles", "{{cycle_id}}", "list-test-objectives"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "Evidence",
+			"item": [
+				{
+					"name": "List Evidence",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/evidence/list-evidence?page=1&page_size=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "evidence", "list-evidence"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "page_size", "value": "20"},
+								{"key": "cycle_id", "value": "", "disabled": true},
+								{"key": "control_id", "value": "", "disabled": true},
+								{"key": "test_id", "value": "", "disabled": true},
+								{"key": "uploaded_by", "value": "", "disabled": true},
+								{"key": "file_type", "value": "", "disabled": true},
+								{"key": "status", "value": "", "disabled": true},
+								{"key": "search", "value": "", "disabled": true}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Evidence Stats",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{base_url}}/api/v1/evidence/get-evidence-stats", "host": ["{{base_url}}"], "path": ["api", "v1", "evidence", "get-evidence-stats"]}
+					}
+				},
+				{
+					"name": "Get Evidence Vault",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{base_url}}/api/v1/evidence/get-evidence-vault", "host": ["{{base_url}}"], "path": ["api", "v1", "evidence", "get-evidence-vault"]}
+					}
+				},
+				{
+					"name": "Upload Evidence",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var json = pm.response.json();",
+									"    pm.collectionVariables.set('evidence_id', json.evidence_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"url": {"raw": "{{base_url}}/api/v1/evidence/upload-evidence", "host": ["{{base_url}}"], "path": ["api", "v1", "evidence", "upload-evidence"]},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{"key": "file", "type": "file", "src": ""},
+								{"key": "cycle_id", "value": "1", "type": "text"},
+								{"key": "control_id", "value": "1", "type": "text", "disabled": true},
+								{"key": "test_id", "value": "", "type": "text", "disabled": true},
+								{"key": "comments", "value": "Uploaded via Postman", "type": "text"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Evidence by ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/evidence/get-evidence?evidence_id={{evidence_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "evidence", "get-evidence"],
+							"query": [{"key": "evidence_id", "value": "{{evidence_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Update Evidence",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{base_url}}/api/v1/evidence/update-evidence?evidence_id={{evidence_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "evidence", "update-evidence"],
+							"query": [{"key": "evidence_id", "value": "{{evidence_id}}"}]
+						},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"comments\": \"Updated evidence metadata\",\n  \"cycle_id\": 1,\n  \"control_id\": 1\n}"
+						}
+					}
+				},
+				{
+					"name": "Re-upload Evidence",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{base_url}}/api/v1/evidence/reupload-evidence?evidence_id={{evidence_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "evidence", "reupload-evidence"],
+							"query": [{"key": "evidence_id", "value": "{{evidence_id}}"}]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{"key": "file", "type": "file", "src": ""}
+							]
+						}
+					}
+				},
+				{
+					"name": "Approve Evidence",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{base_url}}/api/v1/evidence/update-evidence-status?evidence_id={{evidence_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "evidence", "update-evidence-status"],
+							"query": [{"key": "evidence_id", "value": "{{evidence_id}}"}]
+						},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"Approved\",\n  \"comments\": \"Evidence verified and approved\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Reject Evidence",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{base_url}}/api/v1/evidence/update-evidence-status?evidence_id={{evidence_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "evidence", "update-evidence-status"],
+							"query": [{"key": "evidence_id", "value": "{{evidence_id}}"}]
+						},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"Rejected\",\n  \"comments\": \"Insufficient documentation\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Delete Evidence",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{base_url}}/api/v1/evidence/delete-evidence?evidence_id={{evidence_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "evidence", "delete-evidence"],
+							"query": [{"key": "evidence_id", "value": "{{evidence_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Download Evidence",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/evidence/download-evidence?evidence_id={{evidence_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "evidence", "download-evidence"],
+							"query": [{"key": "evidence_id", "value": "{{evidence_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Get Workflow Status",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/evidence/{{evidence_id}}/workflow-status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "evidence", "{{evidence_id}}", "workflow-status"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Test Logs",
+			"item": [
+				{
+					"name": "Create Test Log",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var json = pm.response.json();",
+									"    pm.collectionVariables.set('log_id', json.log_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"url": {"raw": "{{base_url}}/api/v1/test-logs/create-test-log", "host": ["{{base_url}}"], "path": ["api", "v1", "test-logs", "create-test-log"]},
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"test_id\": 1,\n  \"control_id\": 1,\n  \"cycle_id\": 1,\n  \"status\": \"Passed\",\n  \"execution_time_seconds\": 3600,\n  \"report_link\": \"https://reports.example.com/test-001\",\n  \"notes\": \"All test cases passed successfully\"\n}"
+						}
+					}
+				}
+			]
+		}
+	]
+}

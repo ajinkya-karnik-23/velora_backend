@@ -1,0 +1,137 @@
+{
+  "_id": {
+    "$oid": "67224247c088dea0dfa75c34"
+  },
+  "alias": "CTRL0020526_Monthly",
+  "control_number": "CTRL0020526",
+  "control_name": "FSC008-002 Review of SAP configured discounts and rebates control",
+  "reference_number": "FSC008-002",
+  "entity": {
+    "$numberDouble": "NaN"
+  },
+  "control_desc": "WHAT & WHY: Gross to net sales calculation. Price conditions in SAP representing selling price or deductions are reviewed to ensure that the gross sales, discounts and net sales reported are accurate; and discounts applied are valid and approved.\n\nHOW: a full review of all SAP price conditions related to sales is performed once a year. During the months when the full review is not performed, the changes on those sales related price conditions are reviewed by the Supply Chain Manager, CFO or delegates.\n\nFull review: a report (UKMC only: 30 & Z5-ZL & ZF) is extracted from SAP (transaction V/LD) with all the price conditions related to sales/customers. Accuracy and completeness of the report in SAP is proved by taking screenshots of the parameters to ensure that all the conditions are included. Comments on validity of the price conditions are added by the Supply Chain team or delegates, and the report in excel with the comments is sent to the Supply Chain Manager, CFO or delegates for review and sign-off.\n\nChanges during the month: a report with all the changes during the month is extracted from SAP (transaction  ZV231213 and V/LD 30). Accuracy and completeness of the report in SAP is proved by taking screenshots of the parameters to ensure that all the conditions are included. Comments on validity of the change are added by the Supply Chain team or delegates, and the report in excel with the comments is sent to the Supply Chain Manager, CFO or delegates for review and sign-off\n \nIf errors are detected during the review, clear action plan or evidence of the correction is added.\n\nWHEN: Monthly before WD15 (December by WD8)",
+  "frequency_of": "Monthly",
+  "risk_level": "High",
+  "pwc_reliance": "No",
+  "control_owner": "Vibhakar, Nisha",
+  "unit_fccg_contact": "Priyanka",
+  "validations": [
+    {
+      "test_id":86,
+      "validation_name": "IPE1:  ZL01 Validation",
+      "validation_desc": "In 526m_IPE1.jpg \n1) T-Code = ZV231213 \n2) Sales Organisation = GB10\n3) Condition Type = ZL01\n4) Validity Range = 01.10.2023 to 31.10.2023\n5) Type of report = Classical Report \n\n%\n526m_IPE1 \"ZL01\" Validation: Validate the ZL01 input parameters.\n%",
+      "validation": "ipe1:__zl01_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c2b"
+      }
+    },
+    {
+      "test_id":87,
+      "validation_name": "IPE2: ZL01 Validation",
+      "validation_desc": "In 526m_IPE2a.jpg and 526m_IPE2b.xlsx. \nStep1: retrieve the number of rows in 526m_IPE2b.xlsx.\nStep2: retrieve row count from 526m_IPE2a.jpg\nStep3: retrieve first and last row elements from 526m_IPE2b.xlsx.\nStep 4: extract the first and last line items from the image:526m_IPE2a.jpg\n%\n526m_IPE2* \"ZL01\" Validation: Ensure the completeness and accuracy of ZL01 report used in the control performance\n%",
+      "validation": "ipe2:_zl01_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c2c"
+      }
+    },
+    {
+      "test_id":88,
+      "validation_name": "IPE3: ZF01 Validation",
+      "validation_desc": "In 526m_IPE3.jpg \n1) T-Code = ZV231213 \n2) Sales Organisation = GB10\n3) Condition Type = ZL01\n4) Validity Range = 01.10.2023 to 31.10.2023\n5) Type of report = Classical Report \n%\n526m_IPE3 \"ZF01\" Validation: Validate the overall pricing report condition ZF01 input parameters.\n%",
+      "validation": "ipe3:_zf01_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c2d"
+      }
+    },
+    {
+      "test_id":89,
+      "validation_name": "IPE4: ZF01 Validation",
+      "validation_desc": "In 526m_IPE4a.jpg and 526m_IPE4b with the records in 526m_IPE4c.xlsx. \nStep1: retrieve  the  first row and last row from 526m_IPE4c.xlsx.\nStep2: retrieve the first row from 526m_IPE4a.jpg\nStep3:  retrieve the last row from 526m_IPE4b.jpg\nStep4: Retrieve the number of rows in 526m_IPE4c.xlsx\nStep5: retreive the row count from 526m_IPE4a.jpg\nStep6: retreive the row count from 526m_IPE4b.jpg\n%\n526m_IPE2* \"ZF01\" Validation: Ensure the completeness and accuracy of ZF01 report used in the control performance\n%",
+      "validation": "ipe4:_zf01_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c2e"
+      }
+    },
+    {
+      "test_id":90,
+      "validation_name": "IPE5: ZF01 Hierarchy Validation",
+      "validation_desc": "In 526m_IPE5a.jpg and 526m_IPE5b.jpg \n1) T-Code = VL/D \n2) Sales Organisation = GB10\n3) Validity Range = 01.10.2023 to 31.10.2023 \n\n%\n526m_IPE5* \"ZF01 Hierarchy\" Validation: Validate the overall pricing report input parameters.\n%",
+      "validation": "ipe5:_zf01_hierarchy_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c2f"
+      }
+    },
+    {
+      "test_id":91,
+      "validation_name": "IPE6: ZF01 Hierarchy Validation",
+      "validation_desc": "Refer data in 526m_IPE6.html, 526m_IPE6f.xlsx. \nStep 1: retrieve row counts from 526m_IPE6f.xlsx. \nStep2: retrieve row counts from 526m_IPE6.html\nStep3: retrieve the first and last row from 526m_IPE6f.xlsx\nStep4: retrieve the first and last row from 526m_IPE6.html\n%\n526m_IPE6* \"ZF01 Hierarchy\" Validation: Ensure the completeness and accuracy of ZL01 report used in the control performance\n%",
+      "validation": "ipe6:_zf01_hierarchy_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c30"
+      }
+    },
+    {
+      "test_id":92,
+      "validation_name": "IPE7: ZA01 Validation",
+      "validation_desc": "In 526m_IPE7.jpg \n1) T-Code = ZV231213 \n2) Sales Organisation = GB10\n3) Condition Type = ZA01\n4) Validity Range = 01.01.2023 to 31.10.2023\n5) Type of report = Classical Report \n\n%\n526m_IPE7 \"ZA01\" Validation: Validate the overall pricing report condition \"ZA01\" input parameters.\n%",
+      "validation": "ipe7:_za01_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c31"
+      }
+    },
+    {
+      "test_id":93,
+      "validation_name": "IPE8: ZA01 Validation",
+      "validation_desc": "Match the no. of records found in 526m_IPE8a.jpg and 526m_IPE8b.xlsx. \nStep 1: retrieve row counts from  526m_IPE8b.xlsx. \nStep2: retrieve row counts from 526m_IPE8a.jpg \n\n%\n526m_IPE8* \"ZA01\" Validation: Ensure the completeness and accuracy of ZL01 report used in the control performance\n%",
+      "validation": "ipe8:_za01_validation",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c32"
+      }
+    },
+    {
+      "test_id":94,
+      "validation_name": "CPT",
+      "validation_desc": "Monthly Review: Verify that comments on validity of the price conditions are added by the Supply Chain team or delegates, and the report in excel with the comments is sent to the Supply Chain Manager, CFO or delegates for monthly review and sign-off.\n- Verify that the monthly review is performed before WD15. \nFor review evidence refer to tabs \"Review and Evidence\"\n",
+      "validation": "cpt",
+      "alias": "CTRL0020526_Monthly",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224247c088dea0dfa75c33"
+      }
+    }
+  ]
+}

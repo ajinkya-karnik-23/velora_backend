@@ -1,0 +1,56 @@
+{
+  "_id": {
+    "$oid": "67224259c088dea0dfa75c6f"
+  },
+  "alias": "CTRL0027940_Daily",
+  "control_number": "CTRL0027940",
+  "control_name": "IDOC Monitoring_Movianto",
+  "reference_number": "DES001",
+  "entity": "EMEA Logistics",
+  "control_desc": "WHAT & WHY\nA control to monitor the status of goods despatch IDOCs received from LSPs to ensure blocked IDOCs are resolved in a timely fashion\n\nHOW:\n1. On a daily basis an IDOC report is ran using SAP transaction WE02 to review IDOCs received from LSPs for goods despatches.  A screenshot should be taken of the screen used to select the parameters of the report including the bottom corner of the screen to show the date and time.\n2. IDOCs relating to LSP despatches are reviewed to identify any that are blocked (showing status 51) and therefore may not have been accurately reflected in revenue.\n3. If there are no despatch IDOCs with a status of 51, or if the only blocked IDOCs are 3 days old or less, a further screenshot is saved to evidence this, again showing the date and time. No further actions are necessary.\n4. Where blocked despatch IDOCs greater than 3 days old are identified, appropriate actions are taken to ensure these are cleared promptly.  The actions must be noted together with the report to identify both how the IDOCs will be unblocked.  By the end of the month, the actions should have been completed to ensure that no blocked IDOCs remain when the period closes in SAP.\n\nWHEN:\nDaily  (working days only)",
+  "frequency_of": "Daily",
+  "risk_level": "High",
+  "pwc_reliance": "Yes",
+  "control_owner": "Lawton, Jon",
+  "unit_fccg_contact": "Ana",
+  "validations": [
+    {
+      "test_id":113,
+      "validation_name": "IPE 1 IDOC Listing Validation ",
+      "validation_desc": "In screenshot1.jpg\n\n1. Report Title on left side: IDoc List.\n2. Created On: 01.01.2024 to 05.01.2024\n3. Partner Number: MOVIANTO\n4. System date stamp : 2024-01-05\n\n%\nValidate the WE02 input parameters\n%",
+      "validation": "ipe_1_idoc_listing_validation_",
+      "alias": "CTRL0027940_Daily",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224259c088dea0dfa75c6c"
+      }
+    },
+    {
+      "test_id":114,
+      "validation_name": "Attribute A_(SHPCON) Validation ",
+      "validation_desc": "In screenshot2a.jpg\n\n1. Validate if SHPCON is the immediate parent directory of the selected item in the left panel from the image screenshot2a.jpg\n2. Presence of Status 51 in the left panel from the image screenshot2a.jpg\n3. extract the system date from the image screenshot2a.jpg\n4. check if there are any line items created with a difference of more than 3 days when compared to date in step 3 from screenshot2a.jpg\n5. if there are any items from step 4, then the test is a FAIL. If there is no items present or if Step 2 is false, the test is a PASS from screenshot2a.jpg\n%\nReview if for any despatches with status 51 or any despatches blocked for more than 3 days appropriate action was taken to unblock those before month end\n%",
+      "validation": "attribute_a_(shpcon)_validation_",
+      "alias": "CTRL0027940_Daily",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224259c088dea0dfa75c6d"
+      }
+    },
+    {
+      "validation_name": "Attribute A_(WHSCON) Validation ",
+      "validation_desc": "In WP_Sample_1_2.png\n\n1. Validate if the screenshot is titled IDOC List. from WP_Sample_1_2.png\n2. Date and time stamp screenshot:\n2024-01-05 from WP_Sample_1_2.png\n3. Validate in left panel the selected folder is for condition \"WHSCON\" from WP_Sample_1_2.png\n4. Validate the drop-down in selected folder, whether it contains status 51 from WP_Sample_1_2.png.\n5. If there is no items in condition 51 or there is no folder showing for status 51 from step 4, then this test is a NA.\n6.  if there are items in this status and if aging of item is more than 3 days, the control test is failing from WP_Sample_1_2.png\n%\nReview if for any despatches with status 51 or any despatches blocked for more than 3 days appropriate action was taken to unblock those before month end\n%",
+      "validation": "attribute_a_(whscon)_validation_",
+      "alias": "CTRL0027940_Daily",
+      "status": "RUN PENDING",
+      "run_status": "NOT STARTED",
+      "version": 1,
+      "_id": {
+        "$oid": "67224259c088dea0dfa75c6e"
+      }
+    }
+  ]
+}

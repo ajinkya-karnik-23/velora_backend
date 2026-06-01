@@ -1,0 +1,122 @@
+2026-05-17 14:04:19,455 - INFO - =====================================================================
+2026-05-17 14:04:19,455 - INFO - ⚡ Control-iQ Module Initiated for Control: CTRL0020526
+2026-05-17 14:04:19,455 - INFO - Executing Preprocessing: Extracting description string from JSON maps...
+2026-05-17 14:04:19,455 - INFO - Preprocessing context initialization for Control ID: CTRL0020526
+2026-05-17 14:04:19,455 - INFO - Successfully bound high-fidelity JSON description to active payload state.
+2026-05-17 14:04:19,455 - INFO - Invoking Step 1: Running parallel analysis graph (G01)...
+2026-05-17 14:04:21,996 - INFO - --- [STEP 1 GRAPH EXECUTION COMPLETE] ---
+2026-05-17 14:04:21,996 - INFO - Interpreter Execution Status   : True
+2026-05-17 14:04:21,996 - INFO - Detected Compliance Category   : SAP Test Case
+2026-05-17 14:04:21,996 - INFO - Target Conditions Found        : ['T-Code', 'Sales Organisation', 'Condition Type']
+2026-05-17 14:04:21,996 - INFO - Evidence Capture Status        : True
+2026-05-17 14:04:21,996 - INFO - Resolved Storage Path Arrays   : ['4/CTRL0020526/88_IPE_3.xlsx']
+2026-05-17 14:04:21,996 - INFO - ---------------------------------------------------------
+2026-05-17 17:36:36,146 - INFO - =====================================================================
+2026-05-17 17:36:36,146 - INFO - ⚡ Control-iQ Module Initiated for Control: CTRL0020526
+2026-05-17 17:36:36,146 - INFO - Executing Preprocessing: Extracting description string from JSON maps...
+2026-05-17 17:36:36,146 - INFO - ⚡ [Preprocessor] Resolving metadata for Control: CTRL0020526 | Test ID: 89
+2026-05-17 17:36:36,146 - INFO - ✅ [Preprocessor] High-fidelity validation description parsed and bound to workflow state successfully.
+2026-05-17 17:36:36,146 - INFO - Invoking Step 1: Running parallel analysis graph (G01)...
+2026-05-17 17:36:40,627 - INFO - --- [STEP 1 GRAPH EXECUTION COMPLETE] ---
+2026-05-17 17:36:40,628 - INFO - Interpreter Execution Status   : True
+2026-05-17 17:36:40,628 - INFO - Detected Compliance Category   : Data Validation
+2026-05-17 17:36:40,628 - INFO - Target Conditions Found        : ['First row from IPE_4.xlsx', 'Last row from IPE_4.xlsx', 'First row from IPE_4.jpg', 'Last row from IPE_4.jpg', 'Row count from IPE_4.xlsx', 'Row count from IPE_4.jpg']
+2026-05-17 17:36:40,628 - INFO - Evidence Capture Status        : True
+2026-05-17 17:36:40,628 - INFO - Resolved Storage Path Arrays   : ['4/CTRL0020526/88_IPE_3.xlsx']
+2026-05-17 17:36:40,628 - INFO - ---------------------------------------------------------
+2026-05-17 18:07:20,861 - INFO - =====================================================================
+2026-05-17 18:07:20,861 - INFO - ⚡ Control-iQ Module Initiated for Control: CTRL0020526
+2026-05-17 18:07:20,861 - INFO - Executing Preprocessing: Extracting description string from JSON maps...
+2026-05-17 18:07:20,862 - INFO - ⚡ [Preprocessor] Resolving metadata for Control: CTRL0020526 | Test ID: 89
+2026-05-17 18:07:20,862 - INFO - ✅ [Preprocessor] High-fidelity validation description parsed and bound to workflow state successfully.
+2026-05-17 18:07:20,862 - INFO - Invoking Step 1: Running parallel analysis graph (G01)...
+2026-05-17 18:07:23,904 - INFO - --- [STEP 1 GRAPH EXECUTION COMPLETE] ---
+2026-05-17 18:07:23,904 - INFO - Interpreter Execution Status   : True
+2026-05-17 18:07:23,904 - INFO - Detected Compliance Category   : IPE_SAP_IMAGE_VALIDATION
+2026-05-17 18:07:23,904 - INFO - Target Conditions Found        : ['IPE_4.jpg', 'IPE_4.xlsx', 'first row', 'last row', 'row count']
+2026-05-17 18:07:23,904 - INFO - Evidence Capture Status        : True
+2026-05-17 18:07:23,904 - INFO - Resolved Storage Path Arrays   : ['4/CTRL0020526/88_IPE_3.xlsx']
+2026-05-17 18:07:23,904 - INFO - ---------------------------------------------------------
+2026-05-17 18:12:07,765 - INFO - =====================================================================
+2026-05-17 18:12:07,765 - INFO - ⚡ Control-iQ Module Initiated for Control: CTRL0020526
+2026-05-17 18:12:07,765 - INFO - Executing Preprocessing: Extracting description string from JSON maps...
+2026-05-17 18:12:07,765 - INFO - ⚡ [Preprocessor] Resolving metadata for Control: CTRL0020526 | Test ID: 89
+2026-05-17 18:12:07,765 - INFO - ✅ [Preprocessor] High-fidelity validation description parsed and bound to workflow state successfully.
+2026-05-17 18:12:07,765 - INFO - Invoking Step 1: Running parallel analysis graph (G01)...
+2026-05-17 18:12:10,520 - INFO - --- [STEP 1 GRAPH EXECUTION COMPLETE] ---
+2026-05-17 18:12:10,520 - INFO - Interpreter Execution Status   : True
+2026-05-17 18:12:10,520 - INFO - Detected Compliance Category   : ROW_LEVEL_ANALYSIS
+2026-05-17 18:12:10,520 - INFO - Target Conditions Found        : ['IPE_4.jpg', 'IPE_4.xlsx', 'first row', 'last row', 'row count']
+2026-05-17 18:12:10,520 - INFO - Evidence Capture Status        : True
+2026-05-17 18:12:10,520 - INFO - Resolved Storage Path Arrays   : ['4/CTRL0020526/88_IPE_3.xlsx']
+2026-05-17 18:12:10,520 - INFO - ---------------------------------------------------------
+2026-05-17 18:22:16,850 - INFO - =====================================================================
+2026-05-17 18:22:16,850 - INFO - ⚡ Control-iQ Module Initiated for Control: CTRL0020526
+2026-05-17 18:22:16,850 - INFO - Executing Preprocessing: Extracting description string from JSON maps...
+2026-05-17 18:22:16,850 - INFO - ⚡ [Preprocessor] Resolving metadata for Control: CTRL0020526 | Test ID: 89
+2026-05-17 18:22:16,850 - INFO - ✅ [Preprocessor] High-fidelity validation description parsed and bound to workflow state successfully.
+2026-05-17 18:22:16,850 - INFO - Invoking Step 1: Running parallel analysis graph (G01)...
+2026-05-17 18:22:16,896 - ERROR - ❌ Critical Core Crash encountered inside graph iteration: 1 validation error for G01_graph_state
+test_id
+  Field required [type=missing, input_value={'test_description': 'Mat...0020526', 'cycle_id': 4}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+Traceback (most recent call last):
+  File "/Users/ajinkyakarnik/Desktop/Apps/control-IQ/control iQ backend -05-2026/CIQ_Backend/app/services/control_testing_module/run_module.py", line 66, in execute_module_pipeline
+    final_state = await graph.ainvoke(processed_payload)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ajinkyakarnik/Library/Caches/pypoetry/virtualenvs/ciq-backend-Syh6WQRE-py3.12/lib/python3.12/site-packages/langgraph/pregel/main.py", line 4057, in ainvoke
+    async for chunk in self.astream(
+  File "/Users/ajinkyakarnik/Library/Caches/pypoetry/virtualenvs/ciq-backend-Syh6WQRE-py3.12/lib/python3.12/site-packages/langgraph/pregel/main.py", line 3404, in astream
+    while loop.tick():
+          ^^^^^^^^^^^
+  File "/Users/ajinkyakarnik/Library/Caches/pypoetry/virtualenvs/ciq-backend-Syh6WQRE-py3.12/lib/python3.12/site-packages/langgraph/pregel/_loop.py", line 596, in tick
+    self.tasks = prepare_next_tasks(
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/Users/ajinkyakarnik/Library/Caches/pypoetry/virtualenvs/ciq-backend-Syh6WQRE-py3.12/lib/python3.12/site-packages/langgraph/pregel/_algo.py", line 491, in prepare_next_tasks
+    if task := prepare_single_task(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ajinkyakarnik/Library/Caches/pypoetry/virtualenvs/ciq-backend-Syh6WQRE-py3.12/lib/python3.12/site-packages/langgraph/pregel/_algo.py", line 637, in prepare_single_task
+    val = _proc_input(
+          ^^^^^^^^^^^^
+  File "/Users/ajinkyakarnik/Library/Caches/pypoetry/virtualenvs/ciq-backend-Syh6WQRE-py3.12/lib/python3.12/site-packages/langgraph/pregel/_algo.py", line 1386, in _proc_input
+    val = proc.mapper(val)
+          ^^^^^^^^^^^^^^^^
+  File "/Users/ajinkyakarnik/Library/Caches/pypoetry/virtualenvs/ciq-backend-Syh6WQRE-py3.12/lib/python3.12/site-packages/langgraph/graph/state.py", line 1732, in _coerce_state
+    return schema(**input)
+           ^^^^^^^^^^^^^^^
+  File "/Users/ajinkyakarnik/Library/Caches/pypoetry/virtualenvs/ciq-backend-Syh6WQRE-py3.12/lib/python3.12/site-packages/pydantic/main.py", line 263, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pydantic_core._pydantic_core.ValidationError: 1 validation error for G01_graph_state
+test_id
+  Field required [type=missing, input_value={'test_description': 'Mat...0020526', 'cycle_id': 4}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+Before task with name 'evidence_gatherer' and path '('__pregel_pull', 'evidence_gatherer')'
+2026-05-17 18:23:50,984 - INFO - =====================================================================
+2026-05-17 18:23:50,985 - INFO - ⚡ Control-iQ Module Initiated for Control: CTRL0020526
+2026-05-17 18:23:50,985 - INFO - Executing Preprocessing: Extracting description string from JSON maps...
+2026-05-17 18:23:50,985 - INFO - ⚡ [Preprocessor] Resolving metadata for Control: CTRL0020526 | Test ID: 89
+2026-05-17 18:23:50,985 - INFO - ✅ [Preprocessor] High-fidelity validation description parsed and bound to workflow state successfully.
+2026-05-17 18:23:50,985 - INFO - Invoking Step 1: Running parallel analysis graph (G01)...
+2026-05-17 18:23:51,067 - WARNING - ⚠️ [Evidence Gatherer] File element '89_88_IPE_3.xlsx' could not be located at path: ./storage/4/CTRL0020526/89_88_IPE_3.xlsx
+2026-05-17 18:23:53,784 - INFO - --- [STEP 1 GRAPH EXECUTION COMPLETE] ---
+2026-05-17 18:23:53,784 - INFO - Interpreter Execution Status   : True
+2026-05-17 18:23:53,784 - INFO - Detected Compliance Category   : ROW_LEVEL_ANALYSIS
+2026-05-17 18:23:53,784 - INFO - Target Conditions Found        : ['IPE_4.jpg', 'IPE_4.xlsx', 'first row', 'last row', 'row count']
+2026-05-17 18:23:53,784 - INFO - Evidence Capture Status        : False
+2026-05-17 18:23:53,784 - INFO - Resolved Storage Path Arrays   : []
+2026-05-17 18:23:53,784 - INFO - ---------------------------------------------------------
+2026-05-17 18:30:24,422 - INFO - =====================================================================
+2026-05-17 18:30:24,422 - INFO - ⚡ Control-iQ Module Initiated for Control: CTRL0020526
+2026-05-17 18:30:24,422 - INFO - Executing Preprocessing: Extracting description string from JSON maps...
+2026-05-17 18:30:24,422 - INFO - ⚡ [Preprocessor] Resolving metadata for Control: CTRL0020526 | Test ID: 89
+2026-05-17 18:30:24,422 - INFO - ✅ [Preprocessor] High-fidelity validation description parsed and bound to workflow state successfully.
+2026-05-17 18:30:24,422 - INFO - Invoking Step 1: Running parallel analysis graph (G01)...
+2026-05-17 18:30:24,506 - INFO - 🔎 [Evidence Gatherer] Extracted targets from description: ['IPE_4.jpg', 'IPE_4.xlsx']
+2026-05-17 18:30:27,512 - INFO - --- [STEP 1 GRAPH EXECUTION COMPLETE] ---
+2026-05-17 18:30:27,512 - INFO - Interpreter Execution Status   : True
+2026-05-17 18:30:27,512 - INFO - Detected Compliance Category   : ROW_LEVEL_ANALYSIS
+2026-05-17 18:30:27,512 - INFO - Target Conditions Found        : ['IPE_4.jpg', 'IPE_4.xlsx', 'first row', 'last row', 'row count']
+2026-05-17 18:30:27,512 - INFO - Evidence Capture Status        : True
+2026-05-17 18:30:27,512 - INFO - Resolved Storage Path Arrays   : ['4/CTRL0020526/89_IPE_4.jpg', '4/CTRL0020526/89_IPE_4.xlsx']
+2026-05-17 18:30:27,512 - INFO - ---------------------------------------------------------
