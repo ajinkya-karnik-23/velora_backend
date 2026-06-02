@@ -78,6 +78,20 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
         )
 
     # -------------------------------------------------------------------
+    # RUN SEED (idempotent — safe on every startup)
+    # -------------------------------------------------------------------
+
+    try:
+
+        from scripts.seed import seed
+        await seed()
+        logger.info("✅ Database seed completed")
+
+    except Exception:
+
+        logger.exception("❌ seed_failed")
+
+    # -------------------------------------------------------------------
     # APP RUNNING
     # -------------------------------------------------------------------
 
