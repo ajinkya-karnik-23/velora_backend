@@ -91,6 +91,16 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
 
         logger.exception("❌ seed_failed")
 
+    try:
+
+        from scripts.seed_ukmc_controls import seed_ukmc_controls
+        await seed_ukmc_controls()
+        logger.info("✅ UKMC controls seed completed")
+
+    except Exception:
+
+        logger.exception("❌ ukmc_seed_failed")
+
     # -------------------------------------------------------------------
     # APP RUNNING
     # -------------------------------------------------------------------

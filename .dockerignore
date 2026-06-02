@@ -28,7 +28,8 @@ storage/
 tests/
 postman/
 Detail_API_Request_Response/
-data/
+data/*
+!data/detailed_jsons
 landing_folder/
 *.md
 !README.md
