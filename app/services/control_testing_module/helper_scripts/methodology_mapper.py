@@ -8,7 +8,7 @@ TEST_METHODOLOGY_CORPUS: Dict[str, Dict[str, Any]] = {
     "CPT_PRICE_CHANGE_VALIDATION": {
         "title": "CPT Price Change Commentary Alignment Audit",
         "expected_tools": ["extract_price_change_entries_from_excel", "parse_image_and_get_extracted_text"],
-        "classification_criteria": "Use this category ONLY when the description explicitly mentions auditing pricing updates, validating price change commentary, tracking price flags/condition codes (like ZL01 or ZF01), or checking supply chain commentary/annotations for price modifications.",
+        "classification_criteria": "Use this category ONLY when the description explicitly mentions auditing price change commentary, verifying that pricing modifications have associated commentary or annotations, or checking supply chain commentary for price modifications. The evidence is typically an Excel workbook containing price change records with commentary columns. Do NOT use this category simply because the description mentions a SAP condition type name (e.g. ZL01, ZF01) — condition type names also appear in IPE SAP screenshot tests; the distinguishing factor here is the presence of commentary/annotation validation against pricing records.",
         "methodology_instructions": """
         CRITICAL COMPLIANCE TESTING PROCEDURE:
         1. Use the tool 'extract_price_change_entries_from_excel' to extract structured price change entries from the workbook.
@@ -73,7 +73,7 @@ TEST_METHODOLOGY_CORPUS: Dict[str, Dict[str, Any]] = {
     "IPE_SAP_IMAGE_VALIDATION": {
         "title": "IPE SAP GUI Presentation Layer Structural Inspection",
         "expected_tools": ["analyse_image_evidence_directly_with_llm", "parse_image_and_get_extracted_text", "analyse_image_evidence_for_tcode_with_llm"],
-        "classification_criteria": "Use this category ONLY when verifying specific SAP GUI interface layouts, application configurations, parameters or system attributes fields directly visible in a screenshot panel (e.g., Sales Organisation, Validity Ranges, Transaction T-Codes like ZV231213, or bottom status ribbons). Do NOT use this if the primary task is matching data row numbers or counting table lines.",
+        "classification_criteria": "Use this category when verifying specific SAP GUI interface parameters or system attributes directly visible in a screenshot or image file. This includes: Sales Organisation, Condition Type (e.g. ZL01, ZF01, or any other SAP condition code), Validity Ranges/Dates, Type of Report, Transaction T-Codes, or bottom status ribbons. If the description names an image file (e.g. IPE_3.jpg) and asks to check SAP field values like Condition Type, Sales Organisation, or Validity Range, always use this category. Do NOT use this if the primary task is matching data row numbers, counting table lines, or validating commentary on price change records.",
         "methodology_instructions": """
         CRITICAL COMPLIANCE TESTING PROCEDURE:
         ══════════════════════════════════════════════════════════
