@@ -19,6 +19,7 @@ from app.api.deps import (
 from app.core.exceptions import ForbiddenException
 from app.schemas.common import PaginatedResponse
 from app.schemas.evidence import (
+    DemoFileImport,
     DemoVaultFile,
     EvidenceOut,
     EvidenceStatusUpdate,
@@ -281,6 +282,24 @@ async def list_demo_vault(
                 uploader_name=uploader,
             ))
     return files
+
+
+@router.post("/import-demo-file", response_model=EvidenceOut, status_code=201)
+async def import_demo_file(
+    data: DemoFileImport,
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> EvidenceOut:
+    """Copy a demo vault file into real evidence storage and link it."""
+    service = EvidenceService(db)
+    return await service.import_demo(
+        control_number=data.control_number,
+        filename=data.filename,
+        cycle_id=data.cycle_id,
+        control_id=data.control_id,
+        test_id=data.test_id,
+        current_user=current_user,
+    )
 
 
 @router.get("/demo-vault/download")

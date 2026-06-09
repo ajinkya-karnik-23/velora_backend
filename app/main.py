@@ -354,10 +354,23 @@ def create_app() -> FastAPI:
     )
 
     # -------------------------------------------------------------------
-    # KNOWLEDGE BASE — static Quartz-compiled site
+    # DEMO VAULT — serve demo_data files as plain static assets for preview
     # -------------------------------------------------------------------
 
     import pathlib
+
+    _demo_vault_path = pathlib.Path(__file__).parent / "services" / "evidence_vault" / "demo_data"
+    _demo_vault_path.mkdir(parents=True, exist_ok=True)
+
+    app.mount(
+        "/demo-data",
+        StaticFiles(directory=str(_demo_vault_path)),
+        name="demo_data",
+    )
+
+    # -------------------------------------------------------------------
+    # KNOWLEDGE BASE — static Quartz-compiled site
+    # -------------------------------------------------------------------
 
     _kb_path = pathlib.Path(__file__).parent / "static" / "kb"
     _kb_path.mkdir(parents=True, exist_ok=True)

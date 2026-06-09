@@ -328,6 +328,73 @@ class EvidenceService:
         fresh = await self.repo.get_detail(evidence_id)
         return _to_out(fresh) if fresh else _to_out(ev)
 
+    # ------------------------------------------------------------------ import demo file
+
+    async def import_demo(
+        self,
+        control_number: str,
+        filename: str,
+        cycle_id: int | None,
+        control_id: int | None,
+        test_id: int | None,
+        current_user: dict[str, Any],
+    ) -> EvidenceOut:
+        from pathlib import Path
+        import mimetypes, io
+
+        demo_vault = (
+            Path(__file__).parent / "evidence_vault" / "demo_data"
+        )
+        safe_path = (demo_vault / control_number / filename).resolve()
+        if not str(safe_path).startswith(str(demo_vault.resolve())):
+            raise AppException(code="INVALID_PATH", message="Invalid path.", status_code=400)
+        if not safe_path.exists() or not safe_path.is_file():
+            raise AppException(code="NOT_FOUND", message="Demo file not found.", status_code=404)
+
+        content = safe_path.read_bytes()
+        mime = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+        now = int(time.time())
+        user_id = int(current_user["sub"])
+
+        evidence = EvidenceFile(
+            file_name=filename,
+            file_type=mime,
+            file_size=len(content),
+            upload_date=now,
+            uploaded_by=user_id,
+            cycle_id=cycle_id,
+            control_id=control_id,
+            test_id=test_id,
+            status="Pending",
+            comments=None,
+            file_version=1,
+        )
+        await self.repo.create(evidence)
+
+        try:
+            ctrl_number = await self._control_number(control_id) if control_id else control_number
+            blob_path = await azure_storage.upload_blob(
+                cycle_id=cycle_id or 0,
+                control_number=ctrl_number,
+                filename=filename,
+                stream=io.BytesIO(content),
+                content_type=mime,
+            )
+            evidence.file_path = blob_path
+            await self.db.flush()
+            await self.db.commit()
+        except Exception as exc:  # noqa: BLE001
+            await self.db.rollback()
+            logger.error("demo_import_failed", error=str(exc))
+            raise AppException(
+                code="UPLOAD_FAILED",
+                message="Failed to import demo file.",
+                status_code=500,
+            ) from exc
+
+        fresh = await self.repo.get_detail(evidence.evidence_id)
+        return _to_out(fresh) if fresh else _to_out(evidence)
+
     # ------------------------------------------------------------------ delete
 
     async def delete(self, evidence_id: int, current_user: dict[str, Any]) -> None:

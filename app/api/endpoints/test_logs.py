@@ -12,6 +12,16 @@ from app.services.test_log_service import TestLogService
 router = APIRouter()
 
 
+@router.get("/list", response_model=list[TestLogOut])
+async def list_test_logs(
+    current_user: dict = Depends(get_current_user),  # noqa: ARG001
+    db: AsyncSession = Depends(get_db),
+) -> list[TestLogOut]:
+    """Return the 200 most recent test log entries across all cycles."""
+    service = TestLogService(db)
+    return await service.list_all()
+
+
 @router.post("/create-test-log", response_model=TestLogOut, status_code=201)
 async def create_test_log(
     data: TestLogCreate,

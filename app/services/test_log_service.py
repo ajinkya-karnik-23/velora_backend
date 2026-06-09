@@ -15,6 +15,7 @@ from app.schemas.test_log import TestLogCreate, TestLogOut
 def _to_out(log: TestLog) -> TestLogOut:
     ctrl = getattr(log, "control", None)
     changer = getattr(log, "changer", None)
+    cycle = getattr(log, "review_cycle", None)
     return TestLogOut(
         log_id=log.log_id,
         test_id=log.test_id,
@@ -22,6 +23,7 @@ def _to_out(log: TestLog) -> TestLogOut:
         control_number=ctrl.control_number if ctrl else None,
         control_name=ctrl.control_name if ctrl else None,
         cycle_id=log.cycle_id,
+        cycle_name=cycle.name if cycle else None,
         log_date=log.log_date,
         changed_by=log.changed_by,
         tested_by=changer.user_name if changer else None,
@@ -55,10 +57,26 @@ class TestLogService:
         )
         await self.repo.create(log)
         await self.db.commit()
-        # Re-fetch to get joins resolved
-        fresh = await self.db.get(TestLog, log.log_id)
+        # Re-fetch with all joins so _to_out can access relationships
+        from sqlalchemy import select
+        from sqlalchemy.orm import joinedload
+        stmt = (
+            select(TestLog)
+            .options(
+                joinedload(TestLog.control),
+                joinedload(TestLog.changer),
+                joinedload(TestLog.review_cycle),
+            )
+            .where(TestLog.log_id == log.log_id)
+        )
+        result = await self.db.execute(stmt)
+        fresh = result.unique().scalar_one_or_none()
         return _to_out(fresh) if fresh else _to_out(log)
 
     async def list_by_cycle(self, cycle_id: int) -> list[TestLogOut]:
         logs = await self.repo.get_by_cycle(cycle_id)
+        return [_to_out(log) for log in logs]
+
+    async def list_all(self, limit: int = 200) -> list[TestLogOut]:
+        logs = await self.repo.get_all(limit)
         return [_to_out(log) for log in logs]

@@ -82,6 +82,14 @@ class DemoVaultFile(BaseModel):
     uploader_name: str | None = None
 
 
+class DemoFileImport(BaseModel):
+    control_number: str
+    filename: str
+    cycle_id: int | None = None
+    control_id: int | None = None
+    test_id: int | None = None
+
+
 class WorkflowStepOut(BaseModel):
     step: int
     name: str

@@ -33,6 +33,7 @@ class TestLogOut(BaseModel):
     control_number: str | None = None
     control_name: str | None = None
     cycle_id: int | None = None
+    cycle_name: str | None = None
     log_date: int
     changed_by: int
     tested_by: str | None = None
