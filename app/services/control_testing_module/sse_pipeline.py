@@ -53,6 +53,7 @@ _TOOL_LABELS: Dict[str, str] = {
     "get_excel_table_shape":               "Reading Excel spreadsheet row count, column structure, and boundary row data",
     "extract_table_structure_from_image":  "Parsing image table layout to count data rows and capture boundary record content",
     "parse_excel_raw":                     "Performing high-fidelity raw structural extraction of spreadsheet contents for reconciliation",
+    "analyse_multiple_images":             "Analysing all evidence images in a single multimodal pass to extract row counts and compliance data",
 }
 
 # Category → agent instance (mirrors routing in run_module.py exactly)

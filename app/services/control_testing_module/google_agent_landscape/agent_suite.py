@@ -73,9 +73,9 @@ default_ROW_LEVEL_ANALYSIS_agent = Agent(
     output_key="row_level_analysis_output",
     tools=[
         tool_box.tools_registry["get_excel_details_for_row_level_analysis"],
-        tool_box.tools_registry["extract_image_table_details_for_row_level_analysis"]
+        tool_box.tools_registry["extract_image_table_details_for_row_level_analysis"],
+        tool_box.tools_registry["analyse_multiple_images_with_llm"],
     ]
-
 )
 
 # 4. SAP GUI Visual Inspection Agent

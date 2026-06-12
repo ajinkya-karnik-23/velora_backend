@@ -285,7 +285,15 @@ class SapImageValidationOutput(StrictBaseModel):
 
     condition_type: str = Field(
         description=(
-            "Pricing or condition type identified from the SAP interface."
+            "The EXACT condition type code read directly from the SAP Selections panel "
+            "in the image — the alphanumeric value (e.g. ZA01, ZL01, ZF01) that appears "
+            "in the cell immediately to the right of the 'Condition type' label row. "
+            "This is a RAW EXTRACTION field: populate it with what the image shows, "
+            "never with the expected value copied from test_description. "
+            "If the label row is visible and contains a code, that code must appear here — "
+            "this field must NOT be left blank or set to an empty string. "
+            "Only set to 'NOT_FOUND' if the 'Condition type' label row is genuinely "
+            "absent from the screenshot after all tool calls have been exhausted."
         )
     )
 

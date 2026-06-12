@@ -60,20 +60,39 @@ TEST_METHODOLOGY_CORPUS: Dict[str, Dict[str, Any]] = {
     },
     "ROW_LEVEL_ANALYSIS": {
         "title": "Row-Level Validation Framework",
-        "expected_tools": ["get_excel_details_for_row_level_analysis", "extract_image_table_details_for_row_level_analysis"],
-        "classification_criteria": "Use this category when the description instructs to compare, match, or reconcile tabular records, spreadsheet rows, or line items between two distinct sources (such as an image table and an Excel sheet). This includes counting data rows, retrieving first/last rows, validating total row counts, or confirming complete data transmission/completeness between evidence files.",
+        "expected_tools": ["get_excel_details_for_row_level_analysis", "extract_image_table_details_for_row_level_analysis", "analyse_multiple_images_with_llm"],
+        "classification_criteria": "Use this category when the description instructs to compare, match, or reconcile tabular records, spreadsheet rows, or line items between two distinct sources (such as an image table and an Excel sheet). This includes counting data rows, retrieving first/last rows, validating total row counts, confirming complete data transmission/completeness between evidence files, OR counting rows across multiple screenshots that match a specific column value or criterion (e.g. 'count rows where CnTy = ZF01 across all images'). Use this category for any multi-image row-counting task even if SAP condition codes like ZF01 or ZL01 are mentioned — the distinguishing factor is that the task is about counting or reconciling rows, not validating SAP GUI field parameters.",
         "methodology_instructions": """
         CRITICAL COMPLIANCE TESTING PROCEDURE:
-        1. For spreadsheet/excel evidence, utilize the 'get_excel_details_for_row_level_analysis' tool to extract detailed structural metadata about the table dimensions, row counts, and columnar attributes.
-        2. For image-based evidence, apply the 'extract_image_table_details_for_row_level_analysis' tool to parse the visual layout and reconstruct the tabular structure.
-        3. Conduct a meticulous analysis comparing the number of extracted valid rows as per the the control's target criteria, focusing on row counts, transactional identifiers, financial totals, or user activity logs (whatever the specific control parameters dictate).
-        4. Document any anomalies or deviations at the row level, and only issue a 'Pass' status if there is a complete alignment with the specified control parameters across the entire dataset.
+
+        STEP 0 — READ THE TEST DESCRIPTION FIRST
+        Read the test_description carefully before calling any tool. Identify:
+        a) Whether the count is a TOTAL row count (count all rows) or a FILTERED row count
+           (count only rows where a specific column contains a specific value).
+        b) Whether evidence is image-based, spreadsheet-based, or both.
+
+        TOOL SELECTION RULES — follow these before calling any tool:
+        - Spreadsheet evidence → call 'get_excel_details_for_row_level_analysis' once per file.
+        - Image evidence (any count task, filtered or total) → call
+          'analyse_multiple_images_with_llm' ONCE, passing ALL image paths from
+          evidence_paths as a list and writing a precise agent_user_prompt describing
+          exactly what to count or verify. The tool embeds every image in one multimodal
+          LLM request so the model sees them all simultaneously — no per-image iteration.
+          Do NOT call this tool more than once.
+        - Do NOT use 'extract_image_table_details_for_row_level_analysis' when the task
+          requires filtering rows by a column value — it returns total row counts only and
+          cannot filter by column value.
+
+        HARD LOOP-PREVENTION RULE — non-negotiable:
+        Make at most ONE tool call for all image evidence combined. After receiving the
+        tool response, compile the final verdict immediately from your context without
+        any further tool calls. Never retry a tool call for images.
         """
     },
     "IPE_SAP_IMAGE_VALIDATION": {
         "title": "IPE SAP GUI Presentation Layer Structural Inspection",
         "expected_tools": ["analyse_image_evidence_directly_with_llm", "parse_image_and_get_extracted_text", "analyse_image_evidence_for_tcode_with_llm"],
-        "classification_criteria": "Use this category when verifying specific SAP GUI interface parameters or system attributes directly visible in a screenshot or image file. This includes: Sales Organisation, Condition Type (e.g. ZL01, ZF01, or any other SAP condition code), Validity Ranges/Dates, Type of Report, Transaction T-Codes, or bottom status ribbons. If the description names an image file (e.g. IPE_3.jpg) and asks to check SAP field values like Condition Type, Sales Organisation, or Validity Range, always use this category. Do NOT use this if the primary task is matching data row numbers, counting table lines, or validating commentary on price change records.",
+        "classification_criteria": "Use this category when verifying specific SAP GUI interface parameters or system attributes directly visible in a screenshot or image file. This includes: Sales Organisation, Condition Type (e.g. ZL01, ZF01, or any other SAP condition code), Validity Ranges/Dates, Type of Report, Transaction T-Codes, or bottom status ribbons. If the description names a single image file (e.g. IPE_3.jpg) and asks to check SAP field values like Condition Type, Sales Organisation, or Validity Range, always use this category. Do NOT use this if the primary task is counting rows across multiple screenshots, matching data row numbers, filtering rows by a column value, or validating commentary on price change records — those belong in ROW_LEVEL_ANALYSIS. The presence of a SAP condition code (ZF01, ZL01, ZA01) in the description alone is NOT sufficient to use this category if the task is a row count or row filter operation.",
         "methodology_instructions": """
         CRITICAL COMPLIANCE TESTING PROCEDURE:
         ══════════════════════════════════════════════════════════
@@ -109,9 +128,17 @@ TEST_METHODOLOGY_CORPUS: Dict[str, Dict[str, Any]] = {
            heuristics to locate it — these are extraction guides, not a mandatory
            scan list:
            - Sales Organisation: value in the main view pane. Example: GB10.
-           - Condition Type: value adjacent to the label field.
+           - Condition Type: the alphanumeric code (e.g. ZA01, ZL01, ZF01) in the
+             input cell immediately to the right of the 'Condition type' label row
+             inside the SAP Selections panel. Extract the raw code exactly as it
+             appears. CRITICAL: this is an image extraction step — you MUST read
+             the value from the screenshot, never substitute the expected value
+             from test_description. If you see any alphanumeric code in that cell,
+             that is the extracted Condition Type — record it regardless of whether
+             it matches the expected value. A blank or empty condition_type in the
+             output is never acceptable when the label row is visible.
            - Validity Range: start/end dates adjacent to the label. Example: 01.10.2023 – 31.10.2023.
-           - Type of Report: categorisation string adjacent to the label.
+           - Type of Report: categorisation string adjacent to the label (e.g. Classical Report, ALV).
            - Transaction Code (T-Code): alphanumeric code, e.g. ZV231213 (8 chars).
              Check the main view pane first; if not found there, check the bottom-right
              system status ribbon of the SAP GUI window. Finding it in EITHER location
@@ -130,11 +157,12 @@ TEST_METHODOLOGY_CORPUS: Dict[str, Dict[str, Any]] = {
         T-CODE FALLBACK RULE (applies only when T-Code is a required field):
         If T-Code is in the checklist and you could not confirm it using
         analyse_image_evidence_directly_with_llm or parse_image_and_get_extracted_text,
-        you MUST call analyse_image_evidence_for_tcode_with_llm before concluding.
+        call analyse_image_evidence_for_tcode_with_llm EXACTLY ONCE.
         If that tool confirms the T-Code value, treat T-Code as PASSED — do not
         introduce any additional "visibility" or "presentation" check afterward.
-        Do NOT issue a FAIL for T-Code until this fallback tool has been attempted
-        and has also failed to confirm the value.
+        If it returns empty or unrecognised, mark T-Code as UNCONFIRMED and proceed
+        immediately to generate the final structured output — do NOT call any tool
+        again. Do NOT retry the fallback tool a second time under any circumstances.
 
         ══════════════════════════════════════════════════════════
         VERDICT RULES
@@ -148,7 +176,19 @@ TEST_METHODOLOGY_CORPUS: Dict[str, Dict[str, Any]] = {
           and the value was still not found or did not match. Ambiguity introduced
           after a successful confirmation does NOT constitute an unconfirmed field.
         - Any field outside the test_description checklist has ZERO effect on
-          the verdict in either direction."""
+          the verdict in either direction.
+
+        CONDITION TYPE — ANTI-HALLUCINATION RULE (non-negotiable):
+        Before producing the final structured output, review the text returned
+        by every tool call you have already made and locate any alphanumeric code
+        adjacent to the words "Condition type" or "Condition Type".
+        Set condition_type to that exact extracted code.
+        Do NOT call any additional tool to find it — use only what prior tool
+        calls have already returned. Do NOT copy the expected value from
+        test_description into this field; only use values read from tool output.
+        If after reviewing all prior tool output no condition type code is found,
+        set condition_type to 'NOT_FOUND' and mark compliance_status False.
+        A blank or empty string is never acceptable for this field."""
     },
     "GENERIC": {
         "title": "Standard Textual Control Validation Framework",

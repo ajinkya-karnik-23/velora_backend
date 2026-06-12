@@ -84,7 +84,7 @@
     {
       "test_id":91,
       "validation_name": "IPE6: ZF01 Hierarchy Validation",
-      "validation_desc": "Refer data in IPE_6a.jpg, IPE_6b.jpg, IPE_6c.jpg, IPE_6d.jpg, IPE_6e.jpg, \nStep 1: retrieve row counts from all the IPE_6* screenshots for the row highlighed in blue. \nStep2: Validate if the total number of row count come up to 21. %\nIPE_6 \"ZF01 Hierarchy\" Validation: Ensure the completeness and accuracy of ZL01 report used in the control performance\n%",
+      "validation_desc": "Refer data in IPE_6a.jpg, IPE_6b.jpg, IPE_6c.jpg, IPE_6d.jpg, and IPE_6e.jpg. Count only the visible table rows where the first column (CnTy) explicitly displays the value 'ZF01'. A row is valid only when 'ZF01' is visibly present in that row. Ignore customer header information, column headers, blank rows, totals, and any text outside the table. Do not infer, estimate, or assume hidden, collapsed, paginated, or off-screen rows. Count only rows that are visibly displayed in the provided screenshots. Calculate the total number of valid ZF01 rows across all screenshots. If the total count equals 24, return PASS. If the total count is not equal to 24, return FAIL. The response should include only the total valid ZF01 row count and the PASS/FAIL result. %\nIPE_6 \"ZF01 Hierarchy\" Validation: Ensure the completeness and accuracy of ZL01 report used in the control performance\n%",
       "validation": "ipe6:_zf01_hierarchy_validation",
       "alias": "CTRL0020526_Monthly",
       "status": "RUN PENDING",

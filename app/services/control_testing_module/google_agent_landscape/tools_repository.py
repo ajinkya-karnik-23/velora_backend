@@ -608,12 +608,12 @@ class Tools:
         
     def analyse_image_evidence(self, evidence_path: Union[str, List[str]], agent_user_prompt: str = "") -> str:
         """
-        Ingests a compliance image screenshot, converts it into a high-fidelity base64 data URL, 
-        and leverages a vision-capable LLM acting as a Compliance Officer to audit corporate 
+        Ingests a compliance image screenshot, converts it into a high-fidelity base64 data URL,
+        and leverages a vision-capable LLM acting as a Compliance Officer to audit corporate
         tracking parameters, layouts, and data points as specified by the agent's prompt.
         """
         base_path = os.getenv("LOCAL_STORAGE_PATH", "./storage")
-        
+
         if isinstance(evidence_path, list):
             if not evidence_path:
                 return "Error: Provided file paths array list is empty."
@@ -642,9 +642,6 @@ class Tools:
 
             final_user_query = agent_user_prompt if agent_user_prompt.strip() else "Perform a comprehensive compliance audit extraction on this image. CRITICAL EXTRACTION TASK: 1) 1. Search the entire screenshot for SAP transaction codes.2) 4. If no T-Code is visible, explicitly state "
 
-
-            # if the final user query (given by the agent has a mention of the tcode, then I want to append this prompt with addition information. I need fuzzy match for the same, or regex)
-            
             response = litellm.completion(
                 model=os.getenv("LITELLM_MODEL"),
                 messages=[
@@ -657,17 +654,79 @@ class Tools:
                         "content": [
                             {"type": "text", "text": final_user_query},
                             {"type": "image_url", "image_url": {"url": data_url}},
-                            # add a base64 reference image of the image at path: data/detailed_jsons/references/T-Code Reference.png as part of the prompt only if T code is mentioned in the agent query
                         ],
                     }
                 ],
             )
-            
+
             return response.choices[0].message.content
 
         except Exception as e:
             logger.error(f"❌ [Image Compliance Tool] Visual lookup failed: {e}", exc_info=True)
             return f"Tool Execution Failure: {str(e)}. Stop trying to analyze this file with this tool."
+
+    def analyse_multiple_images(self, evidence_paths: List[str], agent_user_prompt: str = "") -> str:
+        """
+        Accepts a list of image file paths and sends them all to a vision LLM in a single
+        multimodal request. Use this when the task requires reasoning across multiple
+        screenshots simultaneously (e.g. counting filtered rows across several images).
+        Do not use for single-image analysis — use analyse_image_evidence_directly_with_llm
+        for that.
+        """
+        base_path = os.getenv("LOCAL_STORAGE_PATH", "./storage")
+
+        image_blocks = []
+        for p in evidence_paths:
+            if not p or str(p).lower().endswith(('.xlsx', '.xls', '.csv')):
+                continue
+            full_path = os.path.join(base_path, str(p).strip())
+            logger.info(f"🔍 [Multi-Image Tool] Loading: {full_path}")
+            if not os.path.exists(full_path):
+                logger.warning(f"⚠️ [Multi-Image Tool] File not found, skipping: {full_path}")
+                continue
+            mime_type, _ = mimetypes.guess_type(full_path)
+            if mime_type is None or not mime_type.startswith('image/'):
+                logger.warning(f"⚠️ [Multi-Image Tool] Not an image, skipping: {full_path}")
+                continue
+            with open(full_path, "rb") as f:
+                encoded = base64.b64encode(f.read()).decode("utf-8")
+            image_blocks.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:{mime_type};base64,{encoded}"}
+            })
+
+        if not image_blocks:
+            return "Error: None of the provided paths resolved to a readable image file."
+
+        logger.info(f"🖼️ [Multi-Image Tool] Sending {len(image_blocks)} image(s) in one request.")
+
+        system_instruction = (
+            "You are an expert Corporate Compliance and Audit Officer. Examine all provided "
+            "screenshots carefully. Focus only on what is explicitly visible. Do not extrapolate "
+            "or assume anything not shown. Report only verified facts."
+        )
+
+        final_user_query = (
+            agent_user_prompt.strip()
+            if agent_user_prompt.strip()
+            else "Perform a compliance audit extraction across all provided images."
+        )
+
+        user_content = [{"type": "text", "text": final_user_query}] + image_blocks
+
+        try:
+            response = litellm.completion(
+                model=os.getenv("LITELLM_MODEL"),
+                messages=[
+                    {"role": "system", "content": system_instruction},
+                    {"role": "user", "content": user_content},
+                ],
+            )
+            return response.choices[0].message.content
+
+        except Exception as e:
+            logger.error(f"❌ [Multi-Image Tool] Failed: {e}", exc_info=True)
+            return f"Tool Execution Failure: {str(e)}. Stop trying to analyze these files with this tool."
 
     def analyse_image_evidence_for_tcode(
             self,
@@ -944,5 +1003,6 @@ If a likely T-Code is found:
             "analyse_image_evidence_directly_with_llm": self.analyse_image_evidence,
             "analyse_image_evidence_for_tcode_with_llm": self.analyse_image_evidence_for_tcode,
             "get_excel_details_for_row_level_analysis": self.get_excel_table_shape,
-            "extract_image_table_details_for_row_level_analysis": self.extract_table_structure_from_image
+            "extract_image_table_details_for_row_level_analysis": self.extract_table_structure_from_image,
+            "analyse_multiple_images_with_llm": self.analyse_multiple_images,
         }
