@@ -94,101 +94,46 @@ TEST_METHODOLOGY_CORPUS: Dict[str, Dict[str, Any]] = {
         "expected_tools": ["analyse_image_evidence_directly_with_llm", "parse_image_and_get_extracted_text", "analyse_image_evidence_for_tcode_with_llm"],
         "classification_criteria": "Use this category when verifying specific SAP GUI interface parameters or system attributes directly visible in a screenshot or image file. This includes: Sales Organisation, Condition Type (e.g. ZL01, ZF01, or any other SAP condition code), Validity Ranges/Dates, Type of Report, Transaction T-Codes, or bottom status ribbons. If the description names a single image file (e.g. IPE_3.jpg) and asks to check SAP field values like Condition Type, Sales Organisation, or Validity Range, always use this category. Do NOT use this if the primary task is counting rows across multiple screenshots, matching data row numbers, filtering rows by a column value, or validating commentary on price change records — those belong in ROW_LEVEL_ANALYSIS. The presence of a SAP condition code (ZF01, ZL01, ZA01) in the description alone is NOT sufficient to use this category if the task is a row count or row filter operation.",
         "methodology_instructions": """
-        CRITICAL COMPLIANCE TESTING PROCEDURE:
-        ══════════════════════════════════════════════════════════
-        STEP 0 — READ THE TEST DESCRIPTION FIRST (MANDATORY)
-        ══════════════════════════════════════════════════════════
-        Before calling any tool, read the test_description in the work order.
-        Identify the EXACT set of fields you are required to validate.
-        This set — and ONLY this set — defines your compliance checklist.
+        SAP SCREENSHOT VALIDATION — keep this simple.
 
-        ══════════════════════════════════════════════════════════
-        FIELD SCOPING RULES — NON-NEGOTIABLE
-        ══════════════════════════════════════════════════════════
-        1. Validate ONLY the fields explicitly named in the test_description.
-           Do not validate any other field, regardless of what you see in the image.
-        2. SAP screenshots contain many system-generated fields that are NOT part
-           of the compliance check — for example: 'Created By', 'Changed By',
-           'Created On', 'Last Changed By', 'Change Date', 'Last Changed On',
-           'Processed By', 'Entered By'. These fields MUST be completely ignored
-           unless the test_description explicitly names them.
-        3. `interface_discrepancies_found` must be set to True ONLY when a field
-           that IS in your compliance checklist fails validation. A field that is
-           visible in the screenshot but NOT in the checklist can never cause
-           `interface_discrepancies_found` to be True.
-        4. compliance_status = False (FAIL) ONLY when a required field from the
-           test_description is missing, ambiguous, or has an unexpected value.
-           Fields outside the test_description checklist cannot cause a FAIL.
+        NON-NEGOTIABLES:
+        1. The test_description defines your checklist. Validate ONLY the fields it
+           explicitly names — nothing else.
+        2. Fields visible in the screenshot but NOT named in the test_description
+           are OUT OF SCOPE. They can NEVER cause a FAIL or set
+           interface_discrepancies_found. Ignore system-generated fields like
+           'Created By', 'Changed By', 'Created On', 'Last Changed By' unless named.
+        3. Read every value from the image. Never copy the expected value from the
+           test_description into an extracted field.
 
-        ══════════════════════════════════════════════════════════
-        EXTRACTION PROCEDURE (apply only to required fields)
-        ══════════════════════════════════════════════════════════
-        1. Process the visual evidence using OCR and spatial coordinate extractors.
-        2. For each field that IS in your checklist, use the following spatial
-           heuristics to locate it — these are extraction guides, not a mandatory
-           scan list:
-           - Sales Organisation: value in the main view pane. Example: GB10.
-           - Condition Type: the alphanumeric code (e.g. ZA01, ZL01, ZF01) in the
-             input cell immediately to the right of the 'Condition type' label row
-             inside the SAP Selections panel. Extract the raw code exactly as it
-             appears. CRITICAL: this is an image extraction step — you MUST read
-             the value from the screenshot, never substitute the expected value
-             from test_description. If you see any alphanumeric code in that cell,
-             that is the extracted Condition Type — record it regardless of whether
-             it matches the expected value. A blank or empty condition_type in the
-             output is never acceptable when the label row is visible.
-           - Validity Range: start/end dates adjacent to the label. Example: 01.10.2023 – 31.10.2023.
-           - Type of Report: categorisation string adjacent to the label (e.g. Classical Report, ALV).
-           - Transaction Code (T-Code): alphanumeric code, e.g. ZV231213 (8 chars).
-             Check the main view pane first; if not found there, check the bottom-right
-             system status ribbon of the SAP GUI window. Finding it in EITHER location
-             counts as full confirmation — the ribbon is a valid and authoritative
-             location for T-Code display in SAP.
-           - Fiscal Year: year value in the evidence. Example: 2023.
-        3. Parse the image with parse_image_and_get_extracted_text and look for
-           the required field values in the extracted text.
+        FIELDS IN SCOPE = exactly those listed in the test_description. Where to find them:
+           - Sales Organisation: main view pane (e.g. GB10).
+           - Condition Type: alphanumeric code in the cell right of the 'Condition type'
+             label in the SAP Selections panel (e.g. ZA01, ZL01, ZF01).
+           - Validity Range: start/end dates next to the label (e.g. 01.10.2023 – 31.10.2023).
+           - Type of Report: string next to the label (e.g. Classical Report, ALV).
+           - Transaction Code (T-Code): main view pane OR the bottom-right status
+             ribbon — either location is authoritative (e.g. ZV231213).
+           - Fiscal Year: year value in the evidence (e.g. 2023).
 
-        CONFIRMATION IS CONCLUSIVE — NON-NEGOTIABLE:
-        Once a required field's value is found and matches the expected value via
-        ANY tool call (including the T-Code fallback tool), that field is CONFIRMED.
-        A confirmed field CANNOT be re-questioned for visibility or presentation
-        in any subsequent reasoning step. Do not contradict a confirmation.
+        TOOL-CALL BUDGET:
+        - One evidence file → ONE tool call. Do not re-process the same image.
+        - The ONLY exception: if the test_description requires BOTH OCR extraction
+          AND LLM visual ingestion, call parse_image_and_get_extracted_text once AND
+          analyse_image_evidence_directly_with_llm once (one call each).
+        - T-Code only: if a required T-Code is not confirmed by the above, call
+          analyse_image_evidence_for_tcode_with_llm EXACTLY ONCE as a fallback.
+        - Never retry a tool. Once a field's value is found via any call, it is
+          CONFIRMED — do not re-question it.
 
-        T-CODE FALLBACK RULE (applies only when T-Code is a required field):
-        If T-Code is in the checklist and you could not confirm it using
-        analyse_image_evidence_directly_with_llm or parse_image_and_get_extracted_text,
-        call analyse_image_evidence_for_tcode_with_llm EXACTLY ONCE.
-        If that tool confirms the T-Code value, treat T-Code as PASSED — do not
-        introduce any additional "visibility" or "presentation" check afterward.
-        If it returns empty or unrecognised, mark T-Code as UNCONFIRMED and proceed
-        immediately to generate the final structured output — do NOT call any tool
-        again. Do NOT retry the fallback tool a second time under any circumstances.
-
-        ══════════════════════════════════════════════════════════
-        VERDICT RULES
-        ══════════════════════════════════════════════════════════
-        - compliance_status = True  → every required field is confirmed (found and
-          matches the expected value, via any tool call).
-        - compliance_status = False → at least one required field could not be
-          confirmed by ANY available tool, or its extracted value does not match
-          the expected value from the test_description.
-        - A field is UNCONFIRMED only when all relevant tools have been exhausted
-          and the value was still not found or did not match. Ambiguity introduced
-          after a successful confirmation does NOT constitute an unconfirmed field.
-        - Any field outside the test_description checklist has ZERO effect on
-          the verdict in either direction.
-
-        CONDITION TYPE — ANTI-HALLUCINATION RULE (non-negotiable):
-        Before producing the final structured output, review the text returned
-        by every tool call you have already made and locate any alphanumeric code
-        adjacent to the words "Condition type" or "Condition Type".
-        Set condition_type to that exact extracted code.
-        Do NOT call any additional tool to find it — use only what prior tool
-        calls have already returned. Do NOT copy the expected value from
-        test_description into this field; only use values read from tool output.
-        If after reviewing all prior tool output no condition type code is found,
-        set condition_type to 'NOT_FOUND' and mark compliance_status False.
-        A blank or empty string is never acceptable for this field."""
+        REASONING RULES:
+        - compliance_status = True  → every required field was found and its value
+          matches the expected value.
+        - compliance_status = False → a required field is missing, or its extracted
+          value does not match the expected value.
+        - Out-of-scope fields have ZERO effect on the verdict in either direction.
+        - Do not introduce extra 'visibility' or 'presentation' checks after a
+          confirmation. After tools are exhausted, emit the final output immediately."""
     },
     "GENERIC": {
         "title": "Standard Textual Control Validation Framework",
