@@ -116,21 +116,30 @@ TEST_METHODOLOGY_CORPUS: Dict[str, Dict[str, Any]] = {
              ribbon — either location is authoritative (e.g. ZV231213).
            - Fiscal Year: year value in the evidence (e.g. 2023).
 
-        TOOL-CALL BUDGET:
-        - One evidence file → ONE tool call. Do not re-process the same image.
-        - The ONLY exception: if the test_description requires BOTH OCR extraction
-          AND LLM visual ingestion, call parse_image_and_get_extracted_text once AND
-          analyse_image_evidence_directly_with_llm once (one call each).
-        - T-Code only: if a required T-Code is not confirmed by the above, call
-          analyse_image_evidence_for_tcode_with_llm EXACTLY ONCE as a fallback.
-        - Never retry a tool. Once a field's value is found via any call, it is
-          CONFIRMED — do not re-question it.
+        TOOL ORDER — follow exactly:
+        1. FIRST, call analyse_image_evidence_directly_with_llm ONCE per evidence
+           image. In agent_user_prompt, ask it to read and return EVERY field in your
+           checklist (Condition Type, Sales Organisation, Validity Range, Type of
+           Report, T-Code, etc.). This vision tool is the PRIMARY and AUTHORITATIVE
+           source for ALL fields — trust the values it reads from the screenshot.
+        2. THEN, ONLY if T-Code is a required field AND step 1 did not return it,
+           call analyse_image_evidence_for_tcode_with_llm EXACTLY ONCE. Use this tool
+           for T-Code ONLY — never for any other field.
+        3. parse_image_and_get_extracted_text (OCR) is OPTIONAL and SECONDARY. It
+           often fails to read values inside SAP input cells. NEVER use a blank or
+           missing OCR result to override or null out a field the vision tool already
+           read. A field is NOT_FOUND only if the VISION tool (step 1) could not see it.
+        - One call per image per tool. Never retry a tool. Once a field's value is
+          found, it is CONFIRMED — do not re-question it.
 
         REASONING RULES:
         - compliance_status = True  → every required field was found and its value
           matches the expected value.
         - compliance_status = False → a required field is missing, or its extracted
           value does not match the expected value.
+        - condition_type: set it to the code the VISION tool read. Set NOT_FOUND only
+          when the vision tool itself reports the 'Condition type' value is absent —
+          never because OCR missed it.
         - Out-of-scope fields have ZERO effect on the verdict in either direction.
         - Do not introduce extra 'visibility' or 'presentation' checks after a
           confirmation. After tools are exhausted, emit the final output immediately."""

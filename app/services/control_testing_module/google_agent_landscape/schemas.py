@@ -266,8 +266,13 @@ class SapImageValidationOutput(StrictBaseModel):
 
     compliance_status: bool = Field(
         description=(
-            "True when all expected SAP interface fields "
-            "and values are successfully validated."
+            "True if and only if EVERY field explicitly named in the test_description "
+            "matches its expected value. Consider ONLY the fields named in the "
+            "test_description. Fields visible in the screenshot but NOT named in the "
+            "test_description (e.g. Material, Created By, Created On, Changed By, "
+            "Last Changed On) have ZERO bearing on this value and must never cause a "
+            "False. Set False only when a field that IS named in the test_description "
+            "is missing or does not match its expected value."
         )
     )
 
@@ -305,8 +310,12 @@ class SapImageValidationOutput(StrictBaseModel):
 
     interface_discrepancies_found: bool = Field(
         description=(
-            "True when missing fields, visual inconsistencies, "
-            "or unexpected SAP interface deviations are detected."
+            "True ONLY when a field explicitly named in the test_description fails "
+            "validation (missing or value mismatch). Fields visible in the screenshot "
+            "but NOT named in the test_description (e.g. Material, Created By, "
+            "Created On, Changed By, an empty/blank cell for an unrequested field) must "
+            "NEVER set this to True. An empty field is only a discrepancy if that field "
+            "is named in the test_description."
         )
     )
 

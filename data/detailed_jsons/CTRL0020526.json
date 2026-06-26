@@ -45,7 +45,7 @@
     {
       "test_id":88,
       "validation_name": "IPE3: ZF01 Validation",
-      "validation_desc": "In IPE_3.jpg \n1) T-Code = ZV231213 \n2) Sales Organisation = GB10\n3) Condition Type = ZL01\n4) Validity Range = 01.10.2023 to 31.10.2023\n5) Type of report = Classical Report \n%\nIPE_3 \"ZF01\" Validation: Validate the overall pricing report condition ZF01 input parameters.\n%",
+      "validation_desc": "In IPE_3.jpg \n1) T-Code = ZV231213 \n2) Sales Organisation = GB10\n3) Condition Type = ZF01\n4) Validity Range = 01.10.2023 to 31.10.2023\n5) Type of report = Classical Report \n%\nIPE_3 \"ZF01\" Validation: Validate the overall pricing report condition ZF01 input parameters.\n%",
       "validation": "ipe3:_zf01_validation",
       "alias": "CTRL0020526_Monthly",
       "status": "RUN PENDING",
@@ -84,7 +84,7 @@
     {
       "test_id":91,
       "validation_name": "IPE6: ZF01 Hierarchy Validation",
-      "validation_desc": "Refer data in IPE_6a.jpg, IPE_6b.jpg, IPE_6c.jpg, IPE_6d.jpg, and IPE_6e.jpg. Count only the visible table rows where the first column (CnTy) explicitly displays the value 'ZF01'. A row is valid only when 'ZF01' is visibly present in that row. Ignore customer header information, column headers, blank rows, totals, and any text outside the table. Do not infer, estimate, or assume hidden, collapsed, paginated, or off-screen rows. Count only rows that are visibly displayed in the provided screenshots. Calculate the total number of valid ZF01 rows across all screenshots. If the total count equals 24, return PASS. If the total count is not equal to 24, return FAIL. The response should include only the total valid ZF01 row count and the PASS/FAIL result. %\nIPE_6 \"ZF01 Hierarchy\" Validation: Ensure the completeness and accuracy of ZL01 report used in the control performance\n%",
+      "validation_desc": "Refer data in IPE_6a.jpg, IPE_6b.jpg, IPE_6c.jpg, IPE_6d.jpg, and IPE_6e.jpg. Count only the visible table rows where the first column (CnTy) explicitly displays the value 'ZF01'. A row is valid only when 'ZF01' is visibly present in that row. Ignore customer header information, column headers, blank rows, totals, and any text outside the table. Do not infer, estimate, or assume hidden, collapsed, paginated, or off-screen rows. Count only rows that are visibly displayed in the provided screenshots. Calculate the total number of valid ZF01 rows across all screenshots. If the total count is more than 5, return PASS. If the total count is not more than 5, return FAIL. The response should include only the total valid ZF01 row count and the PASS/FAIL result. %\nIPE_6 \"ZF01 Hierarchy\" Validation: Ensure the completeness and accuracy of ZL01 report used in the control performance\n%",
       "validation": "ipe6:_zf01_hierarchy_validation",
       "alias": "CTRL0020526_Monthly",
       "status": "RUN PENDING",

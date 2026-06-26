@@ -56,6 +56,26 @@ _TOOL_LABELS: Dict[str, str] = {
     "analyse_multiple_images":             "Analysing all evidence images in a single multimodal pass to extract row counts and compliance data",
 }
 
+
+def _format_evidence_arg(args: Any) -> str:
+    """Return a readable evidence filename (or comma-joined list) from a tool
+    call's args, so the tool-activity log shows WHICH evidence each call used.
+    Returns '' when no recognisable evidence path argument is present."""
+    if not isinstance(args, dict):
+        return ""
+    raw = None
+    for key in ("evidence_path", "evidence_paths", "image_path", "image_paths", "file_path"):
+        if args.get(key):
+            raw = args[key]
+            break
+    if raw is None:
+        return ""
+    import os
+    if isinstance(raw, (list, tuple)):
+        names = [os.path.basename(str(p)) for p in raw if p]
+        return ", ".join(names)
+    return os.path.basename(str(raw))
+
 # Category → agent instance (mirrors routing in run_module.py exactly)
 def _resolve_agent(category: str) -> Any:
     routing = {
@@ -426,6 +446,9 @@ async def stream_full_pipeline(
 
     final_response_text: str | None = None
     tool_call_count = 0
+    # Maps each tool call's id -> evidence filename(s), so the matching
+    # tool_result can report WHICH evidence it finished processing.
+    evidence_by_call_id: Dict[str, str] = {}
 
     try:
         async for event in runner.run_async(
@@ -442,10 +465,18 @@ async def stream_full_pipeline(
             for fc in (fn_calls or []):
                 tool_call_count += 1
                 tool_label = _TOOL_LABELS.get(fc.name, f"Executing tool '{fc.name}'")
+                evidence_label = _format_evidence_arg(getattr(fc, "args", None))
+                call_id = getattr(fc, "id", None)
+                if call_id and evidence_label:
+                    evidence_by_call_id[call_id] = evidence_label
                 yield _emit("tool_call", {
                     "tool_name":   fc.name,
                     "call_number": tool_call_count,
-                    "message":     tool_label,
+                    "evidence":    evidence_label,
+                    "message": (
+                        f"{tool_label} — on {evidence_label}"
+                        if evidence_label else tool_label
+                    ),
                 })
 
             # Tool result returned to agent
@@ -456,10 +487,13 @@ async def stream_full_pipeline(
             )
             for fr in (fn_responses or []):
                 tool_label = _TOOL_LABELS.get(fr.name, fr.name)
+                evidence_label = evidence_by_call_id.get(getattr(fr, "id", None) or "", "")
+                on_file = f" ({evidence_label})" if evidence_label else ""
                 yield _emit("tool_result", {
                     "tool_name": fr.name,
+                    "evidence": evidence_label,
                     "message": (
-                        f"'{tool_label}' — extraction complete. "
+                        f"'{tool_label}'{on_file} — extraction complete. "
                         "Results handed off to the agent for compliance analysis."
                     ),
                 })
