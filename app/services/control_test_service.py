@@ -4,10 +4,21 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from datetime import datetime
+
+from sqlalchemy import delete, select
+
 from app.core.exceptions import NotFoundException
+from app.models.test_log import TestLog
 from app.repositories.control_test_repo import ControlTestRepo
 # from app.services.agent_configuration import input_json
-from app.schemas.control_test import ControlTestOut, ControlTestUpdate, CycleTestObjectiveOut
+from app.schemas.control_test import (
+    ClearRunDataResponse,
+    ControlTestOut,
+    ControlTestUpdate,
+    CycleTestObjectiveOut,
+    TestRunHistoryOut,
+)
 import os, logging, json
 from dotenv import load_dotenv
 import json
@@ -71,6 +82,54 @@ class ControlTestService:
             ))
         return result
     
+    async def get_run_history(
+        self,
+        cycle_id: int,
+        control_id: str | None = None,  # noqa: ARG002 — accepted for API symmetry
+        test_id: int | None = None,
+    ) -> list[TestRunHistoryOut]:
+        """Return persisted test runs (from test_logs), newest first.
+
+        Scoped to a cycle, optionally narrowed to a test. The first item is the
+        latest run; the rest are past runs.
+        """
+        stmt = select(TestLog).where(TestLog.cycle_id == cycle_id)
+        if test_id is not None:
+            stmt = stmt.where(TestLog.test_id == test_id)
+        stmt = stmt.order_by(TestLog.created_time.desc())
+
+        rows = (await self.db.execute(stmt)).scalars().all()
+        return [
+            TestRunHistoryOut(
+                id=r.log_id,
+                test_id=r.test_id,
+                status=r.status,
+                notes=r.notes,
+                execution_time_ms=(
+                    r.execution_time_seconds * 1000
+                    if r.execution_time_seconds is not None
+                    else None
+                ),
+                created_at=datetime.fromtimestamp(r.created_time),
+            )
+            for r in rows
+        ]
+
+    async def clear_cycle_run_data(self, cycle_id: int) -> ClearRunDataResponse:
+        """Delete all test-run logs for a review cycle.
+
+        Destructive and irreversible. Uploaded evidence files are NOT touched.
+        """
+        logs_deleted = await self.db.execute(
+            delete(TestLog).where(TestLog.cycle_id == cycle_id)
+        )
+        await self.db.commit()
+        return ClearRunDataResponse(
+            cycle_id=cycle_id,
+            deleted_test_results=0,
+            deleted_test_logs=logs_deleted.rowcount or 0,
+        )
+
     async def perform_test(self, payload , task_id:str): # Updated version (latest adk documentation)
 
         detailed_jsons_path = os.getenv("DETAILED_JSONS_PATH")

@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, require_role
+from app.schemas.control_test import ClearRunDataResponse, TestRunHistoryOut
 from app.schemas.test_log import TestLogCreate, TestLogOut
+from app.services.control_test_service import ControlTestService
 from app.services.control_testing_module.run_module import (
     execute_module_pipeline
 )
@@ -51,6 +53,38 @@ class SaveResultRequest(BaseModel):
     verdict: str
     remarks: str | None = None
     execution_time_ms: int | None = None
+
+
+@router.get("/results", response_model=list[TestRunHistoryOut])
+async def list_run_results(
+    cycle_id: int = Query(...),
+    control_id: str | None = Query(default=None),
+    test_id: int | None = Query(default=None),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[TestRunHistoryOut]:
+    """Return persisted AI run results (newest first) for a cycle.
+
+    Optionally narrow by control_id and/or test_id. The first item is the latest
+    run; the remainder are past runs.
+    """
+    service = ControlTestService(db)
+    return await service.get_run_history(cycle_id, control_id, test_id)
+
+
+@router.delete("/cycle/{cycle_id}/run-data", response_model=ClearRunDataResponse)
+async def clear_cycle_run_data(
+    cycle_id: int,
+    current_user: dict = Depends(require_role("Moderator")),
+    db: AsyncSession = Depends(get_db),
+) -> ClearRunDataResponse:
+    """Delete all AI run results and test logs for a review cycle.
+
+    Destructive and irreversible. Uploaded evidence files are not affected.
+    Requires Moderator or higher.
+    """
+    service = ControlTestService(db)
+    return await service.clear_cycle_run_data(cycle_id)
 
 
 @router.post("/save-result", response_model=TestLogOut, status_code=201)

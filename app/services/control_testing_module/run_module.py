@@ -58,6 +58,26 @@ async def execute_module_pipeline(
         "evidence_result"
     )
 
+    # STEP 2.5 — EVIDENCE COMPLETENESS GATE (fail fast, before any agent runs)
+    # If the test description references evidence files that are not all uploaded,
+    # fail immediately rather than letting the agent loop trying to find them.
+    missing_filenames = (
+        evidence_data.missing_filenames if evidence_data else []
+    )
+    if missing_filenames:
+        gate_justification = (
+            "The required set of evidences required for the test are not found. "
+            "Please verify and check if all evidences are provided as per the test description."
+        )
+        return {
+            "task_id": task_id,
+            "result": {
+                "compliance_status": None,
+                "verdict": "WARNING",
+                "audit_justification": gate_justification,
+            },
+        }
+
     # STEP 3 — WORK ORDER
     compiled_work_order_dict = {
         "task_id": task_id,

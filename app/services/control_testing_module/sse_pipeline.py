@@ -373,6 +373,36 @@ async def stream_full_pipeline(
         ),
     })
 
+    # ── PHASE 3.5: Evidence completeness gate (warn fast, before any agent) ───
+    # If the test description references evidence files that are not all uploaded,
+    # stop immediately with a WARNING rather than letting the agent loop trying to
+    # find them. This is NOT a failure — the test simply could not be performed.
+    missing_filenames = evidence_result.get("missing_filenames", [])
+    if missing_filenames:
+        gate_justification = (
+            "The required set of evidences required for the test are not found. "
+            "Please verify and check if all evidences are provided as per the test description."
+        )
+        execution_time_ms = int((time.time() - pipeline_start_time) * 1000)
+
+        yield _emit("agent_complete", {
+            "agent_name":          "evidence_precheck",
+            "compliance_status":   None,
+            "verdict":             "WARNING",
+            "audit_justification": gate_justification,
+            "tool_calls_made":     0,
+            "message": gate_justification,
+        })
+        yield _emit("pipeline_complete", {
+            "task_id":            task_id,
+            "execution_time_ms":  execution_time_ms,
+            "compliance_status":  None,
+            "verdict":            "WARNING",
+            "audit_justification": gate_justification,
+            "message": gate_justification,
+        })
+        return
+
     # ── PHASE 4: Work order compilation ──────────────────────────────────────
     test_category  = interpreter_result.get("test_type", "GENERIC")
     evidence_paths = evidence_result.get("file_paths", [])

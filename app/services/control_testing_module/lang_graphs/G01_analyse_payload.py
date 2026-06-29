@@ -81,6 +81,7 @@ async def evidence_gatherer_node(state: G01_graph_state) -> Dict[str, Any]:
     )
     
     found_evidence = []
+    missing_filenames = []
 
     cycle_str = str(state.cycle_id)
     control_str = str(state.control_id)
@@ -160,10 +161,14 @@ async def evidence_gatherer_node(state: G01_graph_state) -> Dict[str, Any]:
                 f"'{prefixed_filename}' but it does not exist at: "
                 f"{relative_path}"
             )
+            missing_filenames.append(filename)
 
     output = EvidenceGathererOutput(
         status=len(found_evidence) > 0,
-        file_paths=found_evidence
+        file_paths=found_evidence,
+        required_filenames=unique_filenames,
+        missing_filenames=missing_filenames,
+        all_present=len(missing_filenames) == 0,
     )
 
     return {"evidence_result": output}

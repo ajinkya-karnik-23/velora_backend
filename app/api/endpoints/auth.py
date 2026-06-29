@@ -14,6 +14,10 @@ from app.services.auth_service import AuthService
 router = APIRouter()
 
 _COOKIE_MAX_AGE = settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
+# Secure cookies require HTTPS. Over plain-HTTP localhost (dev) some browsers
+# (e.g. Safari) refuse to store/send a Secure cookie, which silently breaks the
+# refresh-token flow and logs the user out once the access token expires.
+_COOKIE_SECURE = settings.APP_ENV != "development"
 
 
 class LoginRequest:
@@ -39,7 +43,7 @@ async def login(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=True,
+        secure=_COOKIE_SECURE,
         samesite="lax",
         path="/api/v1/auth",
         max_age=_COOKIE_MAX_AGE,
@@ -66,7 +70,7 @@ async def refresh(
         key="refresh_token",
         value=new_refresh,
         httponly=True,
-        secure=True,
+        secure=_COOKIE_SECURE,
         samesite="lax",
         path="/api/v1/auth",
         max_age=_COOKIE_MAX_AGE,

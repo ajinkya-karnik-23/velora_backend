@@ -10,6 +10,9 @@ from app.services.control_testing_module.helper_scripts.methodology_mapper impor
 class EvidenceGathererOutput(BaseModel):
     status: bool
     file_paths: List[str]
+    required_filenames: List[str] = []
+    missing_filenames: List[str] = []
+    all_present: bool = True
 
 class FinalAuditReport(BaseModel):
     control_id: str
