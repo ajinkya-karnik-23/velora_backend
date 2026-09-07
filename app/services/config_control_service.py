@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -99,6 +99,13 @@ class ConfigControlService:
         """Populate ControlTest rows from the cycle-independent ControlTestTemplate table.
         Uses source_test_id from the template so IDs always match the detailed JSONs.
         Falls back to one blank row (auto-increment) only if no templates exist."""
+        # Seeding writes `test_id` explicitly when a template carries one (so IDs
+        # keep matching the detailed JSONs), which does not advance the identity
+        # sequence. Realign it first, or the fallback insert below draws a stale
+        # id that collides with an already-seeded row — surfacing as a bogus
+        # "already exists" conflict when attaching a control.
+        await self._resync_test_id_sequence()
+
         templates = await self.test_repo.get_templates_for_control(control_id)
         if templates:
             for tmpl in templates:
@@ -114,6 +121,21 @@ class ConfigControlService:
         else:
             self.db.add(ControlTest(config_control_id=config_control_id))
         await self.db.flush()
+
+    async def _resync_test_id_sequence(self) -> None:
+        """Realign the test_id sequence with the rows actually present, so the
+        next auto-increment insert cannot collide with an explicitly-seeded id."""
+        await self.db.execute(
+            text(
+                "SELECT setval("
+                "  pg_get_serial_sequence('control_tests_and_evidences', 'test_id'),"
+                "  GREATEST("
+                "    (SELECT COALESCE(MAX(test_id), 1) FROM control_tests_and_evidences),"
+                "    1"
+                "  )"
+                ")"
+            )
+        )
 
     async def _resolve_entity_detail(
         self, cycle_id: int, ctrl: ControlRepository

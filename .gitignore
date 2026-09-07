@@ -20,10 +20,12 @@ storage/
 
 #KB
 
-# Client data lives in poc-2-data/ and IS tracked on this branch so the POC
-# can be cloned and run as-is. CLIENT_DATA_PATH still points at it, so a
-# different deployment can relocate it without code changes.
+# Client-supplied data (control definitions, evidence vault, testing outputs,
+# report templates) is not part of the application and is not tracked on this
+# branch. Point CLIENT_DATA_PATH at your own copy — see .env.example. The app
+# starts without it; the client-data screens simply come up empty.
 client-data/
+poc-2-data/
 
 # macOS
 .DS_Store
