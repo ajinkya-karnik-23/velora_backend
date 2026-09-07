@@ -100,7 +100,19 @@ def register_exception_handlers(app: FastAPI) -> None:
         return _error_response(422, "VALIDATION_ERROR", message, field or None)
 
     @app.exception_handler(IntegrityError)
-    async def integrity_error_handler(_request: Request, _exc: IntegrityError) -> JSONResponse:
+    async def integrity_error_handler(_request: Request, exc: IntegrityError) -> JSONResponse:
+        # A unique violation and a foreign-key violation are both 409s, but they
+        # mean opposite things. Reporting every IntegrityError as "already
+        # exists" sends the reader looking for a duplicate that isn't there —
+        # the actual cause is usually a row still referencing this one.
+        detail = str(getattr(exc, "orig", exc)).lower()
+        if "foreign key" in detail:
+            return _error_response(
+                409,
+                "CONFLICT",
+                "This record is still referenced by other data and cannot be "
+                "changed or removed until those are dealt with first.",
+            )
         return _error_response(409, "CONFLICT", "A resource with the given values already exists.")
 
     @app.exception_handler(NoResultFound)

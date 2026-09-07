@@ -26,6 +26,7 @@ CLIENT_CODE = "ARCELOR-MITTAL"
 CLIENT_NAME = "ArcelorMittal"
 # Shown as the subtitle/tag beneath the client name across the app.
 DEFINITION_SCOPE = "Control Automation"
+COMPLIANCE_FRAMEWORK = "SOX 404"
 # Taken from configuration so the seeded client points at wherever the client
 # data actually lives on this machine (see CLIENT_DATA_PATH).
 EVIDENCE_VAULT_PATH = settings.SUPPORTING_DOCS_PATH
@@ -49,6 +50,9 @@ async def _get_or_create_client(session: AsyncSession) -> Client:
         if client.control_jsons_path != CONTROL_JSONS_PATH:
             client.control_jsons_path = CONTROL_JSONS_PATH
             updated = True
+        if client.compliance_framework != COMPLIANCE_FRAMEWORK:
+            client.compliance_framework = COMPLIANCE_FRAMEWORK
+            updated = True
         if updated:
             await session.flush()
             print(f"  Updated {CLIENT_CODE} client record")
@@ -59,6 +63,7 @@ async def _get_or_create_client(session: AsyncSession) -> Client:
         client_name=CLIENT_NAME,
         definition_scope=DEFINITION_SCOPE,
         reference_documents="Provided by Arcelor Mittal (POC).",
+        compliance_framework=COMPLIANCE_FRAMEWORK,
         evidence_vault_path=EVIDENCE_VAULT_PATH,
         control_jsons_path=CONTROL_JSONS_PATH,
     )

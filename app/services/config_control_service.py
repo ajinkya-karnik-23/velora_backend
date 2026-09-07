@@ -48,6 +48,11 @@ from app.services.test_output_matching import build_samples, find_test_output
 logger = get_logger(__name__)
 
 # Deliberately generic — never reveals the expected filename.
+EVIDENCE_NOT_UPLOADED_MESSAGE = (
+    "No evidence has been uploaded for this control yet. "
+    "Upload the supporting evidence to begin testing."
+)
+
 EVIDENCE_MISMATCH_MESSAGE = (
     "The appropriate evidence for this control was not found. "
     "Please review the evidence uploaded and try again."
@@ -331,11 +336,7 @@ class ConfigControlService:
         if test_id is None:
             return {}
         rows = (
-            (
-                await self.db.execute(
-                    select(EvidenceFile).where(EvidenceFile.test_id == test_id)
-                )
-            )
+            (await self.db.execute(select(EvidenceFile).where(EvidenceFile.test_id == test_id)))
             .scalars()
             .all()
         )
@@ -409,14 +410,12 @@ class ConfigControlService:
         tests = await self.test_repo.get_by_config_control(cc.config_control_id)
         test_id = tests[0].test_id if tests else None
         if test_id is None:
-            return EvidenceCheckOut(ok=False, message=EVIDENCE_MISMATCH_MESSAGE)
+            return EvidenceCheckOut(
+                ok=False, message=EVIDENCE_NOT_UPLOADED_MESSAGE, reason="no_evidence"
+            )
 
         rows = (
-            (
-                await self.db.execute(
-                    select(EvidenceFile).where(EvidenceFile.test_id == test_id)
-                )
-            )
+            (await self.db.execute(select(EvidenceFile).where(EvidenceFile.test_id == test_id)))
             .scalars()
             .all()
         )
@@ -434,9 +433,20 @@ class ConfigControlService:
         )
         any_valid = any(filename_matches(ev.file_name, expected) for ev in rows)
 
+        if any_valid:
+            return EvidenceCheckOut(ok=True, invalid_samples=invalid)
+
+        # Nothing uploaded at all is the normal starting state, not a failure —
+        # saying "the appropriate evidence was not found" there reads as though
+        # the wrong file was supplied.
+        if not rows:
+            return EvidenceCheckOut(
+                ok=False, message=EVIDENCE_NOT_UPLOADED_MESSAGE, reason="no_evidence"
+            )
         return EvidenceCheckOut(
-            ok=any_valid,
-            message=None if any_valid else EVIDENCE_MISMATCH_MESSAGE,
+            ok=False,
+            message=EVIDENCE_MISMATCH_MESSAGE,
+            reason="mismatch",
             invalid_samples=invalid,
         )
 
@@ -474,7 +484,9 @@ class ConfigControlService:
                     .where(EvidenceFile.test_id == test_id)
                     .order_by(EvidenceFile.upload_date)
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
             if test_id is not None
             else []
         )

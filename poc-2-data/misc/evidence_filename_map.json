@@ -1,0 +1,10 @@
+{
+  "_comment": "Expected evidence filename per control+entity. Editable without code changes. Matching is case-insensitive on the filename only (any folder path is ignored).",
+  "controls": [
+    {
+      "control_number": "IA8.CA02",
+      "entity_code": "19A1",
+      "expected_evidence_filename": "JV's TOE.pdf"
+    }
+  ]
+}

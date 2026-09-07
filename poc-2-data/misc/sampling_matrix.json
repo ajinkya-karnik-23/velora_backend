@@ -1,0 +1,84 @@
+{
+  "Sampling Methodology": {
+    "Operating Effectiveness Testing": {
+      "Annual": {
+        "Risk Rating conclusion Low": null,
+        "Risk Rating Conclusion Medium": null,
+        "Risk Rating Conclusion High": null,
+        "RF (Full test)": null,
+        "RM": 1,
+        "YE": 1
+      },
+      "Bi-annual": {
+        "Risk Rating conclusion Low": null,
+        "Risk Rating Conclusion Medium": 1,
+        "Risk Rating Conclusion High": null,
+        "RF (Full test)": 1,
+        "RM": 1,
+        "YE": null
+      },
+      "Quarterly": {
+        "Risk Rating conclusion Low": null,
+        "Risk Rating Conclusion Medium": 2,
+        "Risk Rating Conclusion High": null,
+        "RF (Full test)": 1,
+        "RM": 2,
+        "YE": null
+      },
+      "Monthly": {
+        "Risk Rating conclusion Low": null,
+        "Risk Rating Conclusion Medium": "2 to 5",
+        "Risk Rating Conclusion High": null,
+        "RF (Full test)": 1,
+        "RM": 2,
+        "YE": null
+      },
+      "Weekly": {
+        "Risk Rating conclusion Low": 5,
+        "Risk Rating Conclusion Medium": 10,
+        "Risk Rating Conclusion High": 15,
+        "RF (Full test)": 2,
+        "RM": 2,
+        "YE": null
+      },
+      "Daily": {
+        "Risk Rating conclusion Low": 20,
+        "Risk Rating Conclusion Medium": 30,
+        "Risk Rating Conclusion High": 40,
+        "RF (Full test)": 5,
+        "RM": 10,
+        "YE": null
+      },
+      "Multiple times per day": {
+        "Risk Rating conclusion Low": 25,
+        "Risk Rating Conclusion Medium": 45,
+        "Risk Rating Conclusion High": 60,
+        "RF (Full test)": 8,
+        "RM": 25,
+        "YE": null
+      }
+    },
+    "Sub-sampling according to population range applicable for all rounds": {
+      "More than 200 items": {
+        "Low/ Medium": 15,
+        "High": 40
+      },
+      "Between 100 and 199 items": {
+        "Low/ Medium": 10,
+        "High": 20
+      },
+      "Between 50 and 99 items": {
+        "Low/ Medium": 5,
+        "High": 15
+      },
+      "Between 20 and 49 items": {
+        "Low/ Medium": 3,
+        "High": 10
+      },
+      "Less than 20 items": {
+        "Low/ Medium": 2,
+        "High": 5
+      }
+    }
+  }
+}

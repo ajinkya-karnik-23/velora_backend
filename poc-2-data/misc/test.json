@@ -1,0 +1,24 @@
+{
+  "control_test_output": {
+    "control_number": "",
+    "entity_code": "",
+    "phase_of_control": "",
+    "summary": ""
+  },
+  "test_details": {
+    "1": {
+      "sample_no": "",
+      "document_number": "",
+      "result": "",
+      "pages": [],
+      "validation": ""
+    },
+    "2": {
+      "sample_no": "",
+      "document_number": "",
+      "result": "",
+      "pages": [],
+      "validation": ""
+    }
+  }
+}

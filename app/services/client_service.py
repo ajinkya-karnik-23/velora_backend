@@ -9,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictException, NotFoundException
 from app.models.client import Client
+from app.models.control_repository import ControlRepository
+from app.models.review_cycle import ReviewCycle
 from app.repositories.client_repo import ClientRepo
 from app.schemas.client import ClientCreate, ClientOut, ClientUpdate
 
@@ -30,9 +32,7 @@ class ClientService:
             raise NotFoundException("Client not found.")
         return ClientOut.model_validate(client)
 
-    async def list_clients(
-        self, page: int = 1, page_size: int = 20
-    ) -> tuple[list[ClientOut], int]:
+    async def list_clients(self, page: int = 1, page_size: int = 20) -> tuple[list[ClientOut], int]:
         count_stmt = select(func.count(Client.client_id))
         total = (await self.db.execute(count_stmt)).scalar() or 0
 
@@ -43,7 +43,38 @@ class ClientService:
             .limit(page_size)
         )
         result = await self.db.execute(stmt)
-        clients = [ClientOut.model_validate(c) for c in result.scalars().all()]
+        rows = list(result.scalars().all())
+
+        # Two grouped queries for the whole page rather than a pair per client.
+        ids = [c.client_id for c in rows]
+        cycles: dict[int, int] = {}
+        controls: dict[int, int] = {}
+        if ids:
+            cycles = dict(
+                (
+                    await self.db.execute(
+                        select(ReviewCycle.client_id, func.count(ReviewCycle.cycle_id))
+                        .where(ReviewCycle.client_id.in_(ids))
+                        .group_by(ReviewCycle.client_id)
+                    )
+                ).all()
+            )
+            controls = dict(
+                (
+                    await self.db.execute(
+                        select(ControlRepository.client_id, func.count())
+                        .where(ControlRepository.client_id.in_(ids))
+                        .group_by(ControlRepository.client_id)
+                    )
+                ).all()
+            )
+
+        clients = []
+        for c in rows:
+            out = ClientOut.model_validate(c)
+            out.review_cycle_count = cycles.get(c.client_id, 0)
+            out.control_count = controls.get(c.client_id, 0)
+            clients.append(out)
         return clients, total
 
     async def update_client(self, client_id: int, data: ClientUpdate) -> ClientOut:

@@ -1,6 +1,6 @@
 """Sampling size calculation from the client's sampling matrix.
 
-The matrix (Arcelor-Mittal/misc/sampling_matrix.json) holds an
+The matrix (<CLIENT_DATA_PATH>/misc/sampling_matrix.json) holds an
 "Operating Effectiveness Testing" table keyed by control frequency, with
 columns for each risk rating plus the testing-round columns RF/RM/YE:
 

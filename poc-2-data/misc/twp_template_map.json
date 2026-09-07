@@ -1,0 +1,11 @@
+{
+  "_comment": "TWP report template per control+entity. Two variants: 'empty_template' is served before testing has been completed, 'completed_template' once every sample has been tested. Paths are relative to the backend working directory. Editable without code changes — add a new entry per control.",
+  "controls": [
+    {
+      "control_number": "IA8.CA02",
+      "entity_code": "19A1",
+      "empty_template": "poc-2-data/misc/dummy_template.xlsm",
+      "completed_template": "poc-2-data/misc/IA8.CA02.19A1.TWP.Completed.xlsm"
+    }
+  ]
+}

@@ -20,8 +20,10 @@ storage/
 
 #KB
 
-# Client-supplied data — control definitions, evidence and report templates.
-# Never committed: it is per-deployment and located via CLIENT_DATA_PATH.
-# See .env.example for the expected folder layout.
-Arcelor-Mittal/
+# Client data lives in poc-2-data/ and IS tracked on this branch so the POC
+# can be cloned and run as-is. CLIENT_DATA_PATH still points at it, so a
+# different deployment can relocate it without code changes.
 client-data/
+
+# macOS
+.DS_Store

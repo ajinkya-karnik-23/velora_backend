@@ -51,8 +51,9 @@ class Settings(BaseSettings):
     LOCAL_STORAGE_PATH: str = "./storage"
 
     # ── Client-supplied data ────────────────────────────────────────────────
-    # None of this ships with the code: it is the client's own control
-    # definitions, evidence and report templates, kept outside the repository.
+    # The client's own control definitions, evidence and report templates.
+    # On this POC branch they are committed under poc-2-data/; elsewhere point
+    # CLIENT_DATA_PATH at wherever the deployment keeps them.
     #
     # CLIENT_DATA_PATH is the only variable that normally needs setting — the
     # paths below are derived from it, following the expected folder layout:
@@ -65,7 +66,7 @@ class Settings(BaseSettings):
     #
     # Any individual path can still be overridden in the environment when a
     # deployment does not follow that layout. Absolute paths are fine.
-    CLIENT_DATA_PATH: str = "Arcelor-Mittal"
+    CLIENT_DATA_PATH: str = "poc-2-data"
 
     # Evidence vault — client-supplied supporting documents, one folder per
     # control number, browsed/imported via the "demo vault" evidence endpoints.

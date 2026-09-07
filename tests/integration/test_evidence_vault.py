@@ -1,7 +1,7 @@
 """Integration tests for the per-client evidence vault (supporting-documents-dump).
 
 Each client has its own isolated vault directory (Client.evidence_vault_path),
-one folder per control number — see velora_backend/Arcelor-Mittal/
+one folder per control number — see <CLIENT_DATA_PATH>/
 supporting_documents_dump for the Arcelor Mittal client. Tests build a
 throwaway vault dir and point the seeded test client's evidence_vault_path
 at it, so nothing here touches real client data.

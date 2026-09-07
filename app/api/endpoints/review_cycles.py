@@ -106,7 +106,7 @@ async def delete_review_cycle(
     db: AsyncSession = Depends(get_db),
 ) -> None:
     service = ReviewCycleService(db)
-    await service.delete_cycle(cycle_id)
+    await service.delete_cycle(cycle_id, current_user)
 
 
 @router.get("/get-cycle-stats")

@@ -30,5 +30,9 @@ class ClientOut(BaseModel):
     definition_scope: str
     reference_documents: str
     compliance_framework: str | None = None
+    # Engagement size, so a client can be picked on substance rather than name
+    # alone. Populated by the list endpoint; absent on single-client reads.
+    review_cycle_count: int = 0
+    control_count: int = 0
     created_time: int
     updated_time: int

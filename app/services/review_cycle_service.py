@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AppException, ConflictException, NotFoundException
@@ -88,22 +88,37 @@ class ReviewCycleService:
         cycle = await self.repo.get_with_lead(cycle_id)
         return _to_out(cycle)
 
-    async def delete_cycle(self, cycle_id: int) -> None:
+    async def delete_cycle(self, cycle_id: int, current_user: dict[str, Any] | None = None) -> None:
+        """Delete a cycle and everything attached to it.
+
+        Every foreign key pointing at review_cycles is RESTRICT, so the child
+        rows have to be cleared first — otherwise Postgres rejects the delete
+        and the error surfaces as an unrelated-looking 409. They are removed
+        innermost-first, in the one transaction, so a failure part-way through
+        leaves the cycle intact rather than half-dismantled.
+        """
         cycle = await self.repo.get_by_id(cycle_id)
         if not cycle:
             raise NotFoundException("Review cycle not found.")
         if cycle.status != "Draft":
-            raise ConflictException("Can only delete cycles in Draft status.")
-        # Phase 5: block deletion if any evidence exists
-        ev_count = (
-            await self.db.execute(
-                select(func.count(EvidenceFile.evidence_id)).where(
-                    EvidenceFile.cycle_id == cycle_id
-                )
+            raise ConflictException(
+                f"Only cycles in Draft status can be deleted; this one is {cycle.status}."
             )
-        ).scalar() or 0
-        if ev_count > 0:
-            raise ConflictException("Cannot delete cycle: evidence files exist.")
+
+        # Evidence goes through its own service so the stored blobs are cleaned
+        # up too — deleting the rows alone would strand the files.
+        if current_user is not None:
+            from app.services.evidence_service import EvidenceService
+
+            await EvidenceService(self.db).delete_all_for_cycle(cycle_id, current_user)
+        else:
+            await self.db.execute(delete(EvidenceFile).where(EvidenceFile.cycle_id == cycle_id))
+
+        await self.db.execute(delete(TestLog).where(TestLog.cycle_id == cycle_id))
+        # control_tests cascade from config_controls, so removing those is enough.
+        await self.db.execute(delete(ConfigControl).where(ConfigControl.cycle_id == cycle_id))
+        await self.db.execute(delete(EngagementTeam).where(EngagementTeam.cycle_id == cycle_id))
+
         await self.repo.delete(cycle)
         await self.db.commit()
 
@@ -149,7 +164,8 @@ class ReviewCycleService:
 
         completion_pct = (
             round(float(tested_controls) / float(total_controls) * 100.0, 2)
-            if total_controls else 0.0
+            if total_controls
+            else 0.0
         )
 
         return {

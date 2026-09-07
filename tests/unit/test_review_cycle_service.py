@@ -48,10 +48,23 @@ def _mock_cycle(cycle_id=1, status="Draft", due_date=None):
     c.lead = MagicMock(user_name="admin")
     cols = []
     for key in [
-        "cycle_id", "client_id", "project_lead", "review_period", "name",
-        "audit_type", "priority", "framework", "start_date", "due_date",
-        "end_date", "status", "score", "overview", "description",
-        "created_time", "updated_time",
+        "cycle_id",
+        "client_id",
+        "project_lead",
+        "review_period",
+        "name",
+        "audit_type",
+        "priority",
+        "framework",
+        "start_date",
+        "due_date",
+        "end_date",
+        "status",
+        "score",
+        "overview",
+        "description",
+        "created_time",
+        "updated_time",
     ]:
         col = MagicMock()
         col.key = key
@@ -74,8 +87,11 @@ async def test_create_cycle(service):
     service.repo.get_with_lead = AsyncMock(return_value=cycle)
 
     data = ReviewCycleCreate(
-        client_id=1, review_period="Q1", name="New",
-        start_date=int(time.time()), due_date=int(time.time()) + 86400,
+        client_id=1,
+        review_period="Q1",
+        name="New",
+        start_date=int(time.time()),
+        due_date=int(time.time()) + 86400,
     )
     result = await service.create_cycle(data)
     assert result.name == "Test Cycle"
@@ -90,7 +106,12 @@ async def test_create_cycle(service):
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "from_status,to_status",
-    [("Draft", "Active"), ("Active", "In Review"), ("In Review", "Completed"), ("Completed", "Archived")],
+    [
+        ("Draft", "Active"),
+        ("Active", "In Review"),
+        ("In Review", "Completed"),
+        ("Completed", "Archived"),
+    ],
 )
 async def test_valid_transitions(service, from_status, to_status):
     cycle = _mock_cycle(status=from_status)
@@ -137,17 +158,23 @@ async def test_delete_only_draft(service):
 
 
 @pytest.mark.asyncio
-async def test_delete_blocked_by_evidence(service):
+async def test_delete_clears_children_before_the_cycle(service):
+    """Every FK to review_cycles is RESTRICT, so children must go first.
+
+    The confirmation dialog promises the cycle's controls, tests and evidence
+    go with it; deleting the cycle alone would just raise a foreign-key error.
+    """
     cycle = _mock_cycle(status="Draft")
     service.repo.get_by_id = AsyncMock(return_value=cycle)
+    service.repo.delete = AsyncMock()
+    service.db.execute = AsyncMock(return_value=MagicMock())
 
-    # Mock evidence count > 0
-    mock_result = MagicMock()
-    mock_result.scalar.return_value = 3
-    service.db.execute = AsyncMock(return_value=mock_result)
+    await service.delete_cycle(1)
 
-    with pytest.raises(ConflictException, match="evidence"):
-        await service.delete_cycle(1)
+    # One DELETE per child table, all before the cycle itself is removed.
+    assert service.db.execute.await_count >= 4
+    service.repo.delete.assert_awaited_once_with(cycle)
+    service.db.commit.assert_awaited_once()
 
 
 @pytest.mark.asyncio

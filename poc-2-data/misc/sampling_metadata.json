@@ -1,0 +1,19 @@
+{
+  "controls": [
+    {
+      "control_number": "IA8.CA02",
+      "entity_code": "19A1",
+      "notes": {
+        "frequency": {
+          "text": "For manual entries, based on population, Frequency = multiple times. For NR, based on population, Frequency = monthly. From the matrix, sampling size, 25 + 2 = 27",
+          "source": "RCM"
+        },
+        "risk_level": {
+          "text": "As observed from the RCM.",
+          "source": "RCM"
+        },
+        "phase": null
+      }
+    }
+  ]
+}

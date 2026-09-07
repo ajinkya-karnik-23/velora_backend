@@ -99,6 +99,11 @@ class EvidenceCheckOut(BaseModel):
 
     ok: bool
     message: str | None = None
+    # Why the check did not pass: "no_evidence" (nothing uploaded yet — the
+    # normal starting state) or "mismatch" (uploaded, but it does not satisfy
+    # the control). Lets the UI tell an empty control apart from a failing one
+    # without exposing what was expected.
+    reason: str | None = None
     # Sample rows whose own attached evidence does not satisfy the control's
     # requirement. Carries sample numbers only — never what was expected.
     invalid_samples: list[int] = []
