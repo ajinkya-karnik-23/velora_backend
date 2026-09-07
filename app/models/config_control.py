@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, ForeignKey, Index, UniqueConstraint
+from sqlalchemy import JSON, BigInteger, ForeignKey, Index, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, BigIntTimestampMixin
@@ -28,6 +28,19 @@ class ConfigControl(BigIntTimestampMixin, Base):
         ForeignKey("control_repository.control_id", ondelete="RESTRICT", onupdate="CASCADE"),
         nullable=False,
     )
+
+    # Snapshot of the entity-specific control JSON resolved at attach time
+    # (control_number + the cycle's entity_code) — captured once here so it
+    # survives even if the source JSON on disk later changes.
+    entity_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    entity_detail_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+    # Sample size computed from the client's sampling matrix (or falling back
+    # to the control JSON's own "Sample Size"). Stored as text because the
+    # matrix legitimately contains ranges such as "2 to 5".
+    sample_size: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    # "matrix" | "control_json" — where the stored sample_size came from.
+    sample_size_source: Mapped[str | None] = mapped_column(String(30), nullable=True)
 
     # Relationships
     review_cycle: Mapped[ReviewCycle] = relationship()  # noqa: F821

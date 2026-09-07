@@ -12,6 +12,7 @@ class ControlOut(BaseModel):
 
     control_id: int
     control_number: str
+    client_id: int
     version_id: int | None = None
     control_name: str
     reference_number: str | None = None
@@ -27,6 +28,7 @@ class ControlOut(BaseModel):
     units_fccg_contact: int
     fccg_contact_name: str | None = None
     frameworks: list[str] = []
+    source_json: dict | None = None
     created_time: int
     updated_time: int
 

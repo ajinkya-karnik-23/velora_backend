@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from sqlalchemy import BigInteger, Integer, event as sa_event
 from sqlalchemy.engine import Engine
+from sqlalchemy.pool import StaticPool
 
 from app.core.security import create_access_token, hash_password
 from app.db.base import Base  # imports all models so metadata is populated
@@ -56,7 +57,12 @@ def _patch_bigint_for_sqlite(target, connection, **kw):
                 if isinstance(column.type, BigInteger):
                     column.type = Integer()
 
-_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+_engine = create_async_engine(
+    TEST_DATABASE_URL,
+    echo=False,
+    poolclass=StaticPool,
+    connect_args={"check_same_thread": False},
+)
 _testing_session = async_sessionmaker(bind=_engine, class_=AsyncSession, expire_on_commit=False)
 
 
@@ -302,6 +308,7 @@ async def seeded_engagement(
     # Control repository entry
     control = ControlRepository(
         control_number="CTRL-001",
+        client_id=client_obj.client_id,
         version_id=version.version_id,
         control_name="Test Control",
         entity="Test Entity",

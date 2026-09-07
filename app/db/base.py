@@ -26,7 +26,4 @@ from app.models.version import Version  # noqa: F401
 # Phase 5
 from app.models.evidence_file import EvidenceFile  # noqa: F401
 from app.models.test_log import TestLog  # noqa: F401
-# from app.models.control_test_result import ControlTestResult
-from app.db.base_class import Base
-
-from app.models.control_test_result import ControlTestResult
+from app.models.control_test_result import ControlTestResult  # noqa: F401

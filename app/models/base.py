@@ -4,7 +4,6 @@ import time
 
 from sqlalchemy import BigInteger, event
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-# from app.models.control_test_result import ControlTestResult
 
 
 class Base(DeclarativeBase):

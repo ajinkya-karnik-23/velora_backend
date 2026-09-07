@@ -8,6 +8,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Body, Depends, Query
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_engagement_member, require_permission
@@ -17,6 +18,9 @@ from app.schemas.config_control import (
     ConfigControlBulkRemove,
     ConfigControlCreate,
     ConfigControlOut,
+    ControlTestOutputOut,
+    EvidenceCheckOut,
+    SampleSizeResultOut,
 )
 from app.schemas.control_test import CycleTestObjectiveOut
 from app.schemas.engagement_team import (
@@ -212,6 +216,98 @@ async def bulk_attach_controls(
 ) -> list[ConfigControlOut]:
     service = ConfigControlService(db)
     return await service.bulk_attach(cycle_id, data.control_ids)
+
+
+@router.post(
+    "/{cycle_id}/calculate-sample-size", response_model=SampleSizeResultOut
+)
+async def calculate_sample_size(
+    cycle_id: int,  # noqa: ARG001 — path scoping only; lookup is by config_control_id
+    config_control_id: int = Query(...),
+    current_user: dict = Depends(require_permission("can_manage_controls")),
+    db: AsyncSession = Depends(get_db),
+) -> SampleSizeResultOut:
+    """Determine this attached control's sample size.
+
+    Resolves the control's attributes against the sampling methodology
+    matrix, falling back to the size defined on the control itself when no
+    mapping applies.
+    """
+    service = ConfigControlService(db)
+    return await service.calculate_sample_size(config_control_id)
+
+
+@router.get("/{cycle_id}/check-evidence", response_model=EvidenceCheckOut)
+async def check_evidence(
+    cycle_id: int,  # noqa: ARG001 — path scoping only
+    config_control_id: int = Query(...),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> EvidenceCheckOut:
+    """Whether this control's evidence permits test execution."""
+    service = ConfigControlService(db)
+    return await service.check_evidence(config_control_id)
+
+
+@router.get("/{cycle_id}/evidence-pages")
+async def get_evidence_pages(
+    cycle_id: int,  # noqa: ARG001 — path scoping only
+    config_control_id: int = Query(...),
+    sample_no: int = Query(...),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """Evidence for one sample, trimmed to the pages it was validated on."""
+    service = ConfigControlService(db)
+    content, media_type, filename = await service.get_evidence_pages(
+        config_control_id, sample_no
+    )
+    safe_name = filename.replace('"', "")
+    return Response(
+        content=content,
+        media_type=media_type,
+        # inline so the browser renders it in the new tab rather than downloading
+        headers={"Content-Disposition": f'inline; filename="{safe_name}"'},
+    )
+
+
+@router.delete("/{cycle_id}/clear-evidence")
+async def clear_cycle_evidence(
+    cycle_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, int]:
+    """Remove every evidence file attached to this cycle. Admin-only."""
+    service = EvidenceService(db)
+    deleted = await service.delete_all_for_cycle(cycle_id, current_user)
+    return {"deleted": deleted}
+
+
+@router.get("/{cycle_id}/test-output", response_model=ControlTestOutputOut)
+async def get_test_output(
+    cycle_id: int,  # noqa: ARG001 — path scoping only; lookup is by config_control_id
+    config_control_id: int = Query(...),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ControlTestOutputOut:
+    """Testing output for an attached control — drives the Testing table."""
+    service = ConfigControlService(db)
+    return await service.get_test_output(config_control_id)
+
+
+@router.get("/{cycle_id}/test-outputs", response_model=list[ControlTestOutputOut])
+async def list_test_outputs(
+    cycle_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[ControlTestOutputOut]:
+    """Testing output for every control attached to this cycle.
+
+    Backs the cycle-wide progress dashboards, which need the sample rows of
+    all attached controls rather than one control at a time.
+    """
+    service = ConfigControlService(db)
+    return await service.get_cycle_test_outputs(cycle_id)
 
 
 @router.delete("/{cycle_id}/remove-control", status_code=204, response_model=None)

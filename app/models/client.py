@@ -18,3 +18,14 @@ class Client(BigIntTimestampMixin, Base):
     definition_scope: Mapped[str] = mapped_column(Text, nullable=False)
     reference_documents: Mapped[str] = mapped_column(Text, nullable=False)
     compliance_framework: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # Filesystem root for this client's evidence vault — one folder per
+    # control number underneath it. Falls back to settings.SUPPORTING_DOCS_PATH
+    # when unset. Each client gets its own POD-style, isolated vault.
+    evidence_vault_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    # Filesystem root for this client's control JSON definitions — one JSON
+    # file per control, matched against uploaded control Excel filenames by
+    # their shared "<code>.<code>.<code>" prefix. Falls back to
+    # settings.CONTROL_JSONS_PATH when unset.
+    control_jsons_path: Mapped[str | None] = mapped_column(String(500), nullable=True)

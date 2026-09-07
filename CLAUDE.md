@@ -77,4 +77,18 @@ poetry run pytest -k "test_name"
 
 ## Environment
 
-Copy `.env.example` to `.env`. Required vars: `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `AZURE_STORAGE_CONNECTION_STRING`.
+Copy `.env.example` to `.env` — it lists every setting the app reads, with the required ones marked. Required vars: `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, the agent-pipeline block (`DETAILED_JSONS_PATH`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `MODEL1`, `LITELLM_MODEL`, `LANGSMITH_*`), and `AZURE_STORAGE_CONNECTION_STRING` when `STORAGE_BACKEND=azure`.
+
+### Client data
+
+Control definitions, the evidence vault, testing outputs and report templates are **client-supplied and never committed** — the folder is gitignored. Point `CLIENT_DATA_PATH` at it and the individual paths resolve from that root:
+
+```
+<CLIENT_DATA_PATH>/
+  control_jsons/              control definitions, one JSON per control
+  supporting_documents_dump/  evidence vault, one folder per control number
+  test_outputs/               per-control testing output JSONs
+  misc/                       report templates + config JSONs
+```
+
+Each path (`CONTROL_JSONS_PATH`, `SUPPORTING_DOCS_PATH`, …) can still be set individually to override the derived value — see `app/core/config.py`. The app starts and runs without this data: loaders return empty results and the affected screens come up blank. Tests that read the real files are skipped when it is absent (`tests/client_data.py`).

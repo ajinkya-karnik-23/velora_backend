@@ -78,6 +78,9 @@ async def _get_current_version(session: AsyncSession) -> Version:
     return version
 
 
+SEED_EVIDENCE_VAULT_PATH = "app/services/evidence_vault/demo_data"
+
+
 async def _get_or_create_client(session: AsyncSession) -> Client:
     _OLD_CODES = ["AZ-SEED", "VELORA-SEED"]
     result = await session.execute(
@@ -94,6 +97,9 @@ async def _get_or_create_client(session: AsyncSession) -> Client:
         if client.client_name != SEED_CLIENT_NAME:
             client.client_name = SEED_CLIENT_NAME
             updated = True
+        if client.evidence_vault_path != SEED_EVIDENCE_VAULT_PATH:
+            client.evidence_vault_path = SEED_EVIDENCE_VAULT_PATH
+            updated = True
         if updated:
             await session.flush()
             print(f"  Renamed existing seed client → {SEED_CLIENT_NAME}")
@@ -103,6 +109,7 @@ async def _get_or_create_client(session: AsyncSession) -> Client:
         client_name=SEED_CLIENT_NAME,
         definition_scope="Seeded from ukmc_master_controls.json",
         reference_documents="ukmc_master_controls.json",
+        evidence_vault_path=SEED_EVIDENCE_VAULT_PATH,
     )
     session.add(client)
     await session.flush()
@@ -253,6 +260,7 @@ async def seed_ukmc_controls() -> None:
                 # ── ControlRepository row ────────────────────────────────────
                 result = await session.execute(
                     select(ControlRepository).where(
+                        ControlRepository.client_id == client.client_id,
                         ControlRepository.control_number == control_number,
                         ControlRepository.frequency == frequency,
                     )
@@ -263,6 +271,7 @@ async def seed_ukmc_controls() -> None:
                     entity = entry["entity"] or "Signora"
                     ctrl = ControlRepository(
                         control_number=control_number,
+                        client_id=client.client_id,
                         version_id=version_id,
                         control_name=entry["control_name"],
                         reference_number=entry.get("reference_number"),

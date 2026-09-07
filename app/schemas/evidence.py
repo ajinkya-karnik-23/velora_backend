@@ -11,6 +11,7 @@ class EvidenceUpload(BaseModel):
     cycle_id: int | None = None
     control_id: int | None = None
     test_id: int | None = None
+    sample_no: int | None = None
     comments: str | None = None
 
     @model_validator(mode="after")
@@ -51,6 +52,7 @@ class EvidenceOut(BaseModel):
     control_number: str | None = None
     control_name: str | None = None
     test_id: int | None = None
+    sample_no: int | None = None
     status: str
     comments: str | None = None
     file_version: int
@@ -85,6 +87,7 @@ class DemoVaultFile(BaseModel):
 class DemoFileImport(BaseModel):
     control_number: str
     filename: str
+    client_id: int
     cycle_id: int | None = None
     control_id: int | None = None
     test_id: int | None = None

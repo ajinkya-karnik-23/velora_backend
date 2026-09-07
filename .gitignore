@@ -17,3 +17,9 @@ storage/
 .quartz-engine/content
 
 #KB
+
+# Client-supplied data — control definitions, evidence and report templates.
+# Never committed: it is per-deployment and located via CLIENT_DATA_PATH.
+# See .env.example for the expected folder layout.
+Arcelor-Mittal/
+client-data/

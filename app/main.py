@@ -101,6 +101,16 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
 
         logger.exception("❌ ukmc_seed_failed")
 
+    try:
+
+        from scripts.seed_arcelor_mittal_client import seed_arcelor_mittal_client
+        await seed_arcelor_mittal_client()
+        logger.info("✅ Arcelor Mittal client seed completed")
+
+    except Exception:
+
+        logger.exception("❌ arcelor_mittal_seed_failed")
+
     # -------------------------------------------------------------------
     # APP RUNNING
     # -------------------------------------------------------------------
@@ -354,19 +364,36 @@ def create_app() -> FastAPI:
     )
 
     # -------------------------------------------------------------------
-    # DEMO VAULT — serve demo_data files as plain static assets for preview
+    # DEMO VAULT — serve supporting-documents-dump files as plain static
+    # assets for preview (client-supplied evidence, one folder per control)
     # -------------------------------------------------------------------
 
     import pathlib
 
-    _demo_vault_path = pathlib.Path(__file__).parent / "services" / "evidence_vault" / "demo_data"
-    _demo_vault_path.mkdir(parents=True, exist_ok=True)
+    # The vault is client-supplied data that lives outside the repository, so
+    # it may legitimately be absent — a fresh checkout, or a deployment where
+    # CLIENT_DATA_PATH has not been pointed at it yet. Missing or unwritable
+    # data must not stop the API from serving; the mount is simply skipped and
+    # the vault endpoints report an empty vault.
+    _demo_vault_path = pathlib.Path(settings.SUPPORTING_DOCS_PATH)
+    try:
+        _demo_vault_path.mkdir(parents=True, exist_ok=True)
+        _vault_available = True
+    except OSError as exc:
+        logger.warning(
+            "demo_vault_unavailable",
+            path=str(_demo_vault_path),
+            error=str(exc),
+            hint="Set CLIENT_DATA_PATH to the client data folder.",
+        )
+        _vault_available = False
 
-    app.mount(
-        "/demo-data",
-        StaticFiles(directory=str(_demo_vault_path)),
-        name="demo_data",
-    )
+    if _vault_available:
+        app.mount(
+            "/demo-data",
+            StaticFiles(directory=str(_demo_vault_path)),
+            name="demo_data",
+        )
 
     # -------------------------------------------------------------------
     # KNOWLEDGE BASE — static Quartz-compiled site

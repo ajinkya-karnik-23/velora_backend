@@ -16,6 +16,7 @@ from app.api.deps import (
     require_engagement_member,
     require_permission,
 )
+from app.core.config import settings
 from app.core.exceptions import ForbiddenException
 from app.schemas.common import PaginatedResponse
 from app.schemas.evidence import (
@@ -28,8 +29,6 @@ from app.schemas.evidence import (
     WorkflowStepOut,
 )
 
-# Absolute path to the static demo_data folder
-_DEMO_VAULT = Path(__file__).parent.parent.parent / "services" / "evidence_vault" / "demo_data"
 from app.services.evidence_service import EvidenceService
 
 router = APIRouter()
@@ -110,6 +109,7 @@ async def upload_evidence(
     cycle_id: int | None = Form(default=None),
     control_id: int | None = Form(default=None),
     test_id: int | None = Form(default=None),
+    sample_no: int | None = Form(default=None),
     comments: str | None = Form(default=None),
     current_user: dict = Depends(require_permission("can_upload")),
     db: AsyncSession = Depends(get_db),
@@ -140,6 +140,7 @@ async def upload_evidence(
         test_id=test_id,
         comments=comments,
         current_user=current_user,
+        sample_no=sample_no,
     )
 
 
@@ -243,7 +244,9 @@ WORKFLOW_STEPS = [
 
 
 # ---------------------------------------------------------------------------
-# Demo Vault — static file browser of evidence_vault/demo_data
+# Demo Vault — static file browser of the selected client's evidence vault
+# (client-supplied supporting documents, one folder per control number, one
+# vault directory per client — see Client.evidence_vault_path)
 # ---------------------------------------------------------------------------
 
 
@@ -258,15 +261,32 @@ _DEMO_UPLOADERS = [
 ]
 
 
+async def _resolve_vault_dir(db: AsyncSession, client_id: int) -> Path:
+    """Each client has its own evidence vault folder — isolated per POD.
+
+    Falls back to settings.SUPPORTING_DOCS_PATH if the client has no
+    vault path configured.
+    """
+    from app.repositories.client_repo import ClientRepo
+
+    client = await ClientRepo(db).get_by_id(client_id)
+    if client is None:
+        raise HTTPException(status_code=404, detail="Client not found.")
+    return Path(client.evidence_vault_path or settings.SUPPORTING_DOCS_PATH)
+
+
 @router.get("/demo-vault", response_model=list[DemoVaultFile])
 async def list_demo_vault(
+    client_id: int = Query(...),
     current_user: dict = Depends(get_current_user),  # noqa: ARG001
+    db: AsyncSession = Depends(get_db),
 ) -> list[DemoVaultFile]:
-    """Return all files in the demo_data folder, organised by control number."""
+    """Return all files in the client's vault folder, organised by control number."""
+    vault_dir = await _resolve_vault_dir(db, client_id)
     files: list[DemoVaultFile] = []
-    if not _DEMO_VAULT.exists():
+    if not vault_dir.exists():
         return files
-    for control_dir in sorted(_DEMO_VAULT.iterdir()):
+    for control_dir in sorted(vault_dir.iterdir()):
         if not control_dir.is_dir() or control_dir.name.startswith("."):
             continue
         uploader = _DEMO_UPLOADERS[abs(hash(control_dir.name)) % len(_DEMO_UPLOADERS)]
@@ -295,6 +315,7 @@ async def import_demo_file(
     return await service.import_demo(
         control_number=data.control_number,
         filename=data.filename,
+        client_id=data.client_id,
         cycle_id=data.cycle_id,
         control_id=data.control_id,
         test_id=data.test_id,
@@ -306,12 +327,15 @@ async def import_demo_file(
 async def download_demo_vault_file(
     control_number: str = Query(...),
     filename: str = Query(...),
+    client_id: int = Query(...),
     current_user: dict = Depends(get_current_user),  # noqa: ARG001
+    db: AsyncSession = Depends(get_db),
 ) -> FileResponse:
-    """Stream a file from the demo_data folder."""
+    """Stream a file from the client's vault folder."""
+    vault_dir = await _resolve_vault_dir(db, client_id)
     # Prevent path traversal
-    safe_path = (_DEMO_VAULT / control_number / filename).resolve()
-    if not str(safe_path).startswith(str(_DEMO_VAULT.resolve())):
+    safe_path = (vault_dir / control_number / filename).resolve()
+    if not str(safe_path).startswith(str(vault_dir.resolve())):
         raise HTTPException(status_code=400, detail="Invalid path.")
     if not safe_path.exists() or not safe_path.is_file():
         raise HTTPException(status_code=404, detail="File not found.")

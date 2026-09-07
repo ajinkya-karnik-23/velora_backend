@@ -50,6 +50,9 @@ class EvidenceFile(BigIntTimestampMixin, Base):
         ),
         nullable=True,
     )
+    # Sample row this evidence belongs to, within its test. Null for evidence
+    # attached at test level rather than to a specific testing sample.
+    sample_no: Mapped[int | None] = mapped_column(Integer, nullable=True)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="Pending")
     comments: Mapped[str | None] = mapped_column(Text, nullable=True)
     file_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)

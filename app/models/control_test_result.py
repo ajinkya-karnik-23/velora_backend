@@ -6,7 +6,7 @@ from sqlalchemy import (
     DateTime,
     func
 )
-from app.db.base_class import Base
+from app.models.base import Base
 
 class ControlTestResult(Base): 
 

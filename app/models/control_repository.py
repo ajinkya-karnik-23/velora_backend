@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, ForeignKey, Index, String, Text
+from sqlalchemy import JSON, BigInteger, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, BigIntTimestampMixin
@@ -17,10 +17,18 @@ class ControlRepository(BigIntTimestampMixin, Base):
         Index("ix_control_repository_status", "status"),
         Index("ix_control_repository_control_owner", "control_owner"),
         Index("ix_control_repository_units_fccg_contact", "units_fccg_contact"),
+        Index("ix_control_repository_client_id", "client_id"),
     )
 
     control_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     control_number: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Each control belongs to exactly one client — the catalog is per-client,
+    # not a shared global library (each client is its own POD).
+    client_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("clients.client_id", ondelete="RESTRICT", onupdate="CASCADE"),
+        nullable=False,
+    )
     version_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("versions.version_id", ondelete="RESTRICT", onupdate="CASCADE"),
@@ -46,7 +54,14 @@ class ControlRepository(BigIntTimestampMixin, Base):
         nullable=False,
     )
 
+    # Full raw control JSON (control_details + rcm_details) this row was
+    # ingested from, when created via the control-JSON matching upload flow.
+    # Kept verbatim so the UI can display every RCM field, not just the
+    # subset mapped onto typed columns above.
+    source_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
     # Relationships
+    client: Mapped[Client] = relationship()  # noqa: F821
     owner: Mapped[User] = relationship(foreign_keys=[control_owner])  # noqa: F821
     fccg_contact: Mapped[User] = relationship(  # noqa: F821
         foreign_keys=[units_fccg_contact]

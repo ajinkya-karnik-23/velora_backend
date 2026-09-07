@@ -30,6 +30,9 @@ class ControlRepo(BaseRepo[ControlRepository]):
         count_stmt = select(func.count(ControlRepository.control_id))
 
         # Apply filters
+        if filters.get("client_id") is not None:
+            stmt = stmt.where(ControlRepository.client_id == filters["client_id"])
+            count_stmt = count_stmt.where(ControlRepository.client_id == filters["client_id"])
         if filters.get("domain"):
             stmt = stmt.where(ControlRepository.domain == filters["domain"])
             count_stmt = count_stmt.where(ControlRepository.domain == filters["domain"])

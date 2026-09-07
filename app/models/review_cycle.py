@@ -49,6 +49,12 @@ class ReviewCycle(BigIntTimestampMixin, Base):
     overview: Mapped[str | None] = mapped_column(Text, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # Which entity (site) this cycle covers, e.g. "19A1" — the 3rd segment of
+    # the client's "<code>.<code>.<entity>" control coding scheme. When set,
+    # attaching a control to this cycle resolves control_number + entity_code
+    # against the client's control_jsons to pull entity-specific rcm_details.
+    entity_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
     # Relationships
     client: Mapped["Client"] = relationship()  # noqa: F821
     lead: Mapped["User | None"] = relationship(foreign_keys=[project_lead])  # noqa: F821

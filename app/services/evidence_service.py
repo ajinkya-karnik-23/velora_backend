@@ -33,6 +33,7 @@ ALLOWED_MIME_TYPES: set[str] = {
     "image/png",
     "image/jpeg",
     "text/csv",
+    "text/plain",
     "application/zip",
     "application/x-zip-compressed",
 }
@@ -55,6 +56,7 @@ def _to_out(ev: EvidenceFile) -> EvidenceOut:
         control_number=ev.control.control_number if ev.control else None,
         control_name=ev.control.control_name if ev.control else None,
         test_id=ev.test_id,
+        sample_no=ev.sample_no,
         status=ev.status,
         comments=ev.comments,
         file_version=ev.file_version,
@@ -128,6 +130,7 @@ class EvidenceService:
         test_id: int | None,
         comments: str | None,
         current_user: dict[str, Any],
+        sample_no: int | None = None,
     ) -> EvidenceOut:
         # Validate MIME type
         if file.content_type and file.content_type not in ALLOWED_MIME_TYPES:
@@ -160,6 +163,7 @@ class EvidenceService:
             cycle_id=cycle_id,
             control_id=control_id,
             test_id=test_id,
+            sample_no=sample_no,
             status="Pending",
             comments=comments,
             file_version=1,
@@ -334,6 +338,7 @@ class EvidenceService:
         self,
         control_number: str,
         filename: str,
+        client_id: int,
         cycle_id: int | None,
         control_id: int | None,
         test_id: int | None,
@@ -342,9 +347,14 @@ class EvidenceService:
         from pathlib import Path
         import mimetypes, io
 
-        demo_vault = (
-            Path(__file__).parent / "evidence_vault" / "demo_data"
-        )
+        from app.core.config import settings
+        from app.repositories.client_repo import ClientRepo
+
+        db_client = await ClientRepo(self.db).get_by_id(client_id)
+        if db_client is None:
+            raise AppException(code="NOT_FOUND", message="Client not found.", status_code=404)
+
+        demo_vault = Path(db_client.evidence_vault_path or settings.SUPPORTING_DOCS_PATH)
         safe_path = (demo_vault / control_number / filename).resolve()
         if not str(safe_path).startswith(str(demo_vault.resolve())):
             raise AppException(code="INVALID_PATH", message="Invalid path.", status_code=400)
@@ -420,6 +430,42 @@ class EvidenceService:
 
         await self.repo.delete(ev)
         await self.db.commit()
+
+    async def delete_all_for_cycle(
+        self, cycle_id: int, current_user: dict[str, Any]
+    ) -> int:
+        """Delete every evidence file attached to a review cycle.
+
+        Admin-only, matching single-file deletion. Blob removal is
+        best-effort per file so one storage failure cannot strand the rest
+        of the rows. Returns the number of rows removed.
+        """
+        roles = current_user.get("roles", [])
+        if "Admin" not in roles:
+            raise ForbiddenException("Only Admin can delete evidence.")
+
+        from sqlalchemy import select
+
+        rows = (
+            await self.db.execute(
+                select(EvidenceFile).where(EvidenceFile.cycle_id == cycle_id)
+            )
+        ).scalars().all()
+
+        for ev in rows:
+            if ev.file_path:
+                try:
+                    await azure_storage.delete_blob(
+                        cycle_id=ev.cycle_id or 0,
+                        control_number="uncategorized",
+                        filename=ev.file_name,
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning("evidence_blob_delete_failed", error=str(exc))
+            await self.db.delete(ev)
+
+        await self.db.commit()
+        return len(rows)
 
     # ------------------------------------------------------------------ download
 

@@ -1,13 +1,13 @@
-"""Control catalog endpoints — browse, detail, changelog. Read-only."""
+"""Control catalog endpoints — browse, detail, changelog, upload."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, require_permission
 from app.schemas.common import PaginatedResponse
 from app.schemas.control import ChangeLogOut, ControlOut
 from app.services.control_service import ControlService
@@ -17,6 +17,7 @@ router = APIRouter()
 
 @router.get("/list-controls", response_model=PaginatedResponse[ControlOut])
 async def browse_controls(
+    client_id: int = Query(...),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=500),
     domain: str | None = None,
@@ -29,7 +30,7 @@ async def browse_controls(
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     service = ControlService(db)
-    filters: dict[str, Any] = {}
+    filters: dict[str, Any] = {"client_id": client_id}
     if domain:
         filters["domain"] = domain
     if risk_level:
@@ -64,3 +65,49 @@ async def get_control_changelog(
 ) -> list[ChangeLogOut]:
     service = ControlService(db)
     return await service.get_changelog(control_id)
+
+
+@router.post("/upload-control", response_model=ControlOut, status_code=201)
+async def upload_control(
+    file: UploadFile = File(...),
+    client_id: int = Form(...),
+    current_user: dict = Depends(require_permission("can_manage_controls")),
+    db: AsyncSession = Depends(get_db),
+) -> ControlOut:
+    """Upload a control Excel file — matched by filename to its definition JSON.
+
+    The Excel's content is never parsed; its filename's leading
+    "<code>.<code>" group prefix is matched against the client's
+    control_jsons directory to source the actual control details.
+    """
+    service = ControlService(db)
+    return await service.upload_from_control_json(
+        filename=file.filename or "",
+        client_id=client_id,
+        current_user=current_user,
+    )
+
+
+@router.get("/sampling-matrix")
+async def get_sampling_matrix(
+    current_user: dict = Depends(get_current_user),  # noqa: ARG001
+) -> dict[str, Any]:
+    """The client's sampling methodology matrix, rendered on Settings."""
+    from pathlib import Path
+
+    from app.core.config import settings
+    from app.services.sampling_matrix import load_sampling_matrix
+
+    return load_sampling_matrix(Path(settings.SAMPLING_MATRIX_PATH))
+
+
+@router.get("/list-entities", response_model=list[str])
+async def list_entities(
+    client_id: int = Query(...),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[str]:
+    """Entities (site codes) discovered in this client's control_jsons — used
+    to populate the review cycle "Entity" picker."""
+    service = ControlService(db)
+    return await service.list_entities(client_id)

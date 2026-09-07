@@ -19,6 +19,7 @@ class ReviewCycleCreate(BaseModel):
     due_date: int
     overview: str | None = None
     description: str | None = None
+    entity_code: str | None = Field(default=None, max_length=50)
 
 
 class ReviewCycleUpdate(BaseModel):
@@ -35,6 +36,7 @@ class ReviewCycleUpdate(BaseModel):
     score: Decimal | None = None
     overview: str | None = None
     description: str | None = None
+    entity_code: str | None = Field(default=None, max_length=50)
 
 
 class ReviewCycleOut(BaseModel):
@@ -56,6 +58,7 @@ class ReviewCycleOut(BaseModel):
     score: Decimal | None = None
     overview: str | None = None
     description: str | None = None
+    entity_code: str | None = None
     created_time: int
     updated_time: int
 
