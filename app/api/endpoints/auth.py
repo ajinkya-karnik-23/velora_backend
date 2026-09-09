@@ -18,6 +18,11 @@ _COOKIE_MAX_AGE = settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
 # (e.g. Safari) refuse to store/send a Secure cookie, which silently breaks the
 # refresh-token flow and logs the user out once the access token expires.
 _COOKIE_SECURE = settings.APP_ENV != "development"
+# In production the frontend and backend live on different domains (cross-site),
+# so the refresh cookie must be SameSite=None to be sent on cross-origin requests
+# — and SameSite=None is only valid when Secure. Locally (same-site localhost)
+# Lax is fine and works over plain HTTP.
+_COOKIE_SAMESITE = "lax" if settings.APP_ENV == "development" else "none"
 
 
 class LoginRequest:
@@ -44,7 +49,7 @@ async def login(
         value=refresh_token,
         httponly=True,
         secure=_COOKIE_SECURE,
-        samesite="lax",
+        samesite=_COOKIE_SAMESITE,
         path="/api/v1/auth",
         max_age=_COOKIE_MAX_AGE,
     )
@@ -71,7 +76,7 @@ async def refresh(
         value=new_refresh,
         httponly=True,
         secure=_COOKIE_SECURE,
-        samesite="lax",
+        samesite=_COOKIE_SAMESITE,
         path="/api/v1/auth",
         max_age=_COOKIE_MAX_AGE,
     )
