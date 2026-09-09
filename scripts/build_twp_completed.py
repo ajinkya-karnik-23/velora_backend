@@ -27,7 +27,11 @@ from app.services.control_matching import (
     find_control_json_by_control_and_entity,
     load_control_json,
 )
-from app.services.evidence_verification import build_methodology, load_expected_filename
+from app.services.evidence_verification import (
+    build_methodology,
+    expected_filename_for_sample,
+    load_filename_rule,
+)
 from app.services.sampling_matrix import (
     calculate_sample_size,
     extract_control_parameters,
@@ -82,17 +86,60 @@ def _map_frequency(raw: str | None) -> str:
     return "Multiple times per day" if text else ""
 
 
+# Parameters that best identify a journal-entry sample. Controls describing
+# their samples differently fall back to whatever they do carry.
+PREFERRED_LABELS = ("Posting date", "Amount in local cur.", "Type")
+
+# Long narrative fields are never useful as a row label.
+LABEL_MAX_LEN = 60
+
+
 def _sample_label(sample: dict) -> str:
     """One results-row description: sample number, document, key parameters."""
     parts = [f"Sample {sample.get('sample_no')}"]
     if sample.get("document_no"):
         parts.append(f"Doc {sample['document_no']}")
-    for param in sample.get("parameters") or []:
-        if param.get("label") in ("Posting date", "Amount in local cur.", "Type"):
-            value = param.get("value")
-            if value not in (None, ""):
-                parts.append(f"{param['label']}: {value}")
+
+    params = sample.get("parameters") or []
+    chosen = [p for p in params if p.get("label") in PREFERRED_LABELS]
+    if not chosen:
+        # This control names its samples some other way (a customer, a month).
+        # Take the first few short parameters so the row still identifies
+        # itself instead of reading "Sample 1" with nothing else.
+        chosen = [
+            p
+            for p in params
+            if p.get("value") not in (None, "") and len(str(p.get("value"))) <= LABEL_MAX_LEN
+        ][:3]
+
+    for param in chosen:
+        value = param.get("value")
+        if value not in (None, ""):
+            parts.append(f"{param['label']}: {value}")
     return " | ".join(parts)
+
+
+def _sample_fields(sample: dict) -> dict:
+    """Flatten a normalised sample back to field -> value, as the filename
+    rule is written against the client's own field names."""
+    fields = {k: v for k, v in sample.items() if k != "parameters"}
+    for param in sample.get("parameters") or []:
+        label = param.get("label")
+        if label:
+            fields[label] = param.get("value")
+    return fields
+
+
+def _population_split(methodology: dict) -> str:
+    """How the tested population divides, phrased for the conclusion line.
+
+    Controls using the journal-entry methodology keep their original wording;
+    any control declaring its own categories is described by those instead.
+    """
+    if methodology.get("manual_entries") is not None:
+        return f"{methodology['manual_entries']} manual, {methodology['nr_entries']} NR"
+    lines = methodology.get("breakdown") or []
+    return ", ".join(f"{line['value']} {line['label'].lower()}" for line in lines)
 
 
 def build(control_number: str, entity_code: str) -> Path:
@@ -119,7 +166,7 @@ def build(control_number: str, entity_code: str) -> Path:
 
     payload = find_test_output(Path(settings.TEST_OUTPUTS_PATH), control_number, entity_code)
     samples = build_samples(payload) if payload else []
-    methodology = build_methodology(samples)
+    methodology = build_methodology(samples, (payload or {}).get("control_test_output"))
 
     params = extract_control_parameters({"rcm_details": rcm})
     matrix = load_sampling_matrix(Path(settings.SAMPLING_MATRIX_PATH))
@@ -187,7 +234,7 @@ def build(control_number: str, entity_code: str) -> Path:
         ws,
         f"D{summary_label + 1}",
         f"{methodology['methodology']}: {methodology['total_samples']} samples tested "
-        f"({methodology['manual_entries']} manual, {methodology['nr_entries']} NR). "
+        f"({_population_split(methodology)}). "
         f"{len(samples) - len(exceptions)} passed, {len(exceptions)} exception(s).",
     )
     _set(ws, f"D{summary_label + 4}", len(exceptions))
@@ -206,16 +253,31 @@ def build(control_number: str, entity_code: str) -> Path:
     )
 
     # Evidence collected — the work paper records what the test was run against.
-    expected = load_expected_filename(
+    # A control either names one file for every sample, or one per sample
+    # derived from that sample's own data; both are recorded here.
+    rule = load_filename_rule(
         Path(settings.EVIDENCE_FILENAME_MAP_PATH), control_number, entity_code
     )
-    if expected:
-        _set(ws, f"D{summary_label + 13}", expected)
+    fixed = expected_filename_for_sample(rule, None) if rule else None
+    if fixed:
+        _set(ws, f"D{summary_label + 13}", fixed)
         _set(
             ws,
             f"E{summary_label + 13}",
             f"Test of effectiveness evidence supporting all {len(samples)} samples.",
         )
+    elif rule:
+        per_sample = [
+            expected_filename_for_sample(rule, _sample_fields(sample)) for sample in samples
+        ]
+        named = [name for name in per_sample if name]
+        if named:
+            _set(ws, f"D{summary_label + 13}", ", ".join(named))
+            _set(
+                ws,
+                f"E{summary_label + 13}",
+                f"One evidence file per sample, {len(named)} in total.",
+            )
 
     target.parent.mkdir(parents=True, exist_ok=True)
     wb.save(target)

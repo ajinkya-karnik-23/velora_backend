@@ -42,9 +42,14 @@ class SampleSizeResultOut(BaseModel):
     phase_note: AttributeNote | None = None
     # Resolved size; text because the methodology contains ranges ("2 to 5").
     sample_size: str | None = None
-    # "matrix" when the methodology matrix supplied it, otherwise
-    # "control_definition" when it came from the control's own attributes.
+    # "matrix" (Operating Effectiveness table), "sub_sampling" (population-band
+    # table, for frequencies the first has no row for), or "control_definition"
+    # when neither applied and the control's own attributes supplied it.
     sample_size_source: str | None = None
+    # The sample size stated on the control definition itself, shown alongside
+    # the methodology result so the two can be compared. Populated whenever the
+    # definition carries one, including when it is also the resolved size.
+    override_sample_size: str | None = None
 
 
 class SampleParameter(BaseModel):
@@ -67,13 +72,26 @@ class TestSampleOut(BaseModel):
     evidence_status: str = "missing"
 
 
+class MethodologyLine(BaseModel):
+    """One counted category in the sample-population breakdown."""
+
+    label: str
+    value: int
+
+
 class TestMethodology(BaseModel):
     """Sample-population figures shown in step 1 of each sample's log."""
 
     methodology: str
     total_samples: int
-    manual_entries: int
-    nr_entries: int
+    # How the population splits, as this control counts it. Categories differ
+    # per control (journal-entry types for one, amendments vs reviews for
+    # another), so they are carried as labelled lines rather than fixed fields.
+    breakdown: list[MethodologyLine] = []
+    # Original fixed fields, kept so existing controls and callers are
+    # unaffected. Populated only for the journal-entry methodology.
+    manual_entries: int | None = None
+    nr_entries: int | None = None
 
 
 class ControlTestOutputOut(BaseModel):
@@ -129,5 +147,9 @@ class ConfigControlOut(BaseModel):
     entity_detail_json: dict | None = None
     sample_size: str | None = None
     sample_size_source: str | None = None
+    # The size stated on the control definition itself. The Controls table
+    # shows this in preference to the methodology result, which stays
+    # available (with both values) in the determination modal.
+    override_sample_size: str | None = None
     created_time: int
     updated_time: int

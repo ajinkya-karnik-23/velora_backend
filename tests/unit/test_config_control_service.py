@@ -143,9 +143,12 @@ class TestPerSampleEvidenceValidation:
         result.scalars.return_value.all.return_value = rows
         service.db.execute = AsyncMock(return_value=result)
 
+        # The service reads the whole filename-map record now, so that a
+        # control can name one file for every sample (this control) or derive
+        # one per sample from its own data. Patch the record, not the filename.
         monkeypatch.setattr(
-            "app.services.config_control_service.load_expected_filename",
-            lambda *_a, **_k: expected,
+            "app.services.config_control_service.load_filename_rule",
+            lambda *_a, **_k: ({"expected_evidence_filename": expected} if expected else None),
         )
         return cc, ctrl
 

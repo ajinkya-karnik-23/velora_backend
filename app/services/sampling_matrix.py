@@ -50,10 +50,7 @@ def load_sampling_matrix(matrix_path: Path) -> dict[str, Any]:
 
 
 def _operating_effectiveness_table(matrix: dict[str, Any]) -> dict[str, Any]:
-    return (
-        matrix.get("Sampling Methodology", {}).get("Operating Effectiveness Testing", {})
-        or {}
-    )
+    return matrix.get("Sampling Methodology", {}).get("Operating Effectiveness Testing", {}) or {}
 
 
 def _find_row(table: dict[str, Any], frequency: str) -> dict[str, Any] | None:
@@ -98,6 +95,67 @@ def calculate_sample_size(
     if column is None:
         return None
 
+    value = row.get(column)
+    if value is None or value == "":
+        return None
+    return str(value)
+
+
+def _sub_sampling_table(matrix: dict[str, Any]) -> dict[str, Any]:
+    return (
+        matrix.get("Sampling Methodology", {}).get(
+            "Sub-sampling according to population range applicable for all rounds", {}
+        )
+        or {}
+    )
+
+
+def _frequency_band_map(matrix: dict[str, Any]) -> dict[str, Any]:
+    return (
+        matrix.get("Sampling Methodology", {}).get("Frequency to sub-sampling population band", {})
+        or {}
+    )
+
+
+def sub_sampling_size(
+    matrix: dict[str, Any],
+    risk_level: str | None,
+    frequency: str | None,
+) -> str | None:
+    """Sample size from the sub-sampling table, or None if not derivable.
+
+    Applies to frequencies the Operating Effectiveness table has no row for.
+    Which population band such a frequency belongs to is a client judgement,
+    so it is declared in the matrix ("Frequency to sub-sampling population
+    band") rather than inferred here — e.g. an "Upon Occurrence" control is
+    low-volume and is tested against "Less than 20 items".
+
+    The sub-sampling table splits on risk as High vs Low/Medium only, so any
+    non-high risk takes the "Low/ Medium" column.
+    """
+    target = (frequency or "").strip().lower()
+    if not target:
+        return None
+
+    band = None
+    for key, value in _frequency_band_map(matrix).items():
+        if key.startswith("_"):
+            continue
+        if key.strip().lower() == target:
+            band = value
+            break
+    if not band:
+        return None
+
+    row = None
+    for key, value in _sub_sampling_table(matrix).items():
+        if key.strip().lower() == str(band).strip().lower():
+            row = value
+            break
+    if not isinstance(row, dict):
+        return None
+
+    column = "High" if (risk_level or "").strip().lower() == "high" else "Low/ Medium"
     value = row.get(column)
     if value is None or value == "":
         return None

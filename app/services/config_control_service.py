@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,6 +33,7 @@ from app.services.control_matching import (
 )
 from app.services.sampling_matrix import (
     calculate_sample_size,
+    sub_sampling_size,
     extract_control_parameters,
     load_sampling_matrix,
     load_sampling_notes,
@@ -40,7 +42,8 @@ from app.services.evidence_verification import (
     build_methodology,
     extract_pages,
     filename_matches,
-    load_expected_filename,
+    expected_filename_for_sample,
+    load_filename_rule,
 )
 from app.services.test_output_matching import build_samples, find_test_output
 
@@ -62,6 +65,10 @@ EVIDENCE_MISMATCH_MESSAGE = (
 def _to_out(cc: ConfigControl) -> ConfigControlOut:
     ctrl = cc.control
     test = cc.test
+    # The definition's own stated size, read from the entity-specific snapshot
+    # when present so it reflects the entity actually being tested.
+    definition = cc.entity_detail_json or (ctrl.source_json if ctrl else None) or {}
+    override = extract_control_parameters(definition)["fallback_sample_size"]
     return ConfigControlOut(
         config_control_id=cc.config_control_id,
         cycle_id=cc.cycle_id,
@@ -80,6 +87,7 @@ def _to_out(cc: ConfigControl) -> ConfigControlOut:
         entity_detail_json=cc.entity_detail_json,
         sample_size=cc.sample_size,
         sample_size_source=cc.sample_size_source,
+        override_sample_size=override,
         created_time=cc.created_time,
         updated_time=cc.updated_time,
     )
@@ -252,6 +260,16 @@ class ConfigControlService:
         )
         source = "matrix"
         if value is None:
+            # Frequencies absent from the Operating Effectiveness table are
+            # sized from the sub-sampling table via their declared population
+            # band, before falling back to the control's own stated size.
+            value = sub_sampling_size(
+                matrix,
+                risk_level=params["risk_level"],
+                frequency=params["frequency"],
+            )
+            source = "sub_sampling"
+        if value is None:
             value = params["fallback_sample_size"]
             source = "control_definition"
         if value is None:
@@ -286,6 +304,11 @@ class ConfigControlService:
             phase_note=notes["phase"],
             sample_size=value,
             sample_size_source=source,
+            override_sample_size=(
+                str(params["fallback_sample_size"])
+                if params["fallback_sample_size"] is not None
+                else None
+            ),
         )
 
     async def get_test_output(self, config_control_id: int) -> ControlTestOutputOut:
@@ -337,7 +360,7 @@ class ConfigControlService:
             summary=header.get("summary"),
             ipe_name=ipe_name,
             test_id=test_id,
-            methodology=TestMethodology(**build_methodology(samples)),
+            methodology=TestMethodology(**build_methodology(samples, header)),
             samples=samples,
         )
 
@@ -368,6 +391,52 @@ class ConfigControlService:
                 grouped.setdefault(ev.sample_no, []).append(ev)
         return grouped
 
+    @staticmethod
+    def _sample_fields(sample: dict) -> dict:
+        """Flatten a normalised sample back to field -> value.
+
+        `build_samples` moves everything that isn't a core column into
+        `parameters`, so the client's own field names (Customer name, Month,
+        …) live there. The filename rule is written against those names, so
+        it needs them back as a flat mapping.
+        """
+        fields = {k: v for k, v in sample.items() if k != "parameters"}
+        for param in sample.get("parameters") or []:
+            label = param.get("label") if isinstance(param, dict) else None
+            if label:
+                fields[label] = param.get("value")
+        return fields
+
+    async def _expected_by_sample(
+        self, cc: ConfigControl, ctrl: ControlRepository
+    ) -> tuple[dict[str, Any] | None, dict[int, str | None]]:
+        """The control's filename rule, plus each sample's expected filename.
+
+        Returns (rule, {sample_no: expected}). The mapping is empty for a
+        control that names one file for every sample — that path is unchanged
+        and callers keep using the single expected value.
+        """
+        rule = load_filename_rule(
+            Path(settings.EVIDENCE_FILENAME_MAP_PATH),
+            ctrl.control_number,
+            cc.entity_code,
+        )
+        if not rule or not rule.get("expected_evidence_filename_fields"):
+            return rule, {}
+
+        payload = find_test_output(
+            Path(settings.TEST_OUTPUTS_PATH), ctrl.control_number, cc.entity_code
+        )
+        if payload is None:
+            return rule, {}
+
+        per_sample: dict[int, str | None] = {}
+        for i, sample in enumerate(build_samples(payload)):
+            raw = sample.get("sample_no")
+            sample_no = raw if isinstance(raw, int) else i + 1
+            per_sample[sample_no] = expected_filename_for_sample(rule, self._sample_fields(sample))
+        return rule, per_sample
+
     async def _annotate_evidence_status(
         self,
         cc: ConfigControl,
@@ -380,16 +449,21 @@ class ConfigControlService:
         Judged per sample, so a correct upload on one row never vouches for
         another. Mutates `samples` in place.
         """
-        expected = load_expected_filename(
+        rule = load_filename_rule(
             Path(settings.EVIDENCE_FILENAME_MAP_PATH),
             ctrl.control_number,
             cc.entity_code,
         )
+        # One file for every sample, or one derived per sample from its own
+        # data. `samples` is already the normalised set, so the per-sample
+        # expectation is resolved here rather than re-reading the output.
+        fixed = expected_filename_for_sample(rule, None) if rule else None
         grouped = await self._evidence_by_sample(test_id)
 
         for i, sample in enumerate(samples):
             raw = sample.get("sample_no")
             sample_no = raw if isinstance(raw, int) else i + 1
+            expected = fixed or expected_filename_for_sample(rule, self._sample_fields(sample))
             files = grouped.get(sample_no, [])
             if not files:
                 sample["evidence_status"] = "missing"
@@ -421,12 +495,11 @@ class ConfigControlService:
         if not ctrl:
             raise NotFoundException("Control not found.")
 
-        expected = load_expected_filename(
-            Path(settings.EVIDENCE_FILENAME_MAP_PATH),
-            ctrl.control_number,
-            cc.entity_code,
-        )
-        if not expected:
+        rule, per_sample = await self._expected_by_sample(cc, ctrl)
+        fixed = expected_filename_for_sample(rule, None) if rule else None
+        # Ungated when the control names no file at all, and when a per-sample
+        # rule resolved nothing for any row (a data gap must not block testing).
+        if not fixed and not any(per_sample.values()):
             return EvidenceCheckOut(ok=True)
 
         tests = await self.test_repo.get_by_config_control(cc.config_control_id)
@@ -448,12 +521,24 @@ class ConfigControlService:
             if ev.sample_no is not None:
                 by_sample.setdefault(ev.sample_no, []).append(ev)
 
+        # Each row is judged against its OWN expectation: under a per-sample
+        # rule the customer's file only vouches for that customer's sample.
+        def expected_for(sample_no: int | None) -> str | None:
+            if fixed:
+                return fixed
+            return per_sample.get(sample_no) if sample_no is not None else None
+
         invalid = sorted(
             sample_no
             for sample_no, files in by_sample.items()
-            if not any(filename_matches(f.file_name, expected) for f in files)
+            if expected_for(sample_no)
+            and not any(filename_matches(f.file_name, expected_for(sample_no)) for f in files)
         )
-        any_valid = any(filename_matches(ev.file_name, expected) for ev in rows)
+        any_valid = any(
+            expected_for(ev.sample_no)
+            and filename_matches(ev.file_name, expected_for(ev.sample_no))
+            for ev in rows
+        )
 
         if any_valid:
             return EvidenceCheckOut(ok=True, invalid_samples=invalid)
@@ -491,10 +576,12 @@ class ConfigControlService:
             Path(settings.TEST_OUTPUTS_PATH), ctrl.control_number, cc.entity_code
         )
         pages: list[int] = []
+        matched_sample: dict | None = None
         if payload:
             for sample in build_samples(payload):
                 if str(sample.get("sample_no")) == str(sample_no):
                     pages = [p for p in sample.get("pages", []) if isinstance(p, int)]
+                    matched_sample = sample
                     break
 
         tests = await self.test_repo.get_by_config_control(cc.config_control_id)
@@ -519,10 +606,13 @@ class ConfigControlService:
 
         # The same filename gate that governs execution also governs viewing —
         # unverified evidence is never served, whichever route asks for it.
-        expected = load_expected_filename(
+        rule = load_filename_rule(
             Path(settings.EVIDENCE_FILENAME_MAP_PATH),
             ctrl.control_number,
             cc.entity_code,
+        )
+        expected = expected_filename_for_sample(
+            rule, self._sample_fields(matched_sample) if matched_sample else None
         )
         if expected:
             own = [e for e in own if filename_matches(e.file_name, expected)]
