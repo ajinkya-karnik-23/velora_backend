@@ -16,6 +16,7 @@ class EvidenceFile(BigIntTimestampMixin, Base):
         Index("ix_evidence_files_control_id", "control_id"),
         Index("ix_evidence_files_test_id", "test_id"),
         Index("ix_evidence_files_status", "status"),
+        Index("ix_evidence_files_manual_step_id", "manual_step_id"),
         CheckConstraint(
             "cycle_id IS NOT NULL OR control_id IS NOT NULL OR test_id IS NOT NULL",
             name="ck_evidence_files_linkage",
@@ -53,6 +54,13 @@ class EvidenceFile(BigIntTimestampMixin, Base):
     # Sample row this evidence belongs to, within its test. Null for evidence
     # attached at test level rather than to a specific testing sample.
     sample_no: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Manual test step this evidence was uploaded for. Such evidence carries no
+    # test_id, so it never mixes with the sample evidence of the control's test.
+    manual_step_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("manual_test_steps.step_id", ondelete="SET NULL", onupdate="CASCADE"),
+        nullable=True,
+    )
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="Pending")
     comments: Mapped[str | None] = mapped_column(Text, nullable=True)
     file_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)

@@ -39,7 +39,9 @@ from app.services.sampling_matrix import (
     load_sampling_notes,
 )
 from app.services.test_output_matching import build_samples, find_test_output
+from app.services.twp_sample_details import add_sample_details_sheet
 from app.services.twp_templates import load_twp_templates
+from app.utils.workbook_annotations import flag_out_of_scope_fields
 
 # The template's own frequency list (B188:B194) — a control's raw frequency is
 # mapped onto one of these so the cell stays valid.
@@ -56,9 +58,15 @@ FREQUENCY_CHOICES = [
 RESULT_OK = "OK"
 RESULT_NOT_OK = "Not OK"
 RESULT_NA = "N/A"
+# A sample whose assessment is not finished. Written into the template's own
+# result list (the empty E187 slot of E184:E187) so the dropdown accepts it.
+RESULT_PENDING = "Pending"
+RESULT_LIST_SLOT = "E187"
 
 TEST_RESULT_EFFECTIVE = "EFFECTIVE - Test executed without exception(s)"
 TEST_RESULT_INEFFECTIVE = "INEFFECTIVE - Test executed with exception(s)"
+# Already in the template's Test result list (I179).
+TEST_RESULT_NOT_TESTED = "NOT TESTED - Test result not available"
 
 # The per-sample results band. Every row here carries a validated result cell
 # (E118:E143 plus E144), giving exactly 27 rows.
@@ -142,6 +150,53 @@ def _population_split(methodology: dict) -> str:
     return ", ".join(f"{line['value']} {line['label'].lower()}" for line in lines)
 
 
+def _evidence_by_sample(rule: dict | None, samples: list[dict]) -> list[list[str]]:
+    """The files each sample was tested against.
+
+    A sample's own `evidences_used` wins, since it names what the test actually
+    read. Otherwise the control's filename rule says what it had to be run on:
+    one file for every sample, or one derived from the sample's own fields.
+    """
+    fixed = expected_filename_for_sample(rule, None) if rule else None
+    result: list[list[str]] = []
+    for sample in samples:
+        cited = [str(n).strip() for n in sample.get("evidences_used") or [] if str(n).strip()]
+        if not cited and rule:
+            name = fixed or expected_filename_for_sample(rule, _sample_fields(sample))
+            cited = [name] if name else []
+        result.append(cited)
+    return result
+
+
+def _is_pending(sample: dict) -> bool:
+    return (sample.get("result") or "").strip().upper() == "PENDING"
+
+
+def _root_cause(exceptions: list[dict], payload: dict | None) -> str:
+    """Why samples did not pass, in terms the control's own data supports.
+
+    The journal-entry control keeps its established wording. A control that
+    declares its own methodology is described from the exceptions themselves:
+    which samples, and the result each returned, rather than a reason the
+    testing output never gave.
+    """
+    declared = ((payload or {}).get("control_test_output") or {}).get("methodology")
+    if not isinstance(declared, dict):
+        return (
+            "Journal entries flagged NR could not be validated against the "
+            "supporting documentation provided."
+        )
+    by_result: dict[str, list[str]] = {}
+    for sample in exceptions:
+        result = str(sample.get("result") or "no result").strip().upper().replace("_", " ")
+        by_result.setdefault(result, []).append(str(sample.get("sample_no")))
+    parts = [
+        f"{len(nos)} sample(s) returned {result.lower()} (samples {', '.join(nos)})"
+        for result, nos in by_result.items()
+    ]
+    return "; ".join(parts) + ". See the Sample Testing Details sheet for each sample's validation."
+
+
 def build(control_number: str, entity_code: str) -> Path:
     templates = load_twp_templates(
         Path(settings.TWP_TEMPLATE_MAP_PATH), control_number, entity_code
@@ -178,7 +233,14 @@ def build(control_number: str, entity_code: str) -> Path:
     ) or str(len(samples))
     notes = load_sampling_notes(Path(settings.SAMPLING_METADATA_PATH), control_number, entity_code)
 
-    exceptions = [s for s in samples if (s.get("result") or "").upper() not in ("PASS", "PASSED")]
+    # Pending samples are not yet concluded, so they are neither passes nor
+    # exceptions; they hold the overall result open instead.
+    pending = [s for s in samples if _is_pending(s)]
+    exceptions = [
+        s
+        for s in samples
+        if (s.get("result") or "").upper() not in ("PASS", "PASSED") and not _is_pending(s)
+    ]
 
     wb = openpyxl.load_workbook(source, keep_vba=True)
     ws = wb["Template"]
@@ -222,8 +284,19 @@ def build(control_number: str, entity_code: str) -> Path:
         row = RESULTS_FIRST_ROW + offset
         passed = (sample.get("result") or "").upper() in ("PASS", "PASSED")
         _set(ws, f"D{row}", _sample_label(sample))
-        _set(ws, f"E{row}", RESULT_OK if passed else RESULT_NOT_OK)
+        _set(
+            ws,
+            f"E{row}",
+            RESULT_OK if passed else RESULT_PENDING if _is_pending(sample) else RESULT_NOT_OK,
+        )
         _set(ws, f"F{row}", None if passed else sample.get("validation"))
+
+    if pending:
+        ws[RESULT_LIST_SLOT] = RESULT_PENDING
+        # E144 alone validates against E183:E186, one row short of the slot.
+        for dv in ws.data_validations.dataValidation:
+            if "E144" in str(dv.sqref) and dv.formula1 == "$E$183:$E$186":
+                dv.formula1 = "$E$183:$E$187"
 
     # Conclusion block. Fixed positions: the band is never resized, so these
     # sit exactly where the template puts them. The summary caption lives in
@@ -235,26 +308,32 @@ def build(control_number: str, entity_code: str) -> Path:
         f"D{summary_label + 1}",
         f"{methodology['methodology']}: {methodology['total_samples']} samples tested "
         f"({_population_split(methodology)}). "
-        f"{len(samples) - len(exceptions)} passed, {len(exceptions)} exception(s).",
+        f"{len(samples) - len(exceptions) - len(pending)} passed, "
+        f"{len(exceptions)} exception(s)"
+        + (f", {len(pending)} pending." if pending else "."),
     )
     _set(ws, f"D{summary_label + 4}", len(exceptions))
     if exceptions:
-        _set(
-            ws,
-            f"D{summary_label + 6}",
-            "Journal entries flagged NR could not be validated against the "
-            "supporting documentation provided.",
-        )
-    _set(ws, f"D{summary_label + 8}", RESULT_OK if not exceptions else RESULT_NOT_OK)
+        _set(ws, f"D{summary_label + 6}", _root_cause(exceptions, payload))
+    # An exception decides the result on its own; otherwise pending samples
+    # leave it open rather than letting it read as effective.
+    _set(
+        ws,
+        f"D{summary_label + 8}",
+        RESULT_NOT_OK if exceptions else RESULT_PENDING if pending else RESULT_OK,
+    )
     _set(
         ws,
         f"D{summary_label + 10}",
-        TEST_RESULT_EFFECTIVE if not exceptions else TEST_RESULT_INEFFECTIVE,
+        TEST_RESULT_INEFFECTIVE
+        if exceptions
+        else TEST_RESULT_NOT_TESTED if pending else TEST_RESULT_EFFECTIVE,
     )
 
     # Evidence collected — the work paper records what the test was run against.
-    # A control either names one file for every sample, or one per sample
-    # derived from that sample's own data; both are recorded here.
+    # A control either names one file for every sample, one per sample derived
+    # from that sample's own data, or — when it is not filename-gated at all —
+    # the files each sample's testing output says it was validated on.
     rule = load_filename_rule(
         Path(settings.EVIDENCE_FILENAME_MAP_PATH), control_number, entity_code
     )
@@ -278,6 +357,36 @@ def build(control_number: str, entity_code: str) -> Path:
                 f"E{summary_label + 13}",
                 f"One evidence file per sample, {len(named)} in total.",
             )
+    else:
+        # Ungated control: the testing output itself lists what each sample was
+        # validated on. Names are de-duplicated in first-seen order, since one
+        # file can support several samples.
+        cited: list[str] = []
+        for sample in samples:
+            for name in sample.get("evidences_used") or []:
+                text = str(name).strip()
+                if text and text not in cited:
+                    cited.append(text)
+        if cited:
+            _set(ws, f"D{summary_label + 13}", ", ".join(cited))
+            _set(
+                ws,
+                f"E{summary_label + 13}",
+                f"Evidence cited across {len(samples)} samples, {len(cited)} file(s) in total.",
+            )
+
+    # Fields the automation does not answer are handed to the reviewer rather
+    # than left reading "out-of-scope".
+    flag_out_of_scope_fields(ws)
+
+    # The full per-sample record behind the results band above.
+    add_sample_details_sheet(
+        wb,
+        samples,
+        _evidence_by_sample(rule, samples),
+        control_number=control_number,
+        entity_code=entity_code,
+    )
 
     target.parent.mkdir(parents=True, exist_ok=True)
     wb.save(target)

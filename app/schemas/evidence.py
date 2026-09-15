@@ -53,6 +53,7 @@ class EvidenceOut(BaseModel):
     control_name: str | None = None
     test_id: int | None = None
     sample_no: int | None = None
+    manual_step_id: int | None = None
     status: str
     comments: str | None = None
     file_version: int
@@ -91,6 +92,7 @@ class DemoFileImport(BaseModel):
     cycle_id: int | None = None
     control_id: int | None = None
     test_id: int | None = None
+    manual_step_id: int | None = None
 
 
 class WorkflowStepOut(BaseModel):

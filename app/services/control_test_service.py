@@ -123,6 +123,10 @@ class ControlTestService:
         logs_deleted = await self.db.execute(
             delete(TestLog).where(TestLog.cycle_id == cycle_id)
         )
+        # Recorded manual-step verdicts are run data too.
+        from app.services.manual_test_step_service import ManualTestStepService
+
+        await ManualTestStepService(self.db).clear_results_for_cycle(cycle_id)
         await self.db.commit()
         return ClearRunDataResponse(
             cycle_id=cycle_id,

@@ -106,6 +106,33 @@ def list_available_entities(control_jsons_dir: Path) -> list[str]:
     return sorted(entities)
 
 
+def scope_summary_of(payload: dict | None) -> str | None:
+    """The definition's audit-style testing scope (control_details.scope_summary)."""
+    details = (payload or {}).get("control_details") or {}
+    text = details.get("scope_summary")
+    return (text.strip() or None) if isinstance(text, str) else None
+
+
+def scope_summaries(control_jsons_dir: Path) -> dict[tuple[str, str | None], str]:
+    """Scope summaries in a client's control JSONs, keyed (control_no, entity)
+    and (control_no, None) for the first seen per control.
+
+    Read fresh on each call so edits to a JSON show without re-importing or
+    re-attaching the control; the directory holds a handful of small files.
+    """
+    found: dict[tuple[str, str | None], str] = {}
+    for _path, payload in iter_control_jsons(control_jsons_dir):
+        summary = scope_summary_of(payload)
+        if not summary:
+            continue
+        details = payload.get("control_details") or {}
+        number = str(details.get("Control No", "")).strip()
+        entity = str(details.get("Entity Code", "")).strip()
+        found.setdefault((number, entity), summary)
+        found.setdefault((number, None), summary)
+    return found
+
+
 def load_control_json(json_path: Path) -> dict:
     """Parse a control definition JSON file."""
     return json.loads(json_path.read_text(encoding="utf-8"))

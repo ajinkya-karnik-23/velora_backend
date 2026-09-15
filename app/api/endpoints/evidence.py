@@ -110,6 +110,7 @@ async def upload_evidence(
     control_id: int | None = Form(default=None),
     test_id: int | None = Form(default=None),
     sample_no: int | None = Form(default=None),
+    manual_step_id: int | None = Form(default=None),
     comments: str | None = Form(default=None),
     current_user: dict = Depends(require_permission("can_upload")),
     db: AsyncSession = Depends(get_db),
@@ -141,6 +142,7 @@ async def upload_evidence(
         comments=comments,
         current_user=current_user,
         sample_no=sample_no,
+        manual_step_id=manual_step_id,
     )
 
 
@@ -320,6 +322,7 @@ async def import_demo_file(
         control_id=data.control_id,
         test_id=data.test_id,
         current_user=current_user,
+        manual_step_id=data.manual_step_id,
     )
 
 

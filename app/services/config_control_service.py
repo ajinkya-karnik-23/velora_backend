@@ -30,6 +30,8 @@ from app.schemas.config_control import (
 from app.services.control_matching import (
     find_control_json_by_control_and_entity,
     load_control_json,
+    scope_summaries,
+    scope_summary_of,
 )
 from app.services.sampling_matrix import (
     calculate_sample_size,
@@ -62,7 +64,7 @@ EVIDENCE_MISMATCH_MESSAGE = (
 )
 
 
-def _to_out(cc: ConfigControl) -> ConfigControlOut:
+def _to_out(cc: ConfigControl, scope_summary: str | None = None) -> ConfigControlOut:
     ctrl = cc.control
     test = cc.test
     # The definition's own stated size, read from the entity-specific snapshot
@@ -88,6 +90,8 @@ def _to_out(cc: ConfigControl) -> ConfigControlOut:
         sample_size=cc.sample_size,
         sample_size_source=cc.sample_size_source,
         override_sample_size=override,
+        # The live JSON when the caller resolved it; otherwise the snapshot.
+        scope_summary=scope_summary or scope_summary_of(definition),
         created_time=cc.created_time,
         updated_time=cc.updated_time,
     )
@@ -173,7 +177,28 @@ class ConfigControlService:
 
     async def get_cycle_controls(self, cycle_id: int) -> list[ConfigControlOut]:
         ccs = await self.repo.get_cycle_controls(cycle_id)
-        return [_to_out(cc) for cc in ccs]
+        scopes = await self._live_scope_summaries(cycle_id)
+
+        def live(cc: ConfigControl) -> str | None:
+            number = cc.control.control_number.strip() if cc.control else ""
+            entity = (cc.entity_code or "").strip()
+            # An entity-scoped attachment matches its own entity's JSON; one
+            # without an entity takes the first JSON for that control.
+            return scopes.get((number, entity)) or (None if entity else scopes.get((number, None)))
+
+        return [_to_out(cc, live(cc)) for cc in ccs]
+
+    async def _live_scope_summaries(
+        self, cycle_id: int
+    ) -> dict[tuple[str, str | None], str]:
+        """Scope summaries from the cycle's client's control JSONs. Missing data
+        yields nothing, and callers fall back to the attach-time snapshot."""
+        cycle = await self.db.get(ReviewCycle, cycle_id)
+        client = await self.db.get(Client, cycle.client_id) if cycle else None
+        directory = Path(
+            (client.control_jsons_path if client else None) or settings.CONTROL_JSONS_PATH
+        )
+        return scope_summaries(directory)
 
     async def attach_control(self, cycle_id: int, control_id: int) -> ConfigControlOut:
         # Verify control exists

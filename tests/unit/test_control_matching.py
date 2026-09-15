@@ -185,3 +185,28 @@ class TestLoadControlJson:
         f = tmp_path / "CTRL.json"
         f.write_text(json.dumps(IA8_PAYLOAD))
         assert load_control_json(f) == IA8_PAYLOAD
+
+
+def test_scope_summary_is_read_from_control_details() -> None:
+    from app.services.control_matching import scope_summary_of
+
+    assert scope_summary_of({"control_details": {"scope_summary": "  Objective: x  "}}) == "Objective: x"
+    assert scope_summary_of({"control_details": {"scope_summary": "   "}}) is None
+    assert scope_summary_of({"control_details": {}}) is None
+    assert scope_summary_of(None) is None
+
+
+def test_scope_summaries_keyed_by_control_and_entity(tmp_path) -> None:
+    import json
+
+    from app.services.control_matching import scope_summaries
+
+    (tmp_path / "a.json").write_text(json.dumps({"control_details": {
+        "Control No": "IA8.CA02", "Entity Code": "19A1", "scope_summary": "Objective: A"}}))
+    (tmp_path / "b.json").write_text(json.dumps({"control_details": {
+        "Control No": "IA5.CA04", "Entity Code": "19A1"}}))
+
+    found = scope_summaries(tmp_path)
+    assert found[("IA8.CA02", "19A1")] == "Objective: A"
+    assert found[("IA8.CA02", None)] == "Objective: A"
+    assert ("IA5.CA04", None) not in found

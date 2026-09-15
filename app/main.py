@@ -343,6 +343,16 @@ def create_app() -> FastAPI:
         tags=["Test Logs"]
     )
 
+    from app.api.endpoints.manual_test_steps import (
+        router as manual_test_steps_router
+    )
+
+    app.include_router(
+        manual_test_steps_router,
+        prefix="/api/v1/manual-test-steps",
+        tags=["Manual Test Steps"]
+    )
+
     from app.api.endpoints.reports import (
         router as reports_router
     )

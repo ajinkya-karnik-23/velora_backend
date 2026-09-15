@@ -66,6 +66,9 @@ class TestSampleOut(BaseModel):
     result: str | None = None
     validation: str | None = None
     pages: list[int] = []
+    # Evidence files this sample was validated against, when the control's
+    # testing output records them. Empty for controls that do not.
+    evidences_used: list[str] = []
     # Standing of the evidence attached to this sample: "ok", "invalid"
     # (uploaded but does not meet the control's requirement), or "missing".
     # Never says what was expected — only whether the upload satisfies it.
@@ -151,5 +154,9 @@ class ConfigControlOut(BaseModel):
     # shows this in preference to the methodology result, which stays
     # available (with both values) in the determination modal.
     override_sample_size: str | None = None
+    # Audit-style testing scope from the control JSON's control_details
+    # ("scope_summary"). Read from the client's current JSON, so edits to it
+    # show without re-attaching the control.
+    scope_summary: str | None = None
     created_time: int
     updated_time: int

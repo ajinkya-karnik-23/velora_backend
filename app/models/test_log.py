@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Index, String, Text
+from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, BigIntTimestampMixin
@@ -49,6 +49,16 @@ class TestLog(BigIntTimestampMixin, Base):
     execution_time_seconds: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     report_link: Mapped[str | None] = mapped_column(String(255), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # What was executed: "sample" (a sample run on the Testing tab),
+    # "manual_step" (an auditor-recorded manual step result) or null for the
+    # agent pipeline and older rows.
+    source: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    sample_no: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    manual_step_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("manual_test_steps.step_id", ondelete="SET NULL", onupdate="CASCADE"),
+        nullable=True,
+    )
 
     # Relationships
     changer: Mapped["User"] = relationship(foreign_keys=[changed_by])  # noqa: F821
@@ -58,4 +68,7 @@ class TestLog(BigIntTimestampMixin, Base):
     )
     review_cycle: Mapped["ReviewCycle | None"] = relationship(  # noqa: F821
         foreign_keys=[cycle_id]
+    )
+    manual_step: Mapped["ManualTestStep | None"] = relationship(  # noqa: F821
+        foreign_keys=[manual_step_id]
     )

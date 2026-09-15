@@ -29,6 +29,8 @@ class ControlOut(BaseModel):
     fccg_contact_name: str | None = None
     frameworks: list[str] = []
     source_json: dict | None = None
+    # Audit-style testing scope, read live from the client's control JSON.
+    scope_summary: str | None = None
     created_time: int
     updated_time: int
 

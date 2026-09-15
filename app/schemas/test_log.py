@@ -41,5 +41,19 @@ class TestLogOut(BaseModel):
     execution_time_seconds: int | None = None
     report_link: str | None = None
     notes: str | None = None
+    source: str | None = None
+    sample_no: int | None = None
+    manual_step_id: int | None = None
+    # "MS-01 · Title" for a manual step; null once that step has been deleted.
+    step_label: str | None = None
     created_time: int
     updated_time: int
+
+
+class RecordSampleRunRequest(BaseModel):
+    """A sample run finished on the Testing tab. The verdict is looked up on
+    the server from the testing output, never taken from the client."""
+
+    config_control_id: int
+    sample_no: int
+    execution_time_ms: int | None = Field(default=None, ge=0)

@@ -22,15 +22,24 @@ from app.services.control_matching import (
     find_control_json_by_control_no,
     list_available_entities,
     load_control_json,
+    scope_summaries,
+    scope_summary_of,
 )
 
 
-def _to_out(ctrl: ControlRepository) -> ControlOut:
+def _to_out(
+    ctrl: ControlRepository, scopes: dict[tuple[str, str | None], str] | None = None
+) -> ControlOut:
+    number = (ctrl.control_number or "").strip()
+    entity = (ctrl.entity or "").strip()
+    live = (scopes or {}).get((number, entity)) or (scopes or {}).get((number, None))
     return ControlOut(
         **{c.key: getattr(ctrl, c.key) for c in ctrl.__table__.columns},
         owner_name=ctrl.owner.user_name if ctrl.owner else None,
         fccg_contact_name=ctrl.fccg_contact.user_name if ctrl.fccg_contact else None,
         frameworks=[fw.framework_name for fw in ctrl.frameworks],
+        # The client's current JSON first; the imported snapshot otherwise.
+        scope_summary=live or scope_summary_of(ctrl.source_json),
     )
 
 
@@ -47,13 +56,23 @@ class ControlService:
         page_size: int = 20,
     ) -> tuple[list[ControlOut], int]:
         controls, total = await self.repo.browse_with_frameworks(filters, page, page_size)
-        return [_to_out(c) for c in controls], total
+        scopes = await self._scopes_for_client(filters.get("client_id"))
+        return [_to_out(c, scopes) for c in controls], total
+
+    async def _scopes_for_client(
+        self, client_id: int | None
+    ) -> dict[tuple[str, str | None], str]:
+        client = await self.db.get(Client, client_id) if client_id else None
+        directory = Path(
+            (client.control_jsons_path if client else None) or settings.CONTROL_JSONS_PATH
+        )
+        return scope_summaries(directory)
 
     async def get_detail(self, control_id: int) -> ControlOut:
         ctrl = await self.repo.get_detail(control_id)
         if not ctrl:
             raise NotFoundException("Control not found.")
-        return _to_out(ctrl)
+        return _to_out(ctrl, await self._scopes_for_client(ctrl.client_id))
 
     async def get_changelog(self, control_id: int) -> list[ChangeLogOut]:
         # Verify control exists

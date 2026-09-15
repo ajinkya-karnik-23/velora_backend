@@ -57,6 +57,7 @@ def _to_out(ev: EvidenceFile) -> EvidenceOut:
         control_name=ev.control.control_name if ev.control else None,
         test_id=ev.test_id,
         sample_no=ev.sample_no,
+        manual_step_id=ev.manual_step_id,
         status=ev.status,
         comments=ev.comments,
         file_version=ev.file_version,
@@ -131,6 +132,7 @@ class EvidenceService:
         comments: str | None,
         current_user: dict[str, Any],
         sample_no: int | None = None,
+        manual_step_id: int | None = None,
     ) -> EvidenceOut:
         # Validate MIME type
         if file.content_type and file.content_type not in ALLOWED_MIME_TYPES:
@@ -164,6 +166,7 @@ class EvidenceService:
             control_id=control_id,
             test_id=test_id,
             sample_no=sample_no,
+            manual_step_id=manual_step_id,
             status="Pending",
             comments=comments,
             file_version=1,
@@ -343,6 +346,7 @@ class EvidenceService:
         control_id: int | None,
         test_id: int | None,
         current_user: dict[str, Any],
+        manual_step_id: int | None = None,
     ) -> EvidenceOut:
         from pathlib import Path
         import mimetypes, io
@@ -375,6 +379,7 @@ class EvidenceService:
             cycle_id=cycle_id,
             control_id=control_id,
             test_id=test_id,
+            manual_step_id=manual_step_id,
             status="Pending",
             comments=None,
             file_version=1,

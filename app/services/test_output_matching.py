@@ -30,6 +30,10 @@ _CORE_FIELDS = {
     "result": "result",
     "validation": "validation",
     "pages": "pages",
+    # The evidence files a sample was validated against. A control that
+    # records them names what its test was run on, which is a property of
+    # the sample rather than one of its tested parameters.
+    "evidences_used": "evidences_used",
 }
 
 # Source keys surfaced as the grouped "Parameters" object, in display order.
@@ -92,6 +96,7 @@ def normalise_sample(key: str, raw: dict[str, Any]) -> dict[str, Any]:
         "result": None,
         "validation": None,
         "pages": [],
+        "evidences_used": [],
     }
     parameters: list[dict[str, Any]] = []
     extras: dict[str, Any] = {}
