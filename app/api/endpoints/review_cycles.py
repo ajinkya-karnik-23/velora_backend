@@ -14,6 +14,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db, require_engagement_member, require_permission
 from app.schemas.common import PaginatedResponse
 from app.schemas.config_control import (
+    DefaultEvidenceAttachOut,
+    DefaultEvidenceFileOut,
+    DefaultEvidenceStatusOut,
     ConfigControlBulkCreate,
     ConfigControlBulkRemove,
     ConfigControlCreate,
@@ -218,6 +221,86 @@ async def bulk_attach_controls(
     return await service.bulk_attach(cycle_id, data.control_ids)
 
 
+async def _cycle_control(db: AsyncSession, cycle_id: int, config_control_id: int) -> Any:
+    from app.core.exceptions import NotFoundException
+    from app.models.config_control import ConfigControl
+
+    cc = await db.get(ConfigControl, config_control_id)
+    if cc is None or cc.cycle_id != cycle_id:
+        raise NotFoundException("Attached control not found in this cycle.")
+    return cc
+
+
+@router.get("/{cycle_id}/default-evidence", response_model=DefaultEvidenceStatusOut)
+async def get_default_evidence_status(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    current_user: dict = Depends(require_engagement_member),  # noqa: ARG001
+    db: AsyncSession = Depends(get_db),
+) -> DefaultEvidenceStatusOut:
+    """How much of this control's default evidence is still to attach."""
+    from app.services.default_evidence import plan_default_evidence
+
+    plan = await plan_default_evidence(db, await _cycle_control(db, cycle_id, config_control_id))
+    return DefaultEvidenceStatusOut(
+        configured=plan.configured,
+        planned=plan.planned,
+        missing=len(plan.missing),
+        unavailable=plan.unavailable,
+        missing_files=[
+            DefaultEvidenceFileOut(sample_no=n, file_name=p.name) for n, p in plan.missing
+        ],
+    )
+
+
+@router.post("/{cycle_id}/attach-default-evidence", response_model=DefaultEvidenceAttachOut)
+async def attach_default_evidence(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    sample_no: int | None = Query(default=None),
+    file_name: str | None = Query(default=None),
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> DefaultEvidenceAttachOut:
+    """Attach missing default evidence to this control's samples.
+
+    With `sample_no` and `file_name`, attaches only that one file (the Testing
+    tab attaches file by file); without them, attaches everything missing.
+    """
+    from app.core.exceptions import ForbiddenException
+    from app.services.default_evidence import attach_default_evidence as attach
+    from app.services.default_evidence import attach_one_default_evidence, plan_default_evidence
+
+    roles = current_user.get("roles", [])
+    if not any(r in ("Admin", "Moderator") for r in roles):
+        from app.repositories.engagement_team_repo import EngagementTeamRepo
+
+        if not await EngagementTeamRepo(db).is_member(cycle_id, int(current_user["sub"])):
+            raise ForbiddenException("Not a member of this engagement.")
+
+    cc = await _cycle_control(db, cycle_id, config_control_id)
+    if sample_no is not None and file_name:
+        done = await attach_one_default_evidence(
+            db, cc, int(current_user["sub"]), sample_no, file_name
+        )
+        after = await plan_default_evidence(db, cc)
+        return DefaultEvidenceAttachOut(
+            configured=after.configured,
+            planned=after.planned,
+            missing=len(after.missing),
+            unavailable=after.unavailable,
+            attached=1 if done else 0,
+        )
+    plan = await attach(db, cc, int(current_user["sub"]))
+    return DefaultEvidenceAttachOut(
+        configured=plan.configured,
+        planned=plan.planned,
+        missing=0,
+        unavailable=plan.unavailable,
+        attached=len(plan.missing),
+    )
+
+
 @router.post(
     "/{cycle_id}/calculate-sample-size", response_model=SampleSizeResultOut
 )
@@ -369,7 +452,9 @@ async def list_cycle_evidence(
         int(current_user["sub"]),
         current_user.get("roles", []),
         page=1,
-        page_size=100,
+        # Every file in the cycle: the Testing tab derives per-sample evidence
+        # from this list, and a demo cycle alone holds a few hundred.
+        page_size=5000,
     )
     return items
 

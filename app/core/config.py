@@ -100,6 +100,10 @@ class Settings(BaseSettings):
     # uploaded evidence matches. Editable without a code change.
     EVIDENCE_FILENAME_MAP_PATH: str = ""
 
+    # Evidence attached automatically at login, per control, so a demo cycle
+    # is ready to run. Missing or empty map disables it.
+    DEFAULT_EVIDENCE_MAP_PATH: str = ""
+
     # Azure Blob Storage (required when STORAGE_BACKEND=azure)
     AZURE_STORAGE_CONNECTION_STRING: str = ""
     AZURE_BLOB_CONTAINER: str = "ciq-evidence"
@@ -148,6 +152,7 @@ _CLIENT_DATA_LAYOUT = {
     "SAMPLING_MATRIX_PATH": "misc/sampling_matrix.json",
     "SAMPLING_METADATA_PATH": "misc/sampling_metadata.json",
     "EVIDENCE_FILENAME_MAP_PATH": "misc/evidence_filename_map.json",
+    "DEFAULT_EVIDENCE_MAP_PATH": "misc/default_evidence_map.json",
 }
 
 settings = Settings()

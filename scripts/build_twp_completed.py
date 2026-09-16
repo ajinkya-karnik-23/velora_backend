@@ -172,6 +172,22 @@ def _is_pending(sample: dict) -> bool:
     return (sample.get("result") or "").strip().upper() == "PENDING"
 
 
+# The summary box is D147:I148, about 110 characters of 12pt Calibri per line.
+SUMMARY_CHARS_PER_LINE = 105
+SUMMARY_LINE_POINTS = 16.0
+
+
+def _fit_summary_box(ws: Worksheet, first_row: int, text: str) -> None:
+    """Grow the summary box's lower row so the whole narrative shows without
+    the reviewer resizing it. Never shrinks below the template's own height."""
+    lines = sum(max(1, -(-len(part) // SUMMARY_CHARS_PER_LINE)) for part in text.split("\n"))
+    needed = lines * SUMMARY_LINE_POINTS + 6
+    top = ws.row_dimensions[first_row].height or 15.65
+    bottom = ws.row_dimensions[first_row + 1].height or 15.65
+    if top + bottom < needed:
+        ws.row_dimensions[first_row + 1].height = needed - top
+
+
 def _root_cause(exceptions: list[dict], payload: dict | None) -> str:
     """Why samples did not pass, in terms the control's own data supports.
 
@@ -217,7 +233,13 @@ def build(control_number: str, entity_code: str) -> Path:
     )
     if control_path is None:
         raise SystemExit(f"No control JSON for {control_number}.{entity_code}")
-    rcm = load_control_json(control_path).get("rcm_details") or {}
+    definition = load_control_json(control_path)
+    rcm = definition.get("rcm_details") or {}
+    # Audit narrative for the "Summary of test performed" box: nature of the
+    # testing, then results and root cause. Written per control in its JSON.
+    template_summary = str(
+        (definition.get("control_details") or {}).get("template_summary") or ""
+    ).strip()
 
     payload = find_test_output(Path(settings.TEST_OUTPUTS_PATH), control_number, entity_code)
     samples = build_samples(payload) if payload else []
@@ -303,15 +325,16 @@ def build(control_number: str, entity_code: str) -> Path:
     # column D with its value beneath; the rest are captioned in column B with
     # the value in D on the same row.
     summary_label = 146
-    _set(
-        ws,
-        f"D{summary_label + 1}",
+    headline = (
         f"{methodology['methodology']}: {methodology['total_samples']} samples tested "
         f"({_population_split(methodology)}). "
         f"{len(samples) - len(exceptions) - len(pending)} passed, "
         f"{len(exceptions)} exception(s)"
-        + (f", {len(pending)} pending." if pending else "."),
+        + (f", {len(pending)} pending." if pending else ".")
     )
+    summary_text = f"{headline}\n\n{template_summary}" if template_summary else headline
+    _set(ws, f"D{summary_label + 1}", summary_text)
+    _fit_summary_box(ws, summary_label + 1, summary_text)
     _set(ws, f"D{summary_label + 4}", len(exceptions))
     if exceptions:
         _set(ws, f"D{summary_label + 6}", _root_cause(exceptions, payload))

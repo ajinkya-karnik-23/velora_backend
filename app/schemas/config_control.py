@@ -160,3 +160,28 @@ class ConfigControlOut(BaseModel):
     scope_summary: str | None = None
     created_time: int
     updated_time: int
+
+
+class DefaultEvidenceFileOut(BaseModel):
+    sample_no: int
+    file_name: str
+
+
+class DefaultEvidenceStatusOut(BaseModel):
+    """Default evidence for one attached control, as its Testing card shows it."""
+
+    # Whether this control has default evidence configured at all.
+    configured: bool
+    # Files mapped across all samples.
+    planned: int
+    # Mapped files not yet attached that can be attached now.
+    missing: int
+    # Mapped files absent from the evidence folder.
+    unavailable: int
+    # The files still to attach, in sample order, so the UI can attach them
+    # one at a time.
+    missing_files: list[DefaultEvidenceFileOut] = []
+
+
+class DefaultEvidenceAttachOut(DefaultEvidenceStatusOut):
+    attached: int
