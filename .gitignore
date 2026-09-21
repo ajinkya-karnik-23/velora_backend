@@ -19,6 +19,8 @@ storage/
 .quartz-engine/content
 
 #KB
+# Client-specific knowledge bases, like the client data below.
+velora_kb_sox_poc2/
 
 # Client-supplied data (control definitions, evidence vault, testing outputs,
 # report templates) is not part of the application and is not tracked on this
