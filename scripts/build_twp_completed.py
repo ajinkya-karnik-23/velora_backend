@@ -94,9 +94,17 @@ def _map_frequency(raw: str | None) -> str:
     return "Multiple times per day" if text else ""
 
 
-# Parameters that best identify a journal-entry sample. Controls describing
-# their samples differently fall back to whatever they do carry.
-PREFERRED_LABELS = ("Posting date", "Amount in local cur.", "Type")
+# Parameters that best identify a sample. Controls describing their samples
+# differently fall back to whatever they do carry.
+PREFERRED_LABELS = (
+    "Posting date",
+    "Amount in local cur.",
+    "Type",
+    # Payment controls name the same facts slightly differently.
+    "Document Number",
+    "Posting Date",
+    "Amount in local currency",
+)
 
 # Long narrative fields are never useful as a row label.
 LABEL_MAX_LEN = 60
@@ -329,8 +337,7 @@ def build(control_number: str, entity_code: str) -> Path:
         f"{methodology['methodology']}: {methodology['total_samples']} samples tested "
         f"({_population_split(methodology)}). "
         f"{len(samples) - len(exceptions) - len(pending)} passed, "
-        f"{len(exceptions)} exception(s)"
-        + (f", {len(pending)} pending." if pending else ".")
+        f"{len(exceptions)} exception(s)" + (f", {len(pending)} pending." if pending else ".")
     )
     summary_text = f"{headline}\n\n{template_summary}" if template_summary else headline
     _set(ws, f"D{summary_label + 1}", summary_text)
@@ -348,9 +355,11 @@ def build(control_number: str, entity_code: str) -> Path:
     _set(
         ws,
         f"D{summary_label + 10}",
-        TEST_RESULT_INEFFECTIVE
-        if exceptions
-        else TEST_RESULT_NOT_TESTED if pending else TEST_RESULT_EFFECTIVE,
+        (
+            TEST_RESULT_INEFFECTIVE
+            if exceptions
+            else TEST_RESULT_NOT_TESTED if pending else TEST_RESULT_EFFECTIVE
+        ),
     )
 
     # Evidence collected — the work paper records what the test was run against.
