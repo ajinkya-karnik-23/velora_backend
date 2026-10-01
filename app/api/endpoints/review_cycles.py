@@ -25,6 +25,14 @@ from app.schemas.config_control import (
     EvidenceCheckOut,
     SampleSizeResultOut,
 )
+from app.schemas.control_review import (
+    ControlReviewEventOut,
+    ControlReviewStatusOut,
+    ReviewVerdictRequest,
+    SubmitForReviewRequest,
+    SubmitForReviewResult,
+    SubmitManyRequest,
+)
 from app.schemas.control_test import CycleTestObjectiveOut
 from app.schemas.engagement_team import (
     TeamMemberAdd,
@@ -36,6 +44,7 @@ from app.schemas.evidence import EvidenceOut
 from app.schemas.review_cycle import ReviewCycleCreate, ReviewCycleOut, ReviewCycleUpdate
 from app.schemas.test_log import TestLogOut
 from app.services.config_control_service import ConfigControlService
+from app.services.control_review_service import ControlReviewService
 from app.services.control_test_service import ControlTestService
 from app.services.engagement_team_service import EngagementTeamService
 from app.services.evidence_service import EvidenceService
@@ -229,6 +238,68 @@ async def _cycle_control(db: AsyncSession, cycle_id: int, config_control_id: int
     if cc is None or cc.cycle_id != cycle_id:
         raise NotFoundException("Attached control not found in this cycle.")
     return cc
+
+
+@router.get("/{cycle_id}/review-status", response_model=list[ControlReviewStatusOut])
+async def list_review_status(
+    cycle_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[ControlReviewStatusOut]:
+    """Stored review state for the cycle's controls (none until submitted)."""
+    return await ControlReviewService(db).list_for_cycle(cycle_id, current_user)
+
+
+@router.get("/{cycle_id}/review-events", response_model=list[ControlReviewEventOut])
+async def list_review_events(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[ControlReviewEventOut]:
+    """The control's review trail, newest first."""
+    return await ControlReviewService(db).list_events(cycle_id, config_control_id, current_user)
+
+
+@router.post("/{cycle_id}/submit-for-review", response_model=ControlReviewStatusOut)
+async def submit_for_review(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    data: SubmitForReviewRequest = Body(default=SubmitForReviewRequest()),
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> ControlReviewStatusOut:
+    """Tester hands one control to the reviewer."""
+    return await ControlReviewService(db).submit(
+        cycle_id, config_control_id, data.note, current_user
+    )
+
+
+@router.post("/{cycle_id}/submit-many-for-review", response_model=SubmitForReviewResult)
+async def submit_many_for_review(
+    cycle_id: int,
+    data: SubmitManyRequest = Body(...),
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> SubmitForReviewResult:
+    """Tester hands several finished controls over in one action."""
+    return await ControlReviewService(db).submit_many(
+        cycle_id, data.config_control_ids, current_user
+    )
+
+
+@router.post("/{cycle_id}/review-verdict", response_model=ControlReviewStatusOut)
+async def record_review_verdict(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    data: ReviewVerdictRequest = Body(...),
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> ControlReviewStatusOut:
+    """Reviewer records their decision on a submitted control."""
+    return await ControlReviewService(db).record_verdict(
+        cycle_id, config_control_id, data.verdict, data.note, current_user
+    )
 
 
 @router.get("/{cycle_id}/default-evidence", response_model=DefaultEvidenceStatusOut)
