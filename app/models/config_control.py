@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import JSON, BigInteger, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy import JSON, BigInteger, ForeignKey, Index, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, BigIntTimestampMixin
@@ -41,6 +41,27 @@ class ConfigControl(BigIntTimestampMixin, Base):
     sample_size: Mapped[str | None] = mapped_column(String(50), nullable=True)
     # "matrix" | "control_json" — where the stored sample_size came from.
     sample_size_source: Mapped[str | None] = mapped_column(String(30), nullable=True)
+
+    # Matrix-sampled cycles only: the sample numbers selected from the testing
+    # output. Null means every sample in the output is tested.
+    selected_samples: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    # Set when the control cannot be tested (no population, or no sample size
+    # in the matrix); the reason is shown in place of a test status.
+    not_tested_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Sample types the matrix selection left without a sample (proportional
+    # split): [{"label", "available", "reason"}]. The control is tested, but
+    # these types are reported as not tested.
+    untested_types: Mapped[list | None] = mapped_column(JSON, nullable=True)
+
+    # When the tester started testing the control's current round (the whole
+    # control on a full-population cycle; the current phase run on a phased
+    # one, cleared when the next run begins), and who. The name is kept as
+    # written so the record reads the same if the account is renamed.
+    testing_started_time: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    testing_started_by: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.user_id", ondelete="SET NULL"), nullable=True
+    )
+    testing_started_by_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Relationships
     review_cycle: Mapped[ReviewCycle] = relationship()  # noqa: F821

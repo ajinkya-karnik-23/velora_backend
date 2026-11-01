@@ -284,9 +284,21 @@ async def list_demo_vault(
     db: AsyncSession = Depends(get_db),
 ) -> list[DemoVaultFile]:
     """Return all files in the client's vault folder, organised by control number."""
+    from app.services.vault_manifest import load_manifest, manifest_entries
+
     vault_dir = await _resolve_vault_dir(db, client_id)
     files: list[DemoVaultFile] = []
     if not vault_dir.exists():
+        return files
+    manifest = load_manifest(vault_dir)
+    if manifest is not None:
+        # The manifest lists what the vault shows; only entries backed by a
+        # real document are viewable.
+        for entry in manifest_entries(manifest):
+            uploader = _DEMO_UPLOADERS[
+                sum(map(ord, entry["control_number"])) % len(_DEMO_UPLOADERS)
+            ]
+            files.append(DemoVaultFile(**entry, uploader_name=uploader))
         return files
     for control_dir in sorted(vault_dir.iterdir()):
         if not control_dir.is_dir() or control_dir.name.startswith("."):
@@ -323,6 +335,7 @@ async def import_demo_file(
         test_id=data.test_id,
         current_user=current_user,
         manual_step_id=data.manual_step_id,
+        sample_no=data.sample_no,
     )
 
 
@@ -334,8 +347,20 @@ async def download_demo_vault_file(
     current_user: dict = Depends(get_current_user),  # noqa: ARG001
     db: AsyncSession = Depends(get_db),
 ) -> FileResponse:
-    """Stream a file from the client's vault folder."""
+    """Stream a file from the client's vault folder.
+
+    With a vault manifest, only files it backs with a real document can be
+    streamed; listing-only entries are refused.
+    """
+    from app.services.vault_manifest import load_manifest, viewable_path
+
     vault_dir = await _resolve_vault_dir(db, client_id)
+    manifest = load_manifest(vault_dir)
+    if manifest is not None:
+        real = viewable_path(manifest, control_number, filename)
+        if real is None:
+            raise HTTPException(status_code=403, detail="This document is not available to view.")
+        return FileResponse(path=str(real), filename=filename)
     # Prevent path traversal
     safe_path = (vault_dir / control_number / filename).resolve()
     if not str(safe_path).startswith(str(vault_dir.resolve())):

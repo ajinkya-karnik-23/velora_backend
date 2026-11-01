@@ -127,6 +127,29 @@ class ControlTestService:
         from app.services.manual_test_step_service import ManualTestStepService
 
         await ManualTestStepService(self.db).clear_results_for_cycle(cycle_id)
+        # So are the tester's judgements on the results that were run.
+        from app.services.sample_judgement_service import SampleJudgementService
+
+        await SampleJudgementService(self.db).clear_for_cycle(cycle_id)
+        # And the reviewer's word on them, with its trail.
+        from app.services.sample_review_service import SampleReviewService
+
+        await SampleReviewService(self.db).clear_for_cycle(cycle_id)
+        # A phased cycle's phases are run data as well: every control goes back
+        # to design effectiveness, with its hand-over and verdict cleared.
+        from app.services.phase_service import PhaseService
+
+        await PhaseService(self.db).reset_cycle(cycle_id)
+        # Testing has to be started again, like the samples run again.
+        from sqlalchemy import update
+
+        from app.models.config_control import ConfigControl
+
+        await self.db.execute(
+            update(ConfigControl)
+            .where(ConfigControl.cycle_id == cycle_id)
+            .values(testing_started_time=None, testing_started_by=None, testing_started_by_name=None)
+        )
         await self.db.commit()
         return ClearRunDataResponse(
             cycle_id=cycle_id,

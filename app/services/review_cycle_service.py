@@ -88,6 +88,25 @@ class ReviewCycleService:
         cycle = await self.repo.get_with_lead(cycle_id)
         return _to_out(cycle)
 
+    async def set_sampling_mode(self, cycle_id: int, mode: str) -> ReviewCycleOut:
+        """Switch how the cycle's controls are sampled, then re-sample them."""
+        cycle = await self.repo.get_with_lead(cycle_id)
+        if not cycle:
+            raise NotFoundException("Review cycle not found.")
+        if cycle.is_locked:
+            raise ConflictException(
+                "This review cycle is locked, so its sampling mode cannot be changed."
+            )
+        if cycle.sampling_mode != mode:
+            from app.services.config_control_service import ConfigControlService
+
+            cycle.sampling_mode = mode
+            await self.db.flush()
+            await ConfigControlService(self.db).apply_cycle_sampling(cycle_id)
+            await self.db.commit()
+        cycle = await self.repo.get_with_lead(cycle_id)
+        return _to_out(cycle)
+
     async def delete_cycle(self, cycle_id: int, current_user: dict[str, Any] | None = None) -> None:
         """Delete a cycle and everything attached to it.
 
@@ -100,6 +119,8 @@ class ReviewCycleService:
         cycle = await self.repo.get_by_id(cycle_id)
         if not cycle:
             raise NotFoundException("Review cycle not found.")
+        if cycle.is_locked:
+            raise ConflictException("This review cycle is locked and cannot be deleted.")
         if cycle.status != "Draft":
             raise ConflictException(
                 f"Only cycles in Draft status can be deleted; this one is {cycle.status}."

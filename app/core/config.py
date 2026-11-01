@@ -95,6 +95,8 @@ class Settings(BaseSettings):
     # Per-control sampling notes — the reasoning shown alongside each control
     # attribute in the sample size determination.
     SAMPLING_METADATA_PATH: str = ""
+    # Demo engagement team and testing activity for the Review Cycles screen.
+    CYCLE_ACTIVITY_PATH: str = ""
 
     # Expected evidence filename per control — tests only run when the
     # uploaded evidence matches. Editable without a code change.
@@ -103,6 +105,19 @@ class Settings(BaseSettings):
     # Evidence attached automatically at login, per control, so a demo cycle
     # is ready to run. Missing or empty map disables it.
     DEFAULT_EVIDENCE_MAP_PATH: str = ""
+
+    # Demo scenario for phased cycles: which samples a phase draws first and
+    # how their testing output reads there. Missing file means no scenario.
+    PHASE_DEMO_PATH: str = ""
+
+    # Demo control owners shown in the Control Repository.
+    CONTROL_OWNERS_PATH: str = ""
+
+    # The client's Concurrent Review Process workbook: one sheet per phase,
+    # filled from the platform for the CRP downloads.
+    CRP_TEMPLATE_PATH: str = ""
+    # Demo tester and reviewer comments written into the CRP, per control/phase.
+    CRP_COMMENTS_PATH: str = ""
 
     # Azure Blob Storage (required when STORAGE_BACKEND=azure)
     AZURE_STORAGE_CONNECTION_STRING: str = ""
@@ -151,8 +166,13 @@ _CLIENT_DATA_LAYOUT = {
     "TWP_TEMPLATE_MAP_PATH": "misc/twp_template_map.json",
     "SAMPLING_MATRIX_PATH": "misc/sampling_matrix.json",
     "SAMPLING_METADATA_PATH": "misc/sampling_metadata.json",
+    "CYCLE_ACTIVITY_PATH": "misc/cycle_activity.json",
     "EVIDENCE_FILENAME_MAP_PATH": "misc/evidence_filename_map.json",
     "DEFAULT_EVIDENCE_MAP_PATH": "misc/default_evidence_map.json",
+    "PHASE_DEMO_PATH": "misc/phase_demo.json",
+    "CONTROL_OWNERS_PATH": "misc/control_owners.json",
+    "CRP_TEMPLATE_PATH": "misc/Concurrent Review Process 2026 - AME FZCO- TOE.xlsx",
+    "CRP_COMMENTS_PATH": "misc/crp_comments.json",
 }
 
 settings = Settings()

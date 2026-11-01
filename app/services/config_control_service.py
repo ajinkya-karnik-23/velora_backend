@@ -9,8 +9,8 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.logging import get_logger
 from app.core.exceptions import AppException, ConflictException, NotFoundException
+from app.core.logging import get_logger
 from app.models.client import Client
 from app.models.config_control import ConfigControl
 from app.models.control_repository import ControlRepository
@@ -24,7 +24,11 @@ from app.schemas.config_control import (
     ConfigControlOut,
     ControlTestOutputOut,
     EvidenceCheckOut,
+    PhaseInfo,
     SampleSizeResultOut,
+    SamplingCheckOut,
+    SamplingCheckRow,
+    SamplingTypeLine,
     TestMethodology,
 )
 from app.services.control_matching import (
@@ -33,22 +37,32 @@ from app.services.control_matching import (
     scope_summaries,
     scope_summary_of,
 )
+from app.services.control_owners import owner_for
+from app.services.evidence_verification import (
+    build_methodology,
+    expected_filename_for_sample,
+    extract_pages,
+    filename_matches,
+    load_filename_rule,
+)
+from app.services.matrix_sampling import (
+    NO_POPULATION_REASON,
+    explain_lookup,
+    matrix_size,
+    no_matrix_value_reason,
+    select_samples,
+    size_from_matrix_value,
+    untested_type_lines,
+)
+from app.services.phase_demo import demo_changes_for
 from app.services.sampling_matrix import (
     calculate_sample_size,
-    sub_sampling_size,
     extract_control_parameters,
     load_sampling_matrix,
     load_sampling_notes,
-)
-from app.services.evidence_verification import (
-    build_methodology,
-    extract_pages,
-    filename_matches,
-    expected_filename_for_sample,
-    load_filename_rule,
+    sub_sampling_size,
 )
 from app.services.test_output_matching import build_samples, find_test_output
-
 
 logger = get_logger(__name__)
 
@@ -64,13 +78,19 @@ EVIDENCE_MISMATCH_MESSAGE = (
 )
 
 
-def _to_out(cc: ConfigControl, scope_summary: str | None = None) -> ConfigControlOut:
+def _to_out(
+    cc: ConfigControl, scope_summary: str | None = None, matrix_sampled: bool = False
+) -> ConfigControlOut:
     ctrl = cc.control
     test = cc.test
     # The definition's own stated size, read from the entity-specific snapshot
-    # when present so it reflects the entity actually being tested.
+    # when present so it reflects the entity actually being tested. A
+    # matrix-sampled cycle never uses it, so it is not offered there.
     definition = cc.entity_detail_json or (ctrl.source_json if ctrl else None) or {}
-    override = extract_control_parameters(definition)["fallback_sample_size"]
+    override = (
+        None if matrix_sampled else extract_control_parameters(definition)["fallback_sample_size"]
+    )
+    owner = owner_for(ctrl.control_number) if ctrl else None
     return ConfigControlOut(
         config_control_id=cc.config_control_id,
         cycle_id=cc.cycle_id,
@@ -80,6 +100,9 @@ def _to_out(cc: ConfigControl, scope_summary: str | None = None) -> ConfigContro
         domain=ctrl.domain if ctrl else None,
         risk_level=ctrl.risk_level if ctrl else None,
         frequency=ctrl.frequency if ctrl else None,
+        demo_changes=demo_changes_for(ctrl.control_number, cc.entity_code) if ctrl else {},
+        owner_name=owner[0] if owner else None,
+        owner_role=owner[1] if owner else None,
         status=ctrl.status if ctrl else None,
         test_id=test.test_id if test else None,
         tests=test.tests if test else None,
@@ -92,6 +115,11 @@ def _to_out(cc: ConfigControl, scope_summary: str | None = None) -> ConfigContro
         override_sample_size=override,
         # The live JSON when the caller resolved it; otherwise the snapshot.
         scope_summary=scope_summary or scope_summary_of(definition),
+        selected_samples=cc.selected_samples,
+        not_tested_reason=cc.not_tested_reason,
+        untested_types=cc.untested_types,
+        testing_started_time=cc.testing_started_time,
+        testing_started_by_name=cc.testing_started_by_name,
         created_time=cc.created_time,
         updated_time=cc.updated_time,
     )
@@ -173,7 +201,15 @@ class ConfigControlService:
         )
         if json_path is None:
             return cycle.entity_code, None
-        return cycle.entity_code, load_control_json(json_path)
+        detail = load_control_json(json_path)
+        if cycle.sampling_mode == "matrix":
+            # A matrix cycle tests the demo's version of the control (IA5.CA03.1
+            # made Annual), as the repository does; the locked baseline keeps
+            # the client's file as it is.
+            from app.services.phase_demo import with_demo_changes
+
+            detail = with_demo_changes(detail, ctrl.control_number, cycle.entity_code)
+        return cycle.entity_code, detail
 
     async def get_cycle_controls(self, cycle_id: int) -> list[ConfigControlOut]:
         ccs = await self.repo.get_cycle_controls(cycle_id)
@@ -186,7 +222,207 @@ class ConfigControlService:
             # without an entity takes the first JSON for that control.
             return scopes.get((number, entity)) or (None if entity else scopes.get((number, None)))
 
-        return [_to_out(cc, live(cc)) for cc in ccs]
+        matrix_sampled = await self._sampling_mode(cycle_id) == "matrix"
+        return [_to_out(cc, live(cc), matrix_sampled) for cc in ccs]
+
+    async def _sampling_mode(self, cycle_id: int) -> str:
+        cycle = await self.db.get(ReviewCycle, cycle_id)
+        return cycle.sampling_mode if cycle else "full_population"
+
+    async def _payload(self, cc: ConfigControl, ctrl: ControlRepository) -> dict[str, Any] | None:
+        """The control's testing output as its cycle reads it: a phased cycle
+        layers the demo scenario on top, the baseline reads the file as-is."""
+        from app.services.phase_service import load_phased_output
+
+        if await self._sampling_mode(cc.cycle_id) == "matrix":
+            return load_phased_output(ctrl.control_number, cc.entity_code)
+        return find_test_output(
+            Path(settings.TEST_OUTPUTS_PATH), ctrl.control_number, cc.entity_code
+        )
+
+    async def _plan(
+        self, cc: ConfigControl, ctrl: ControlRepository, mode: str
+    ) -> dict[str, Any]:
+        """The control's sampling: its current phase run on a matrix-sampled
+        (phased) cycle, the whole population otherwise."""
+        if mode == "matrix":
+            from app.services.phase_service import PhaseService
+
+            return await PhaseService(self.db).plan(cc, ctrl)
+        return self._sampling_plan(cc, ctrl, mode)
+
+    # ------------------------------------------------------------ sampling
+
+    def _sampling_plan(
+        self, cc: ConfigControl, ctrl: ControlRepository, mode: str
+    ) -> dict[str, Any]:
+        """How this control is sampled under the cycle's mode. Reads only.
+
+        A control with no population is not tested in either mode. In a
+        matrix-sampled cycle, a control the matrix cannot size is not tested
+        either — the control's own stated size is deliberately not used.
+        """
+        params = extract_control_parameters(cc.entity_detail_json or ctrl.source_json or {})
+        payload = find_test_output(
+            Path(settings.TEST_OUTPUTS_PATH), ctrl.control_number, cc.entity_code
+        )
+        population = build_samples(payload) if payload else []
+        plan: dict[str, Any] = {
+            "params": params,
+            "available": len(population),
+            "matrix_value": None,
+            "source": None,
+            "required": None,
+            "selection": None,
+            "not_tested_reason": None,
+        }
+        if not population:
+            plan["not_tested_reason"] = NO_POPULATION_REASON
+            return plan
+        if mode != "matrix":
+            return plan
+
+        raw, source = matrix_size(load_sampling_matrix(Path(settings.SAMPLING_MATRIX_PATH)), params)
+        required = size_from_matrix_value(raw)
+        plan.update(matrix_value=raw, source=source, required=required)
+        if not required:
+            plan["not_tested_reason"] = no_matrix_value_reason(params)
+            return plan
+        plan["selection"] = select_samples(
+            population, (payload or {}).get("control_test_output"), required
+        )
+        return plan
+
+    @staticmethod
+    def _store_plan(cc: ConfigControl, plan: dict[str, Any], mode: str) -> None:
+        cc.not_tested_reason = plan["not_tested_reason"]
+        if mode != "matrix":
+            cc.selected_samples = None
+            cc.untested_types = None
+            return
+        if plan.get("awaiting_size"):
+            # The matrix gave this phase no size and the tester has not entered
+            # one yet: nothing to test until they do.
+            cc.selected_samples = []
+            cc.untested_types = None
+            cc.sample_size = None
+            cc.sample_size_source = "awaiting_input"
+            return
+        selection = plan["selection"]
+        cc.selected_samples = selection["selected"] if selection else None
+        cc.untested_types = (
+            untested_type_lines(selection, plan["required"]) or None if selection else None
+        )
+        cc.sample_size = str(plan["required"]) if selection else None
+        cc.sample_size_source = plan["source"] if selection else None
+
+    async def apply_sampling(self, cc: ConfigControl, mode: str | None = None) -> dict[str, Any]:
+        """Re-derive and store a control's sampling for its cycle's mode."""
+        # Looked up rather than read off the relationship, which is not loaded
+        # when the caller fetched the row on its own (an async lazy load fails).
+        ctrl = await self.control_repo.get_by_id(cc.control_id)
+        mode = mode or await self._sampling_mode(cc.cycle_id)
+        plan = await self._plan(cc, ctrl, mode)
+        self._store_plan(cc, plan, mode)
+        await self.db.flush()
+        return plan
+
+    async def apply_cycle_sampling(self, cycle_id: int) -> None:
+        """Re-sample every attached control, e.g. after the mode changes."""
+        mode = await self._sampling_mode(cycle_id)
+        for cc in await self.repo.get_cycle_controls(cycle_id):
+            await self.apply_sampling(cc, mode)
+
+    async def sampling_check(self, cycle_id: int) -> SamplingCheckOut:
+        """Every control's sampling checked against the population it has."""
+        mode = await self._sampling_mode(cycle_id)
+        rows = []
+        for cc in await self.repo.get_cycle_controls(cycle_id):
+            ctrl = cc.control
+            plan = await self._plan(cc, ctrl, mode)
+            params = plan["params"]
+            if plan.get("run") is not None:
+                # Phased: the matrix is read for the phase being tested now,
+                # with the frequency that phase is sized by.
+                from app.services.phase_service import PhaseService
+
+                runs = await PhaseService(self.db).runs(cc.config_control_id)
+                params = {
+                    **PhaseService.sizing_params(params, plan["run"], runs, ctrl, cc),
+                    "phase": plan["run"].phase,
+                }
+            selection = plan["selection"]
+            if plan["not_tested_reason"]:
+                status, message = "not_tested", plan["not_tested_reason"]
+            elif plan.get("awaiting_size"):
+                status = "awaiting_size"
+                message = (
+                    "The sampling matrix has no sample size for this phase. "
+                    "Enter the sample count to test."
+                )
+            elif selection and selection["shortfall"]:
+                status = "shortfall"
+                message = (
+                    f"The matrix calls for {plan['required']} samples but the population "
+                    f"has only {plan['available']}; all of them are tested."
+                )
+            else:
+                status, message = "ok", None
+            types = (selection or {}).get("types", [])
+            empty_types = [t["label"] for t in types if not t["selected"]]
+            if status == "ok" and empty_types:
+                status = "partial"
+                message = (
+                    "Not tested: "
+                    + ", ".join(empty_types)
+                    + " (no sample under the proportional split)."
+                )
+
+            matrix = load_sampling_matrix(Path(settings.SAMPLING_MATRIX_PATH))
+            lookup = explain_lookup(matrix, params)
+            notes = load_sampling_notes(
+                Path(settings.SAMPLING_METADATA_PATH),
+                ctrl.control_number if ctrl else "",
+                cc.entity_code,
+            )
+            rows.append(
+                SamplingCheckRow(
+                    oe_row=lookup["oe_row"],
+                    oe_column=lookup["oe_column"],
+                    oe_value=lookup["oe_value"],
+                    population_band=lookup["band"],
+                    sub_row=lookup["sub_row"],
+                    sub_column=lookup["sub_column"],
+                    sub_value=lookup["sub_value"],
+                    notes={k: v["text"] for k, v in notes.items() if v and v.get("text")},
+                    selected_samples=(selection or {}).get("selected", []),
+                    stated_size=params["fallback_sample_size"],
+                    config_control_id=cc.config_control_id,
+                    control_number=ctrl.control_number if ctrl else None,
+                    control_name=ctrl.control_name if ctrl else None,
+                    frequency=params["frequency"],
+                    risk_level=params["risk_level"],
+                    phase=params["phase"],
+                    matrix_value=plan["matrix_value"],
+                    sample_size_source=plan["source"],
+                    required=plan["required"],
+                    available=plan["available"],
+                    selected=(
+                        len(selection["selected"])
+                        if selection
+                        # Nothing is drawn while untested or awaiting a count.
+                        else (
+                            0
+                            if plan["not_tested_reason"] or plan.get("awaiting_size")
+                            else plan["available"]
+                        )
+                    ),
+                    types=[SamplingTypeLine(**t) for t in types],
+                    status=status,
+                    message=message,
+                )
+            )
+        return SamplingCheckOut(cycle_id=cycle_id, sampling_mode=mode, controls=rows)
 
     async def _live_scope_summaries(
         self, cycle_id: int
@@ -218,13 +454,15 @@ class ConfigControlService:
         )
         await self.repo.create(cc)  # flush materialises config_control_id
         await self._seed_tests(cc.config_control_id, control_id)
+        mode = await self._sampling_mode(cycle_id)
+        self._store_plan(cc, await self._plan(cc, ctrl, mode), mode)
         await self.db.commit()
         # Re-fetch with joins
         ccs = await self.repo.get_cycle_controls(cycle_id)
         for item in ccs:
             if item.control_id == control_id:
-                return _to_out(item)
-        return _to_out(cc)  # fallback
+                return _to_out(item, matrix_sampled=mode == "matrix")
+        return _to_out(cc, matrix_sampled=mode == "matrix")  # fallback
 
     async def bulk_attach(self, cycle_id: int, control_ids: list[int]) -> list[ConfigControlOut]:
         for control_id in control_ids:
@@ -243,6 +481,8 @@ class ConfigControlService:
             )
             await self.repo.create(cc)
             await self._seed_tests(cc.config_control_id, control_id)
+            mode = await self._sampling_mode(cycle_id)
+            self._store_plan(cc, await self._plan(cc, ctrl, mode), mode)
         await self.db.commit()
         return await self.get_cycle_controls(cycle_id)
 
@@ -275,6 +515,36 @@ class ConfigControlService:
 
         attributes = live_detail or cc.entity_detail_json or ctrl.source_json or {}
         params = extract_control_parameters(attributes)
+        notes = load_sampling_notes(
+            Path(settings.SAMPLING_METADATA_PATH), ctrl.control_number, cc.entity_code
+        )
+
+        if await self._sampling_mode(cc.cycle_id) == "matrix":
+            # Matrix-sampled: the matrix alone sizes the control, and a control
+            # it cannot size is reported as not tested rather than falling back.
+            plan = await self.apply_sampling(cc, "matrix")
+            await self.db.commit()
+            selection = plan["selection"]
+            return SampleSizeResultOut(
+                config_control_id=cc.config_control_id,
+                control_number=ctrl.control_number,
+                entity_code=cc.entity_code,
+                frequency=params["frequency"],
+                risk_level=params["risk_level"],
+                phase=params["phase"],
+                frequency_note=notes["frequency"],
+                risk_level_note=notes["risk_level"],
+                phase_note=notes["phase"],
+                sample_size=(
+                    str(plan["required"]) if plan.get("run") and selection
+                    else plan["matrix_value"] if selection else None
+                ),
+                sample_size_source=plan["source"] if selection else None,
+                selected_count=len(selection["selected"]) if selection else 0,
+                population_count=plan["available"],
+                not_tested_reason=plan["not_tested_reason"],
+                phase_info=await self._phase_info(cc, plan.get("run")),
+            )
 
         matrix = load_sampling_matrix(Path(settings.SAMPLING_MATRIX_PATH))
         value = calculate_sample_size(
@@ -313,10 +583,6 @@ class ConfigControlService:
         await self.db.flush()
         await self.db.commit()
 
-        notes = load_sampling_notes(
-            Path(settings.SAMPLING_METADATA_PATH), ctrl.control_number, cc.entity_code
-        )
-
         return SampleSizeResultOut(
             config_control_id=cc.config_control_id,
             control_number=ctrl.control_number,
@@ -336,7 +602,38 @@ class ConfigControlService:
             ),
         )
 
-    async def get_test_output(self, config_control_id: int) -> ControlTestOutputOut:
+    async def _phase_info(self, cc: ConfigControl, run: Any) -> PhaseInfo | None:
+        if run is None:
+            return None
+        from app.core.phase_rules import EVIDENCE_WINDOWS, PHASE_NAMES
+        from app.services.phase_service import PhaseService, base_phase, effective_size, run_label
+
+        by_id = {r.phase_run_id: r for r in await PhaseService(self.db).runs(cc.config_control_id)}
+        phase = base_phase(run, by_id)
+        window = EVIDENCE_WINDOWS.get(phase)
+        size = effective_size(run)
+        return PhaseInfo(
+            phase_run_id=run.phase_run_id,
+            phase=run.phase,
+            base_phase=phase,
+            label=run_label(run, by_id),
+            name=PHASE_NAMES.get(run.phase, run.phase),
+            attempt=run.attempt,
+            status=run.status,
+            sample_size=size,
+            matrix_value=run.matrix_value,
+            size_source=run.size_source,
+            override_size=run.override_size,
+            override_reason=run.override_reason,
+            window_start=window[0].isoformat() if window else None,
+            window_end=window[1].isoformat() if window else None,
+            awaiting_size=not size,
+            failure_reason=run.failure_reason,
+        )
+
+    async def get_test_output(
+        self, config_control_id: int, phase_run_id: int | None = None
+    ) -> ControlTestOutputOut:
         """The control's testing output — header, IPE name, and sample rows.
 
         Samples are generated from the output JSON's test_details, so the
@@ -361,9 +658,24 @@ class ConfigControlService:
         tests = await self.test_repo.get_by_config_control(cc.config_control_id)
         test_id = tests[0].test_id if tests else None
 
-        payload = find_test_output(
-            Path(settings.TEST_OUTPUTS_PATH), ctrl.control_number, cc.entity_code
-        )
+        # A phased cycle shows one phase run at a time: the current one unless
+        # an earlier run is asked for.
+        run = None
+        selected = cc.selected_samples
+        if await self._sampling_mode(cc.cycle_id) == "matrix":
+            from app.services.phase_service import PhaseService
+
+            phases = PhaseService(self.db)
+            run = (
+                await phases.run(cc.config_control_id, phase_run_id)
+                if phase_run_id is not None
+                else await phases.current_run(cc.config_control_id)
+            )
+            if run is not None and phase_run_id is not None:
+                selected = list(run.selected_samples or [])
+        phase = await self._phase_info(cc, run)
+
+        payload = await self._payload(cc, ctrl)
         if payload is None:
             return ControlTestOutputOut(
                 config_control_id=cc.config_control_id,
@@ -372,11 +684,36 @@ class ConfigControlService:
                 ipe_name=ipe_name,
                 test_id=test_id,
                 samples=[],
+                not_tested_reason=cc.not_tested_reason,
+                phase=phase,
             )
 
         header = payload.get("control_test_output") or {}
         samples = build_samples(payload)
+        population_count = None
+        if cc.not_tested_reason:
+            population_count, samples = len(samples), []
+        elif selected is not None:
+            # Matrix-sampled: only the selection is tested. Sample numbers are
+            # kept, so evidence and run state stay keyed to the same rows.
+            chosen = set(selected)
+            population_count = len(samples)
+            samples = [
+                s
+                for i, s in enumerate(samples)
+                if (s["sample_no"] if isinstance(s.get("sample_no"), int) else i + 1) in chosen
+            ]
         await self._annotate_evidence_status(cc, ctrl, test_id, samples)
+        # The tester's judgement rides beside the tool's result, never over it.
+        from app.services.sample_judgement_service import SampleJudgementService
+        from app.services.sample_review_service import SampleReviewService
+
+        judgements = await SampleJudgementService(self.db).for_control(cc.config_control_id)
+        reviews = await SampleReviewService(self.db).for_control(cc.config_control_id)
+        for i, sample in enumerate(samples):
+            no = sample["sample_no"] if isinstance(sample.get("sample_no"), int) else i + 1
+            sample["judgement"] = judgements.get(no)
+            sample["review"] = reviews.get(no)
         return ControlTestOutputOut(
             config_control_id=cc.config_control_id,
             control_number=header.get("control_number") or ctrl.control_number,
@@ -387,6 +724,10 @@ class ConfigControlService:
             test_id=test_id,
             methodology=TestMethodology(**build_methodology(samples, header)),
             samples=samples,
+            population_count=population_count,
+            not_tested_reason=cc.not_tested_reason,
+            untested_types=cc.untested_types or [],
+            phase=phase,
         )
 
     async def get_cycle_test_outputs(self, cycle_id: int) -> list[ControlTestOutputOut]:
@@ -449,9 +790,7 @@ class ConfigControlService:
         if not rule or not rule.get("expected_evidence_filename_fields"):
             return rule, {}
 
-        payload = find_test_output(
-            Path(settings.TEST_OUTPUTS_PATH), ctrl.control_number, cc.entity_code
-        )
+        payload = await self._payload(cc, ctrl)
         if payload is None:
             return rule, {}
 
@@ -597,9 +936,7 @@ class ConfigControlService:
         if not ctrl:
             raise NotFoundException("Control not found.")
 
-        payload = find_test_output(
-            Path(settings.TEST_OUTPUTS_PATH), ctrl.control_number, cc.entity_code
-        )
+        payload = await self._payload(cc, ctrl)
         pages: list[int] = []
         matched_sample: dict | None = None
         if payload:
@@ -699,7 +1036,67 @@ class ConfigControlService:
 
         return content, content_type or "application/pdf", file_name
 
+    async def start_testing(
+        self, cycle_id: int, config_control_id: int, current_user: dict[str, Any]
+    ) -> ConfigControlOut:
+        """Record that the tester has started testing this control's current
+        round. Starting again keeps the first start (it is when testing began)
+        — unless the reviewer has returned the control since, when the new
+        start replaces it."""
+        import time
+
+        from app.models.user import User
+
+        cc = await self.repo.get_by_id(config_control_id)
+        if cc is None or cc.cycle_id != cycle_id:
+            raise NotFoundException("Attached control not found in this cycle.")
+        # A start made before the reviewer returned the control no longer
+        # counts: the tester is starting the round again.
+        from sqlalchemy import func, select
+
+        from app.models.control_review import RETURNED, ControlReviewEvent
+
+        returned_at = (
+            await self.db.execute(
+                select(func.max(ControlReviewEvent.event_time)).where(
+                    ControlReviewEvent.config_control_id == config_control_id,
+                    ControlReviewEvent.to_status == RETURNED,
+                )
+            )
+        ).scalar_one_or_none()
+        restarting = (
+            returned_at is not None
+            and cc.testing_started_time is not None
+            and cc.testing_started_time < returned_at
+        )
+        if cc.testing_started_time is None or restarting:
+            user = await self.db.get(User, int(current_user["sub"]))
+            cc.testing_started_time = int(time.time())
+            cc.testing_started_by = user.user_id if user else None
+            cc.testing_started_by_name = user.user_name if user else None
+            if await self._sampling_mode(cycle_id) == "matrix":
+                # On a phased cycle the start belongs to the phase run's trail.
+                from app.services.phase_service import PhaseService
+
+                phases = PhaseService(self.db)
+                run = await phases.current_run(cc.config_control_id)
+                if run is not None:
+                    phases._event(cc.config_control_id, run, "testing_started", None, cc.testing_started_by)
+            await self.db.commit()
+        for item in await self.repo.get_cycle_controls(cycle_id):
+            if item.config_control_id == config_control_id:
+                return _to_out(item, matrix_sampled=await self._sampling_mode(cycle_id) == "matrix")
+        return _to_out(cc)
+
+    async def _ensure_unlocked(self, cycle_id: int) -> None:
+        cycle = await self.db.get(ReviewCycle, cycle_id)
+        if cycle is not None and cycle.is_locked:
+            raise ConflictException(
+                "This review cycle is locked, so its controls cannot be removed."
+            )
+
     async def detach_control(self, cycle_id: int, control_id: int) -> None:
+        await self._ensure_unlocked(cycle_id)
         cc = await self.repo.get_by_cycle_and_control(cycle_id, control_id)
         if not cc:
             raise NotFoundException("Control is not attached to this cycle.")
@@ -707,6 +1104,7 @@ class ConfigControlService:
         await self.db.commit()
 
     async def bulk_detach(self, cycle_id: int, config_control_ids: list[int]) -> None:
+        await self._ensure_unlocked(cycle_id)
         for cc_id in config_control_ids:
             cc = await self.repo.get_by_id(cc_id)
             if cc and cc.cycle_id == cycle_id:
@@ -714,6 +1112,7 @@ class ConfigControlService:
         await self.db.commit()
 
     async def reset_cycle_controls(self, cycle_id: int) -> None:
+        await self._ensure_unlocked(cycle_id)
         ccs = await self.repo.get_cycle_controls(cycle_id)
         for cc in ccs:
             await self.repo.delete(cc)

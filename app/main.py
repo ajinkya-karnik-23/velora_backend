@@ -188,7 +188,8 @@ def create_app() -> FastAPI:
             "X-Request-ID",
             "Idempotency-Key"
         ],
-        expose_headers=["X-Request-ID"],
+        # File names of downloads (reports) and the TWP variant served.
+        expose_headers=["X-Request-ID", "Content-Disposition", "X-TWP-Variant"],
         max_age=600,
     )
 

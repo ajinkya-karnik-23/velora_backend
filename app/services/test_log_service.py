@@ -172,8 +172,42 @@ class TestLogService:
 
     async def list_by_cycle(self, cycle_id: int) -> list[TestLogOut]:
         logs = await self.repo.get_by_cycle(cycle_id)
-        return [_to_out(log) for log in logs]
+        return await self._with_phases([_to_out(log) for log in logs])
 
     async def list_all(self, limit: int = 200, client_id: int | None = None) -> list[TestLogOut]:
         logs = await self.repo.get_all(limit, client_id=client_id)
-        return [_to_out(log) for log in logs]
+        return await self._with_phases([_to_out(log) for log in logs])
+
+    async def _with_phases(self, rows: list[TestLogOut]) -> list[TestLogOut]:
+        """Label each sample run with the phase run that drew its sample.
+
+        A sample belongs to exactly one phase run of its control (samples are
+        never reused across runs), so cycle + control + sample number is enough.
+        """
+        from sqlalchemy import select
+
+        from app.models.config_control import ConfigControl
+        from app.models.control_phase import ControlPhaseRun
+        from app.services.phase_service import run_label
+
+        cycles = {r.cycle_id for r in rows if r.sample_no is not None and r.cycle_id}
+        if not cycles:
+            return rows
+        found = (
+            await self.db.execute(
+                select(ConfigControl.cycle_id, ConfigControl.control_id, ControlPhaseRun)
+                .join(ControlPhaseRun, ControlPhaseRun.config_control_id == ConfigControl.config_control_id)
+                .where(ConfigControl.cycle_id.in_(cycles))
+            )
+        ).all()
+        if not found:
+            return rows
+        by_id = {run.phase_run_id: run for _, _, run in found}
+        label: dict[tuple[int, int, int], str] = {}
+        for cycle_id, control_id, run in found:
+            for no in run.selected_samples or []:
+                label[(cycle_id, control_id, no)] = run_label(run, by_id)
+        for row in rows:
+            if row.sample_no is not None and row.cycle_id and row.control_id:
+                row.phase_label = label.get((row.cycle_id, row.control_id, row.sample_no))
+        return rows

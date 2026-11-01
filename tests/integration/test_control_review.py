@@ -148,3 +148,37 @@ async def test_viewer_cannot_submit_or_decide(
         headers=seeded_users["Viewer"]["headers"],
     )
     assert res.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_resubmit_after_testing_ran_again_replaces_the_hand_over(
+    client: AsyncClient, seeded_engagement: dict[str, Any], db_session: Any
+) -> None:
+    """A submission that testing has since overtaken no longer holds, so the
+    tester's fresh submission is accepted rather than refused as a duplicate."""
+    from app.models.test_log import TestLog
+
+    cycle_id = seeded_engagement["cycle"].cycle_id
+    cc = seeded_engagement["config_control"]
+    headers = seeded_engagement["admin"]["headers"]
+    base = f"/api/v1/review-cycles/{cycle_id}"
+
+    url = f"{base}/submit-for-review?config_control_id={cc.config_control_id}"
+    first = await client.post(url, json={}, headers=headers)
+    assert first.status_code == 200, first.text
+    submitted_at = first.json()["submitted_time"]
+
+    # A sample runs again after the hand-over.
+    ran_at = submitted_at + 60
+    db_session.add(
+        TestLog(
+            control_id=cc.control_id, cycle_id=cycle_id, log_date=ran_at,
+            changed_by=seeded_engagement["admin"]["user_id"], status="PASS",
+            created_time=ran_at, updated_time=ran_at,
+        )
+    )
+    await db_session.commit()
+
+    again = await client.post(url, json={"note": "Re-run and re-submitted."}, headers=headers)
+    assert again.status_code == 200, again.text
+    assert again.json()["status"] == "submitted_for_review"

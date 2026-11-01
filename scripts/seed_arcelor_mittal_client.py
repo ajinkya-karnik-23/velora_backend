@@ -33,6 +33,7 @@ from app.models.control_repository import ControlRepository
 from app.models.user import User
 from app.models.version import Version
 from app.services.control_matching import iter_control_jsons
+from app.services.phase_demo import with_demo_changes
 
 CLIENT_CODE = "ARCELOR-MITTAL"
 CLIENT_NAME = "ArcelorMittal"
@@ -118,10 +119,12 @@ async def _seed_controls(session: AsyncSession, client: Client) -> None:
     created = updated = 0
     for _path, payload in payloads:
         details = payload.get("control_details", {}) or {}
-        rcm = payload.get("rcm_details", {}) or {}
         control_number = str(details.get("Control No", "")).strip()
         if not control_number:
             continue
+        # A control changed for the demo (misc/phase_demo.json) keeps it.
+        payload = with_demo_changes(payload, control_number, details.get("Entity Code"))
+        rcm = payload.get("rcm_details", {}) or {}
 
         fields = {
             "control_number": control_number,

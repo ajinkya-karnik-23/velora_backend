@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Index, Numeric, String, Text
+from sqlalchemy import BigInteger, Boolean, CheckConstraint, ForeignKey, Index, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, BigIntTimestampMixin
@@ -54,6 +54,18 @@ class ReviewCycle(BigIntTimestampMixin, Base):
     # attaching a control to this cycle resolves control_number + entity_code
     # against the client's control_jsons to pull entity-specific rcm_details.
     entity_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+    # How attached controls are sampled: "full_population" tests every sample
+    # in the control's testing output; "matrix" tests only the count the
+    # client's sampling matrix calls for, selected from that output.
+    sampling_mode: Mapped[str] = mapped_column(
+        String(30), nullable=False, default="full_population", server_default="full_population"
+    )
+    # A locked cycle cannot be deleted, have its controls removed or have its
+    # sampling mode changed — it is kept as a fixed reference.
+    is_locked: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
 
     # Relationships
     client: Mapped["Client"] = relationship()  # noqa: F821

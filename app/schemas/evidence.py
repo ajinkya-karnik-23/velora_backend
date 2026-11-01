@@ -54,6 +54,10 @@ class EvidenceOut(BaseModel):
     test_id: int | None = None
     sample_no: int | None = None
     manual_step_id: int | None = None
+    doc_ref: str | None = None
+    # Whether the document may be opened. A client whose vault has a manifest
+    # only lets the documents it backs with a real file be viewed.
+    viewable: bool = True
     status: str
     comments: str | None = None
     file_version: int
@@ -83,6 +87,9 @@ class DemoVaultFile(BaseModel):
     file_size: int
     file_type: str
     uploader_name: str | None = None
+    # Only a viewable file can be opened, downloaded or linked to a test.
+    viewable: bool = True
+    uploaded_time: int | None = None
 
 
 class DemoFileImport(BaseModel):
@@ -92,6 +99,8 @@ class DemoFileImport(BaseModel):
     cycle_id: int | None = None
     control_id: int | None = None
     test_id: int | None = None
+    # The sample row the file supports, when linked from a sample's upload.
+    sample_no: int | None = None
     manual_step_id: int | None = None
 
 

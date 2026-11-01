@@ -107,8 +107,11 @@ def expected_filename_for_sample(
         return None
 
     extension = str(rule.get("expected_evidence_extension") or "").strip()
+    # Files keep their real names, so a value the demo calendar moved is
+    # matched as it was (IA5.CA03.1's "Apr-25.pdf").
+    source = sample.get("source_fields") or {}
     for field in fields:
-        value = sample.get(field)
+        value = source.get(field, sample.get(field))
         if value is None:
             continue
         stem = _safe_stem(str(value))

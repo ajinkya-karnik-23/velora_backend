@@ -24,6 +24,7 @@ from app.schemas.config_control import (
     ControlTestOutputOut,
     EvidenceCheckOut,
     SampleSizeResultOut,
+    SamplingCheckOut,
 )
 from app.schemas.control_review import (
     ControlReviewEventOut,
@@ -33,6 +34,14 @@ from app.schemas.control_review import (
     SubmitForReviewResult,
     SubmitManyRequest,
 )
+from app.schemas.control_phase import (
+    ControlPhasesOut,
+    CyclePhasesOut,
+    PhaseFailIn,
+    PhaseSampleSizeIn,
+    PhaseSampleSizeResetIn,
+    PhaseSizeComputedIn,
+)
 from app.schemas.control_test import CycleTestObjectiveOut
 from app.schemas.engagement_team import (
     TeamMemberAdd,
@@ -41,7 +50,20 @@ from app.schemas.engagement_team import (
     TeamMemberUpdate,
 )
 from app.schemas.evidence import EvidenceOut
-from app.schemas.review_cycle import ReviewCycleCreate, ReviewCycleOut, ReviewCycleUpdate
+from app.schemas.review_cycle import (
+    ReviewCycleCreate,
+    ReviewCycleOut,
+    ReviewCycleUpdate,
+    SamplingModeUpdate,
+)
+from app.schemas.cycle_overview import CycleOverviewOut
+from app.schemas.sample_review import (
+    NotificationOut,
+    SampleReviewEventOut,
+    SampleReviewIn,
+    SampleReviewOut,
+)
+from app.schemas.sample_judgement import SampleJudgementIn, SampleJudgementOut
 from app.schemas.test_log import TestLogOut
 from app.services.config_control_service import ConfigControlService
 from app.services.control_review_service import ControlReviewService
@@ -111,6 +133,154 @@ async def update_review_cycle(
     return await service.update_cycle(cycle_id, data)
 
 
+@router.put("/{cycle_id}/sampling-mode", response_model=ReviewCycleOut)
+async def set_sampling_mode(
+    cycle_id: int,
+    data: SamplingModeUpdate = Body(...),
+    current_user: dict = Depends(require_permission("can_manage_cycles")),
+    db: AsyncSession = Depends(get_db),
+) -> ReviewCycleOut:
+    """Switch the cycle between full-population and matrix sampling.
+
+    Every attached control is re-sampled for the new mode. Refused for a
+    locked cycle.
+    """
+    service = ReviewCycleService(db)
+    return await service.set_sampling_mode(cycle_id, data.sampling_mode)
+
+
+@router.get("/{cycle_id}/sample-judgements", response_model=list[SampleJudgementOut])
+async def list_sample_judgements(
+    cycle_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[SampleJudgementOut]:
+    """Every tester judgement recorded in the cycle (results, root causes)."""
+    from app.services.sample_judgement_service import SampleJudgementService
+
+    return await SampleJudgementService(db).list_for_cycle(cycle_id)
+
+
+@router.put("/{cycle_id}/sample-judgement", response_model=SampleJudgementOut)
+async def record_sample_judgement(
+    cycle_id: int,
+    data: SampleJudgementIn,
+    config_control_id: int = Query(...),
+    sample_no: int = Query(...),
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> SampleJudgementOut:
+    """Accept or change the tool's result for one sample.
+
+    The tool's result is kept as it is; the judgement is stored beside it and
+    logged to the audit trail. A failure needs a root-cause category, and a
+    change needs a conclusion.
+    """
+    from app.services.sample_judgement_service import SampleJudgementService
+
+    return await SampleJudgementService(db).record(
+        cycle_id, config_control_id, sample_no, data, current_user
+    )
+
+
+@router.delete("/{cycle_id}/sample-judgement", status_code=204, response_model=None)
+async def revert_sample_judgement(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    sample_no: int = Query(...),
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Withdraw the tester's judgement, so the tool's result stands again."""
+    from app.services.sample_judgement_service import SampleJudgementService
+
+    await SampleJudgementService(db).revert(cycle_id, config_control_id, sample_no, current_user)
+
+
+@router.get("/{cycle_id}/evidence-map")
+async def get_evidence_map(
+    cycle_id: int,
+    current_user: dict = Depends(require_engagement_member),  # noqa: ARG001
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Every supporting document in the attached controls' populations, dated,
+    with the phase window it falls in, the run that drew it and the files
+    attached — read-only, for the Evidence tab."""
+    from app.services.evidence_map_service import evidence_map
+
+    return await evidence_map(db, cycle_id)
+
+
+@router.get("/{cycle_id}/sample-reviews", response_model=list[SampleReviewOut])
+async def list_sample_reviews(
+    cycle_id: int,
+    current_user: dict = Depends(require_engagement_member),  # noqa: ARG001
+    db: AsyncSession = Depends(get_db),
+) -> list[SampleReviewOut]:
+    """The reviewer's word on every reviewed sample in the cycle."""
+    from app.services.sample_review_service import SampleReviewService
+
+    return await SampleReviewService(db).list_for_cycle(cycle_id)
+
+
+@router.get("/{cycle_id}/sample-review-events", response_model=list[SampleReviewEventOut])
+async def list_sample_review_events(
+    cycle_id: int,
+    current_user: dict = Depends(require_engagement_member),  # noqa: ARG001
+    db: AsyncSession = Depends(get_db),
+) -> list[SampleReviewEventOut]:
+    """Every reviewer action on a sample in the cycle, newest first."""
+    from app.services.sample_review_service import SampleReviewService
+
+    return await SampleReviewService(db).events_for_cycle(cycle_id)
+
+
+@router.put("/{cycle_id}/sample-review", response_model=SampleReviewOut)
+async def save_sample_review(
+    cycle_id: int,
+    data: SampleReviewIn,
+    config_control_id: int = Query(...),
+    sample_no: int = Query(...),
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> SampleReviewOut:
+    """Record the reviewer's edit, comment, people involved and/or verdict on
+    one sample. A changed outcome becomes the sample's effective result."""
+    from app.services.sample_review_service import SampleReviewService
+
+    return await SampleReviewService(db).save(
+        cycle_id, config_control_id, sample_no, data, current_user
+    )
+
+
+@router.get("/notifications", response_model=list[NotificationOut])
+async def list_notifications(
+    client_id: int = Query(...),
+    current_user: dict = Depends(get_current_user),  # noqa: ARG001
+    db: AsyncSession = Depends(get_db),
+) -> list[NotificationOut]:
+    """The reviewer's actions across the client's cycles, newest first — what a
+    tester is notified of."""
+    from app.services.sample_review_service import SampleReviewService
+
+    return await SampleReviewService(db).notifications(client_id)
+
+
+@router.get("/{cycle_id}/sampling-check", response_model=SamplingCheckOut)
+async def sampling_check(
+    cycle_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SamplingCheckOut:
+    """Each control's sample count checked against its population.
+
+    Flags controls whose population is smaller than the matrix asks for, and
+    controls that cannot be tested (no population, or no matrix size).
+    """
+    service = ConfigControlService(db)
+    return await service.sampling_check(cycle_id)
+
+
 @router.delete("/delete-cycle", status_code=204, response_model=None)
 async def delete_review_cycle(
     cycle_id: int = Query(...),
@@ -119,6 +289,19 @@ async def delete_review_cycle(
 ) -> None:
     service = ReviewCycleService(db)
     await service.delete_cycle(cycle_id, current_user)
+
+
+@router.get("/cycles-overview", response_model=list[CycleOverviewOut])
+async def cycles_overview(
+    client_id: int = Query(...),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[CycleOverviewOut]:
+    """Per-cycle summary for the Review Cycles screen: controls, recorded
+    testing results by control, review state, evidence and team."""
+    from app.services.cycle_overview_service import client_overview
+
+    return await client_overview(db, client_id)
 
 
 @router.get("/get-cycle-stats")
@@ -157,7 +340,9 @@ async def add_team_member(
     return await service.add_member(cycle_id, data)
 
 
-@router.post("/{cycle_id}/add-team-members-bulk", response_model=list[TeamMemberOut], status_code=201)
+@router.post(
+    "/{cycle_id}/add-team-members-bulk", response_model=list[TeamMemberOut], status_code=201
+)
 async def bulk_add_team_members(
     cycle_id: int,
     data: TeamMemberBulkAdd,
@@ -238,6 +423,176 @@ async def _cycle_control(db: AsyncSession, cycle_id: int, config_control_id: int
     if cc is None or cc.cycle_id != cycle_id:
         raise NotFoundException("Attached control not found in this cycle.")
     return cc
+
+
+# ---------------------------------------------------------------------------
+# Testing phases (matrix-sampled cycles)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{cycle_id}/phases", response_model=CyclePhasesOut)
+async def list_cycle_phases(
+    cycle_id: int,
+    current_user: dict = Depends(require_engagement_member),  # noqa: ARG001
+    db: AsyncSession = Depends(get_db),
+) -> CyclePhasesOut:
+    """Every control's phase path, runs, results and history. Empty for a
+    full-population cycle, which is tested in a single round."""
+    from app.services.phase_service import PhaseService, period_under_review
+
+    service = PhaseService(db)
+    controls = await service.cycle_phases(cycle_id)
+    return CyclePhasesOut(
+        cycle_id=cycle_id,
+        period_under_review=period_under_review(),
+        cycle_phase=await service.cycle_phase(cycle_id) if controls else None,
+        controls=controls,
+    )
+
+
+@router.put("/{cycle_id}/phase-sample-size", response_model=ControlPhasesOut)
+async def override_phase_sample_size(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    data: PhaseSampleSizeIn = Body(...),
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> ControlPhasesOut:
+    """Change the sample count of the control's current phase (not DE)."""
+    from app.models.review_cycle import ReviewCycle
+    from app.services.phase_service import PhaseService
+
+    cc = await _cycle_control(db, cycle_id, config_control_id)
+    service = PhaseService(db)
+    await service.override_size(
+        cc, data.phase_run_id, data.size, data.reason, int(current_user["sub"])
+    )
+    await db.commit()
+    return ControlPhasesOut(**await service.control_phases(cc, await db.get(ReviewCycle, cycle_id)))
+
+
+@router.post("/{cycle_id}/phase-sample-size/reset", response_model=ControlPhasesOut)
+async def reset_phase_sample_size(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    data: PhaseSampleSizeResetIn = Body(...),
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> ControlPhasesOut:
+    """Return the current phase's sample count to the sampling matrix's."""
+    from app.models.review_cycle import ReviewCycle
+    from app.services.phase_service import PhaseService
+
+    cc = await _cycle_control(db, cycle_id, config_control_id)
+    service = PhaseService(db)
+    await service.reset_size(cc, data.phase_run_id, int(current_user["sub"]))
+    await db.commit()
+    return ControlPhasesOut(**await service.control_phases(cc, await db.get(ReviewCycle, cycle_id)))
+
+
+@router.put("/{cycle_id}/phase-size-computed", response_model=ControlPhasesOut)
+async def mark_phase_size_computed(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    data: PhaseSizeComputedIn = Body(...),
+    current_user: dict = Depends(require_engagement_member),  # noqa: ARG001
+    db: AsyncSession = Depends(get_db),
+) -> ControlPhasesOut:
+    """Keep (or clear) a phase run's computed sample count on the Controls table."""
+    from app.models.review_cycle import ReviewCycle
+    from app.services.phase_service import PhaseService
+
+    cc = await _cycle_control(db, cycle_id, config_control_id)
+    service = PhaseService(db)
+    await service.mark_computed(cc, data.phase_run_id, data.computed)
+    await db.commit()
+    return ControlPhasesOut(**await service.control_phases(cc, await db.get(ReviewCycle, cycle_id)))
+
+
+@router.get("/{cycle_id}/selectable-samples")
+async def list_selectable_samples(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    current_user: dict = Depends(require_engagement_member),  # noqa: ARG001
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """The current phase run's sample collections — each sample's evidence
+    documents under a vault collection ID — and which can be chosen."""
+    from app.services.manual_selection import selectable_samples
+
+    return await selectable_samples(db, await _cycle_control(db, cycle_id, config_control_id))
+
+
+@router.put("/{cycle_id}/select-samples", response_model=ControlPhasesOut)
+async def select_phase_samples(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    data: dict = Body(...),
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> ControlPhasesOut:
+    """Set the current phase run's samples to the collections the tester chose."""
+    from app.models.review_cycle import ReviewCycle
+    from app.services.manual_selection import select_samples
+    from app.services.phase_service import PhaseService
+
+    cc = await _cycle_control(db, cycle_id, config_control_id)
+    await select_samples(
+        db, cc, [int(n) for n in data.get("sample_nos") or []], int(current_user["sub"])
+    )
+    await db.commit()
+    return ControlPhasesOut(
+        **await PhaseService(db).control_phases(cc, await db.get(ReviewCycle, cycle_id))
+    )
+
+
+@router.post("/{cycle_id}/redraw-samples", response_model=ControlPhasesOut)
+async def redraw_phase_samples(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> ControlPhasesOut:
+    """Re-run the testing configuration: draw the current phase run's samples
+    again, the same count, other samples from the same evidence window."""
+    from app.models.review_cycle import ReviewCycle
+    from app.services.phase_service import PhaseService
+
+    cc = await _cycle_control(db, cycle_id, config_control_id)
+    service = PhaseService(db)
+    await service.redraw(cc, int(current_user["sub"]))
+    await db.commit()
+    return ControlPhasesOut(**await service.control_phases(cc, await db.get(ReviewCycle, cycle_id)))
+
+
+@router.post("/{cycle_id}/phase-fail", response_model=ControlPhasesOut)
+async def conclude_phase_failed(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    data: PhaseFailIn = Body(...),
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> ControlPhasesOut:
+    """Conclude the current phase as failed and open its remediation round."""
+    from app.models.review_cycle import ReviewCycle
+    from app.services.phase_service import PhaseService
+
+    cc = await _cycle_control(db, cycle_id, config_control_id)
+    service = PhaseService(db)
+    await service.conclude_failed(cc, data.reason, int(current_user["sub"]))
+    await db.commit()
+    return ControlPhasesOut(**await service.control_phases(cc, await db.get(ReviewCycle, cycle_id)))
+
+
+@router.post("/{cycle_id}/start-testing", response_model=ConfigControlOut)
+async def start_testing(
+    cycle_id: int,
+    config_control_id: int = Query(...),
+    current_user: dict = Depends(require_permission("can_upload")),
+    db: AsyncSession = Depends(get_db),
+) -> ConfigControlOut:
+    """The tester starts testing a control (its current phase, when phased)."""
+    return await ConfigControlService(db).start_testing(cycle_id, config_control_id, current_user)
 
 
 @router.get("/{cycle_id}/review-status", response_model=list[ControlReviewStatusOut])
@@ -372,9 +727,7 @@ async def attach_default_evidence(
     )
 
 
-@router.post(
-    "/{cycle_id}/calculate-sample-size", response_model=SampleSizeResultOut
-)
+@router.post("/{cycle_id}/calculate-sample-size", response_model=SampleSizeResultOut)
 async def calculate_sample_size(
     cycle_id: int,  # noqa: ARG001 — path scoping only; lookup is by config_control_id
     config_control_id: int = Query(...),
@@ -413,9 +766,7 @@ async def get_evidence_pages(
 ) -> Response:
     """Evidence for one sample, trimmed to the pages it was validated on."""
     service = ConfigControlService(db)
-    content, media_type, filename = await service.get_evidence_pages(
-        config_control_id, sample_no
-    )
+    content, media_type, filename = await service.get_evidence_pages(config_control_id, sample_no)
     safe_name = filename.replace('"', "")
     return Response(
         content=content,
@@ -441,12 +792,15 @@ async def clear_cycle_evidence(
 async def get_test_output(
     cycle_id: int,  # noqa: ARG001 — path scoping only; lookup is by config_control_id
     config_control_id: int = Query(...),
+    phase_run_id: int | None = Query(
+        None, description="Phased cycles: an earlier phase run instead of the current one."
+    ),
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ControlTestOutputOut:
     """Testing output for an attached control — drives the Testing table."""
     service = ConfigControlService(db)
-    return await service.get_test_output(config_control_id)
+    return await service.get_test_output(config_control_id, phase_run_id)
 
 
 @router.get("/{cycle_id}/test-outputs", response_model=list[ControlTestOutputOut])

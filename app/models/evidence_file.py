@@ -2,7 +2,16 @@
 
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, BigIntTimestampMixin
@@ -21,6 +30,7 @@ class EvidenceFile(BigIntTimestampMixin, Base):
             "cycle_id IS NOT NULL OR control_id IS NOT NULL OR test_id IS NOT NULL",
             name="ck_evidence_files_linkage",
         ),
+        UniqueConstraint("cycle_id", "doc_ref", name="uq_evidence_files_cycle_doc_ref"),
     )
 
     evidence_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -61,6 +71,9 @@ class EvidenceFile(BigIntTimestampMixin, Base):
         ForeignKey("manual_test_steps.step_id", ondelete="SET NULL", onupdate="CASCADE"),
         nullable=True,
     )
+    # Supporting-document reference, e.g. "IA5.CA01-S03-D01" (control, sample,
+    # document). Unique within the cycle; see services/doc_refs.py.
+    doc_ref: Mapped[str | None] = mapped_column(String(80), nullable=True)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="Pending")
     comments: Mapped[str | None] = mapped_column(Text, nullable=True)
     file_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)

@@ -29,3 +29,6 @@ from app.models.test_log import TestLog  # noqa: F401
 from app.models.control_test_result import ControlTestResult  # noqa: F401
 from app.models.manual_test_step import ManualTestStep, ManualTestStepResult  # noqa: F401
 from app.models.control_review import ControlReviewEvent, ControlReviewStatus  # noqa: F401
+from app.models.sample_judgement import SampleJudgement  # noqa: F401
+from app.models.sample_review import SampleReview, SampleReviewEvent  # noqa: F401
+from app.models.control_phase import ControlPhaseEvent, ControlPhaseRun  # noqa: F401

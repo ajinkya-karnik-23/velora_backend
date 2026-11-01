@@ -29,6 +29,8 @@ def _mock_cycle(cycle_id=1, status="Draft", due_date=None):
     now = int(time.time())
     c = MagicMock()
     c.cycle_id = cycle_id
+    c.is_locked = False
+    c.sampling_mode = "full_population"
     c.client_id = 1
     c.project_lead = 1
     c.review_period = "Q1"
@@ -189,6 +191,18 @@ async def test_delete_success(service):
 
     await service.delete_cycle(1)
     service.repo.delete.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_delete_refused_on_locked_cycle(service):
+    cycle = _mock_cycle(status="Draft")
+    cycle.is_locked = True
+    service.repo.get_by_id = AsyncMock(return_value=cycle)
+    service.repo.delete = AsyncMock()
+
+    with pytest.raises(ConflictException, match="locked"):
+        await service.delete_cycle(cycle.cycle_id)
+    service.repo.delete.assert_not_awaited()
 
 
 @pytest.mark.asyncio

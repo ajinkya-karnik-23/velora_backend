@@ -3,8 +3,26 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
+
+
+class ControlPhaseSummary(BaseModel):
+    """Where the control stands in its testing phases on the client's latest
+    phased (matrix-sampled) cycle."""
+
+    cycle_id: int
+    cycle_name: str
+    path: list[str]
+    current_phase: str | None = None
+    current_label: str | None = None
+    approved: list[str] = []
+    remediated: list[str] = []
+    in_remediation: bool = False
+    complete: bool = False
+    # Cleared its phase; the next opens when the whole cycle has cleared it.
+    waiting_for: str | None = None
 
 
 class ControlOut(BaseModel):
@@ -25,12 +43,18 @@ class ControlOut(BaseModel):
     pwc_reliance: str | None = None
     control_owner: int
     owner_name: str | None = None
+    owner_role: str | None = None
     units_fccg_contact: int
     fccg_contact_name: str | None = None
     frameworks: list[str] = []
     source_json: dict | None = None
     # Audit-style testing scope, read live from the client's control JSON.
     scope_summary: str | None = None
+    # Fields changed for the demo: {field: {from, to, note}}.
+    demo_changes: dict[str, dict[str, Any]] = {}
+    # The phases the control is tested in (DE → OE → RF, annual adds YE).
+    phase_path: list[str] = []
+    phases: ControlPhaseSummary | None = None
     created_time: int
     updated_time: int
 

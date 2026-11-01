@@ -46,6 +46,8 @@ class TestLogOut(BaseModel):
     manual_step_id: int | None = None
     # "MS-01 · Title" for a manual step; null once that step has been deleted.
     step_label: str | None = None
+    # Phased cycles: the phase run the sample belonged to ("OE", "RM 1 · DE").
+    phase_label: str | None = None
     created_time: int
     updated_time: int
 

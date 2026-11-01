@@ -91,6 +91,9 @@ def _parameter_value(sample: dict[str, Any], label: str) -> object:
 
 def sample_remarks(sample: dict[str, Any]) -> str:
     """The sample's own remarks, or a plain statement of its outcome."""
+    judgement = sample.get("judgement") or {}
+    if judgement.get("conclusion"):
+        return f"Tester: {judgement['conclusion']}"
     own = str(_parameter_value(sample, REMARKS_KEY) or "").strip()
     if own:
         return own
@@ -111,11 +114,35 @@ def testing_details(sample: dict[str, Any], evidence: Sequence[str], performer: 
         label = "page" if len(pages) == 1 else "pages"
         files = f"{files} ({label} {', '.join(str(p) for p in pages)})"
 
-    return (
-        f"Validation summary:\n{validation}\n\n"
+    text = (
+        f"Validation summary (tool-generated):\n{validation}\n\n"
         f"Evidence used:\n{files}\n\n"
         f"Performed by:\n{performer}"
     )
+    judgement = sample.get("judgement") or {}
+    if judgement:
+        verb = (
+            "accepted the tool result"
+            if judgement.get("action") == "accepted"
+            else f"changed the tool result {judgement.get('tool_result')} to {judgement.get('result')}"
+        )
+        text += f"\n\nTester judgement:\n{judgement.get('judged_by_name') or 'Tester'} {verb}."
+        if judgement.get("conclusion"):
+            text += f" {judgement['conclusion']}"
+        if judgement.get("root_cause_label"):
+            text += f"\nRoot cause: {judgement['root_cause_label']}"
+            if judgement.get("root_cause_note"):
+                text += f" — {judgement['root_cause_note']}"
+    return text
+
+
+def _tool_result_word(raw: object) -> str:
+    value = str(raw or "").strip().upper()
+    if value in ("PASS", "PASSED"):
+        return RESULT_OK
+    if value == "PENDING":
+        return RESULT_PENDING
+    return RESULT_NOT_OK
 
 
 def _style_header(cell: Cell) -> None:
@@ -141,12 +168,17 @@ def add_sample_details_sheet(
     control_number: str,
     entity_code: str,
     performer: str = DEFAULT_PERFORMER,
+    documents: Sequence[Sequence[tuple[str, str]]] | None = None,
 ) -> Worksheet:
     """Append (or rebuild) the sample details sheet and return it.
 
     `evidence_by_sample` lines up with `samples`: the files each sample was
-    tested against. A sheet left by an earlier build is replaced, so the
-    builder can run on a workbook that already carries one.
+    tested against. `documents`, when given, also lines up with `samples`:
+    the supporting documents attached to each, as (reference, file name). They
+    get their own column and replace the file names in the testing details, so
+    each document's reference maps it to the sample it supports. A sheet left
+    by an earlier build is replaced, so the builder can run on a workbook that
+    already carries one.
     """
     if len(evidence_by_sample) != len(samples):
         raise ValueError("evidence_by_sample must have one entry per sample")
@@ -168,7 +200,22 @@ def add_sample_details_sheet(
     ws["A2"].font = Font(name=FONT_NAME, size=12)
 
     labels = _parameter_labels(samples)
-    headers = ["Sample No.", "Document No.", *labels, "Result", "Remarks", "Testing Details"]
+    has_refs = documents is not None and any(documents)
+    # Tester judgements: show the tool's result beside the final one, and the
+    # root cause of any failure, so tool output and auditor judgement stay
+    # distinguishable on the paper.
+    has_judgements = any(s.get("judgement") for s in samples)
+    headers = [
+        "Sample No.",
+        "Document No.",
+        *labels,
+        *(["Tool Result"] if has_judgements else []),
+        "Result",
+        *(["Result Source", "Root Cause"] if has_judgements else []),
+        "Remarks",
+        *(["Document References"] if has_refs else []),
+        "Testing Details",
+    ]
     # Controls whose samples are not documents get no empty Document column.
     has_documents = any(s.get("document_no") for s in samples)
     if not has_documents:
@@ -179,16 +226,35 @@ def add_sample_details_sheet(
 
     for offset, (sample, evidence) in enumerate(zip(samples, evidence_by_sample, strict=True)):
         row = FIRST_DATA_ROW + offset
+        attached = list(documents[offset]) if documents is not None else []
+        if attached:
+            evidence = [f"{ref} {name}" for ref, name in attached]
         passed = _passed(sample)
         is_pending = _pending(sample)
         values: list[object] = [sample.get("sample_no")]
         if has_documents:
             values.append(sample.get("document_no"))
         values.extend(_parameter_value(sample, label) for label in labels)
+        judgement = sample.get("judgement") or {}
+        if has_judgements:
+            values.append(_tool_result_word(sample.get("tool_result", sample.get("result"))))
         values.extend(
             [
                 RESULT_OK if passed else RESULT_PENDING if is_pending else RESULT_NOT_OK,
+                *(
+                    [
+                        (
+                            "Tester (modified)"
+                            if judgement.get("action") == "modified"
+                            else "Tool, confirmed by tester" if judgement else "Tool"
+                        ),
+                        judgement.get("root_cause_label") or "",
+                    ]
+                    if has_judgements
+                    else []
+                ),
                 sample_remarks(sample),
+                *(["\n".join(ref for ref, _ in attached) or "—"] if has_refs else []),
                 testing_details(sample, evidence, performer),
             ]
         )
@@ -208,6 +274,12 @@ def add_sample_details_sheet(
             width = WIDTH_RESULT
         elif header == "Remarks":
             width = WIDTH_REMARKS
+        elif header == "Document References":
+            width = 22
+        elif header in ("Tool Result", "Result Source"):
+            width = 16
+        elif header == "Root Cause":
+            width = 28
         elif header == "Testing Details":
             width = WIDTH_DETAILS
         else:

@@ -34,6 +34,8 @@ _CORE_FIELDS = {
     # records them names what its test was run on, which is a property of
     # the sample rather than one of its tested parameters.
     "evidences_used": "evidences_used",
+    # Original values of fields the demo calendar moved (demo_calendar.py).
+    "source_fields": "source_fields",
 }
 
 # Source keys surfaced as the grouped "Parameters" object, in display order.

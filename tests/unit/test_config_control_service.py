@@ -17,6 +17,8 @@ def db():
     session.commit = AsyncMock()
     session.flush = AsyncMock()
     session.add = MagicMock()
+    # No cycle row by default, so a cycle is never treated as locked.
+    session.get = AsyncMock(return_value=None)
     return session
 
 
@@ -82,6 +84,16 @@ async def test_detach_control_success(service):
     await service.detach_control(1, 10)
     service.repo.delete.assert_awaited_once()
     service.db.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_detach_refused_on_locked_cycle(service, db):
+    db.get = AsyncMock(return_value=MagicMock(is_locked=True))
+    service.repo.delete = AsyncMock()
+
+    with pytest.raises(ConflictException, match="locked"):
+        await service.detach_control(1, 10)
+    service.repo.delete.assert_not_awaited()
 
 
 @pytest.mark.asyncio

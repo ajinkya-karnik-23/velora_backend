@@ -28,6 +28,13 @@ def service(db):
     return EvidenceService(db)
 
 
+@pytest.fixture(autouse=True)
+def _no_doc_ref_lookup():
+    """Reference numbering queries the database; it has its own tests."""
+    with patch("app.services.evidence_service.assign_doc_ref", AsyncMock(return_value="DOC-D01")):
+        yield
+
+
 def _mock_evidence(evidence_id=1, uploaded_by=1, status="Pending", cycle_id=1):
     ev = MagicMock()
     ev.evidence_id = evidence_id
@@ -43,6 +50,7 @@ def _mock_evidence(evidence_id=1, uploaded_by=1, status="Pending", cycle_id=1):
     ev.status = status
     ev.comments = None
     ev.file_version = 1
+    ev.doc_ref = "DOC-D01"
     ev.created_time = int(time.time())
     ev.updated_time = int(time.time())
     ev.uploader = MagicMock(user_name="admin")

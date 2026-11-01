@@ -26,8 +26,10 @@ from app.core import storage
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.models.control_repository import ControlRepository
+from app.models.review_cycle import ReviewCycle
 from app.models.control_test import ControlTest
 from app.models.evidence_file import EvidenceFile
+from app.services.doc_refs import assign_doc_ref
 from app.services.evidence_verification import expected_filename_for_sample, load_filename_rule
 from app.services.test_output_matching import build_samples, find_test_output
 
@@ -129,9 +131,17 @@ async def plan_default_evidence(db: AsyncSession, cc: ConfigControl) -> DefaultE
         return plan
     entry = _entry_for(control.control_number, cc.entity_code)
     test_id = await _test_id(db, cc.config_control_id)
-    payload = find_test_output(
-        Path(settings.TEST_OUTPUTS_PATH), control.control_number, cc.entity_code
-    )
+    cycle = await db.get(ReviewCycle, cc.cycle_id)
+    if cycle is not None and cycle.sampling_mode == "matrix":
+        # Phased cycles read the demo scenario too, so a sample the scenario
+        # says was given the wrong document is attached that document.
+        from app.services.phase_service import load_phased_output
+
+        payload = load_phased_output(control.control_number, cc.entity_code)
+    else:
+        payload = find_test_output(
+            Path(settings.TEST_OUTPUTS_PATH), control.control_number, cc.entity_code
+        )
     if entry is None or test_id is None or payload is None:
         return plan
     plan.configured = True
@@ -146,9 +156,16 @@ async def plan_default_evidence(db: AsyncSession, cc: ConfigControl) -> DefaultE
             )
         ).all()
     }
+    # A control not tested has nothing to attach; a matrix-sampled one only
+    # its selected samples.
+    if cc.not_tested_reason:
+        return plan
+    chosen = set(cc.selected_samples) if cc.selected_samples is not None else None
     for i, sample in enumerate(build_samples(payload)):
         raw = sample.get("sample_no")
         sample_no = raw if isinstance(raw, int) else i + 1
+        if chosen is not None and sample_no not in chosen:
+            continue
         for path in planned_files(entry, sample):
             plan.planned += 1
             if (sample_no, path.name.strip().lower()) in present:
@@ -237,6 +254,7 @@ async def _attach(
     )
     db.add(evidence)
     await db.flush()
+    await assign_doc_ref(db, evidence)
     evidence.file_path = await storage.upload_blob(
         cycle_id=cc.cycle_id,
         control_number=control_number,

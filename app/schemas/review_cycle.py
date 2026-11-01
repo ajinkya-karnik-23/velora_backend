@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
+
+SamplingMode = Literal["full_population", "matrix"]
 
 
 class ReviewCycleCreate(BaseModel):
@@ -20,6 +24,7 @@ class ReviewCycleCreate(BaseModel):
     overview: str | None = None
     description: str | None = None
     entity_code: str | None = Field(default=None, max_length=50)
+    sampling_mode: SamplingMode = "full_population"
 
 
 class ReviewCycleUpdate(BaseModel):
@@ -59,8 +64,14 @@ class ReviewCycleOut(BaseModel):
     overview: str | None = None
     description: str | None = None
     entity_code: str | None = None
+    sampling_mode: str = "full_population"
+    is_locked: bool = False
     created_time: int
     updated_time: int
+
+
+class SamplingModeUpdate(BaseModel):
+    sampling_mode: SamplingMode
 
 
 class ReviewCycleFilter(BaseModel):

@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import time
+from pathlib import Path
 from typing import Any
 
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import storage as azure_storage
+from app.core.config import settings
 from app.core.exceptions import (
     AppException,
     ConflictException,
@@ -18,6 +20,7 @@ from app.core.exceptions import (
 from app.core.logging import get_logger
 from app.models.evidence_file import EvidenceFile
 from app.models.test_log import TestLog
+from app.services.doc_refs import assign_doc_ref
 from app.repositories.evidence_repo import EvidenceRepo
 from app.schemas.evidence import EvidenceOut, EvidenceUpdate
 
@@ -58,6 +61,7 @@ def _to_out(ev: EvidenceFile) -> EvidenceOut:
         test_id=ev.test_id,
         sample_no=ev.sample_no,
         manual_step_id=ev.manual_step_id,
+        doc_ref=ev.doc_ref,
         status=ev.status,
         comments=ev.comments,
         file_version=ev.file_version,
@@ -84,7 +88,44 @@ class EvidenceService:
         items, total = await self.repo.list_with_joins(
             filters, user_id, user_roles, page, page_size
         )
-        return [_to_out(e) for e in items], total
+        return [await self._out(e) for e in items], total
+
+    async def _out(self, ev: EvidenceFile) -> EvidenceOut:
+        out = _to_out(ev)
+        out.viewable = await self.is_viewable(ev)
+        return out
+
+    async def is_viewable(self, ev: EvidenceFile) -> bool:
+        """Whether this document may be opened.
+
+        A client whose vault carries a manifest lets only the documents it
+        backs with a real file be viewed; every other client is unaffected.
+        """
+        from app.models.client import Client
+        from app.models.review_cycle import ReviewCycle
+        from app.services.vault_manifest import load_manifest, viewable_path
+
+        cycle = await self.db.get(ReviewCycle, ev.cycle_id) if ev.cycle_id else None
+        client_id = cycle.client_id if cycle else None
+        if client_id is None and ev.control_id is not None:
+            from app.models.control_repository import ControlRepository
+
+            control = await self.db.get(ControlRepository, ev.control_id)
+            client_id = control.client_id if control else None
+        if client_id is None:
+            return True
+        cache = self.__dict__.setdefault("_manifests", {})
+        if client_id not in cache:
+            client = await self.db.get(Client, client_id)
+            vault = Path(
+                (client.evidence_vault_path if client else None) or settings.SUPPORTING_DOCS_PATH
+            )
+            cache[client_id] = load_manifest(vault)
+        manifest = cache[client_id]
+        if manifest is None:
+            return True
+        number = await self._control_number(ev.control_id) if ev.control_id else ""
+        return viewable_path(manifest, number, ev.file_name) is not None
 
     async def get_evidence(
         self, evidence_id: int, user_id: int, user_roles: list[str]
@@ -93,7 +134,7 @@ class EvidenceService:
         if not ev:
             raise NotFoundException("Evidence not found.")
         await self._assert_scope(ev, user_id, user_roles)
-        return _to_out(ev)
+        return await self._out(ev)
 
     async def get_stats(
         self, user_id: int, user_roles: list[str]
@@ -172,6 +213,7 @@ class EvidenceService:
             file_version=1,
         )
         await self.repo.create(evidence)  # flush → materialise evidence_id
+        await assign_doc_ref(self.db, evidence)
 
         # Step 2: Upload blob. On failure, rollback DB row.
         try:
@@ -347,6 +389,7 @@ class EvidenceService:
         test_id: int | None,
         current_user: dict[str, Any],
         manual_step_id: int | None = None,
+        sample_no: int | None = None,
     ) -> EvidenceOut:
         from pathlib import Path
         import mimetypes, io
@@ -359,6 +402,21 @@ class EvidenceService:
             raise AppException(code="NOT_FOUND", message="Client not found.", status_code=404)
 
         demo_vault = Path(db_client.evidence_vault_path or settings.SUPPORTING_DOCS_PATH)
+        from app.services.vault_manifest import load_manifest, viewable_path
+
+        manifest = load_manifest(demo_vault)
+        if manifest is not None:
+            # Only a document the manifest backs with a real file can be linked.
+            real = viewable_path(manifest, control_number, filename)
+            if real is None:
+                raise AppException(
+                    code="NOT_AVAILABLE",
+                    message="This document is not available to link.",
+                    status_code=403,
+                )
+            demo_vault = real.parent.parent
+            control_number = real.parent.name
+            filename = real.name
         safe_path = (demo_vault / control_number / filename).resolve()
         if not str(safe_path).startswith(str(demo_vault.resolve())):
             raise AppException(code="INVALID_PATH", message="Invalid path.", status_code=400)
@@ -379,12 +437,14 @@ class EvidenceService:
             cycle_id=cycle_id,
             control_id=control_id,
             test_id=test_id,
+            sample_no=sample_no,
             manual_step_id=manual_step_id,
             status="Pending",
             comments=None,
             file_version=1,
         )
         await self.repo.create(evidence)
+        await assign_doc_ref(self.db, evidence)
 
         try:
             ctrl_number = await self._control_number(control_id) if control_id else control_number
@@ -482,6 +542,12 @@ class EvidenceService:
         if not ev:
             raise NotFoundException("Evidence not found.")
         await self._assert_scope(ev, user_id, user_roles)
+        if not await self.is_viewable(ev):
+            raise AppException(
+                code="NOT_AVAILABLE",
+                message="This document is not available to view.",
+                status_code=403,
+            )
         if not ev.file_path:
             raise ConflictException("Evidence has no associated file.")
         ctrl_number = ev.control.control_number if ev.control else "uncategorized"

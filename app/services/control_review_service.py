@@ -19,6 +19,7 @@ from sqlalchemy.orm import selectinload
 from app.core.exceptions import AppException, ForbiddenException, NotFoundException
 from app.models.config_control import ConfigControl
 from app.models.control_review import (
+    APPROVED,
     RETURNED,
     REVIEWER_VERDICTS,
     SUBMITTED,
@@ -30,9 +31,12 @@ from app.schemas.control_review import (
     ControlReviewStatusOut,
     SubmitForReviewResult,
 )
+from app.services.review_state import with_reviewer
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.services.phase_service import PhaseService
 
 TESTER = "tester"
 REVIEWER = "reviewer"
@@ -109,6 +113,12 @@ class ControlReviewService:
             )
         )
 
+    async def _phases_for(self, cycle_id: int) -> PhaseService | None:
+        from app.models.review_cycle import ReviewCycle
+        from app.services.phase_service import PhaseService, phased
+
+        return PhaseService(self.db) if phased(await self.db.get(ReviewCycle, cycle_id)) else None
+
     # ------------------------------------------------------------ reads
 
     async def list_for_cycle(
@@ -178,10 +188,12 @@ class ControlReviewService:
         """Hand one control to the reviewer. Re-submitting a returned control is
         the normal way back, so only an in-flight review blocks it."""
         await self._require_member(cycle_id, current_user)
-        await self._config_control(cycle_id, config_control_id)
+        cc = await self._config_control(cycle_id, config_control_id)
 
         row = await self._row(config_control_id)
-        if row is not None and row.status in (SUBMITTED,):
+        # A submission that testing has since overtaken no longer holds: the
+        # tester re-ran samples, so a fresh hand-over replaces it.
+        if row is not None and row.status == SUBMITTED and await with_reviewer(self.db, cc):
             raise AppException(
                 code="ALREADY_SUBMITTED",
                 message="This control is already with the reviewer.",
@@ -202,6 +214,9 @@ class ControlReviewService:
         row.reviewed_by = None
         row.reviewed_time = None
         self._record_event(config_control_id, previous, SUBMITTED, note, user_id, TESTER, now)
+        phases = await self._phases_for(cycle_id)
+        if phases is not None:
+            await phases.on_submitted(cc, user_id, note)
 
         await self.db.commit()
         return _to_out(await self._row(config_control_id))  # type: ignore[arg-type]
@@ -235,7 +250,7 @@ class ControlReviewService:
     ) -> ControlReviewStatusOut:
         """Record the reviewer's decision on a submitted control."""
         await self._require_member(cycle_id, current_user)
-        await self._config_control(cycle_id, config_control_id)
+        cc = await self._config_control(cycle_id, config_control_id)
 
         if verdict not in REVIEWER_VERDICTS:
             raise AppException(
@@ -261,11 +276,31 @@ class ControlReviewService:
         now = int(time.time())
         user_id = int(current_user["sub"])
         previous = row.status
+        phases = await self._phases_for(cycle_id)
+        if previous == APPROVED and phases is not None:
+            # Changing an approval: the phase it concluded is reopened first,
+            # so the new verdict lands on that round (refused once the cycle
+            # has moved on).
+            await phases.reopen_approval(cc, user_id)
         row.status = verdict
         row.note = (note or "").strip() or None
         row.reviewed_by = user_id
         row.reviewed_time = now
         self._record_event(config_control_id, previous, verdict, row.note, user_id, REVIEWER, now)
+        if verdict == RETURNED:
+            # A returned control is tested again from a fresh start: the tester
+            # starts it anew (and sees why it came back) before running samples.
+            cc.testing_started_time = None
+            cc.testing_started_by = None
+            cc.testing_started_by_name = None
+        await self.db.flush()
+        out = _to_out(await self._row(config_control_id))  # type: ignore[arg-type]
+
+        # On a phased cycle the verdict concludes the current phase run: an
+        # approval moves the control to its next phase, whose testing starts
+        # afresh (the review row is cleared for it).
+        if phases is not None:
+            await phases.on_verdict(cc, verdict, user_id, row.note)
 
         await self.db.commit()
-        return _to_out(await self._row(config_control_id))  # type: ignore[arg-type]
+        return out
